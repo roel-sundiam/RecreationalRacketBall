@@ -2,6 +2,7 @@ import User from '../models/User';
 import Reservation from '../models/Reservation';
 import Poll from '../models/Poll';
 import SeedingPoint from '../models/SeedingPoint';
+import Tournament from '../models/Tournament';
 import { PlayerRanking, PlayerStats, MatchResult } from '../types';
 
 export class SeedingService {
@@ -332,11 +333,22 @@ export class SeedingService {
     activeMembers: number;
   }> {
     try {
-      // Count polls with open play events by tournament tier
-      const eventStats = await Poll.find({
-        status: { $in: ['active', 'completed'] },
-        'openPlayEvent.tournamentTier': { $exists: true }
-      }).select('openPlayEvent.tournamentTier');
+      // Count all tournaments (active and completed)
+      const totalEvents = await Tournament.countDocuments({
+        status: { $in: ['active', 'completed'] }
+      });
+
+      // Count total matches across all tournaments
+      const tournaments = await Tournament.find({
+        status: { $in: ['active', 'completed'] }
+      }).select('matches');
+
+      let totalMatches = 0;
+      tournaments.forEach((tournament: any) => {
+        if (tournament.matches && Array.isArray(tournament.matches)) {
+          totalMatches += tournament.matches.length;
+        }
+      });
 
       // Count active members
       const activeMembers = await User.countDocuments({
@@ -349,26 +361,349 @@ export class SeedingService {
         '250': 0,
         '500': 0
       };
-      let totalEvents = 0;
-
-      eventStats.forEach((poll: any) => {
-        if (poll.openPlayEvent && poll.openPlayEvent.tournamentTier) {
-          const tier = poll.openPlayEvent.tournamentTier;
-          if (matchesByTier[tier] !== undefined) {
-            matchesByTier[tier]++;
-            totalEvents++;
-          }
-        }
-      });
 
       return {
-        totalMatches: 0, // No longer tracking individual matches
+        totalMatches,
         matchesByTier,
         totalEvents,
         activeMembers
       };
     } catch (error) {
       console.error('Error getting tournament stats:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Parse game score string and return winner/loser games
+   * Examples: "8-6" -> { winnerGames: 8, loserGames: 6 }
+   *           "10-8" -> { winnerGames: 10, loserGames: 8 }
+   */
+  static parseGameScore(scoreString: string): { winnerGames: number; loserGames: number } {
+    // Remove whitespace and try to match score pattern
+    const cleaned = scoreString?.trim();
+    const match = cleaned?.match(/^(\d+)\s*-\s*(\d+)$/);
+
+    if (match && match[1] && match[2]) {
+      const num1 = parseInt(match[1] as string);
+      const num2 = parseInt(match[2] as string);
+
+      // Winner has higher score
+      return {
+        winnerGames: Math.max(num1, num2),
+        loserGames: Math.min(num1, num2)
+      };
+    }
+
+    // Default: assume close 8-6 match if score is invalid
+    console.warn(`⚠️ Invalid score format: "${scoreString}", using default 8-6`);
+    return { winnerGames: 8, loserGames: 6 };
+  }
+
+  /**
+   * Process all matches in a tournament and award points
+   */
+  static async processTournamentPoints(tournamentId: string): Promise<{ processed: number; errors: number }> {
+    let processed = 0;
+    let errors = 0;
+
+    try {
+      const tournament = await Tournament.findById(tournamentId);
+      if (!tournament) {
+        throw new Error('Tournament not found');
+      }
+
+      console.log(`🏆 Processing points for tournament: ${tournament.name}`);
+
+      // Process each match
+      for (let i = 0; i < tournament.matches.length; i++) {
+        const match = tournament.matches[i];
+
+        // Skip if match is undefined or already processed
+        if (!match || match.pointsProcessed) {
+          console.log(`⏭️ Skipping match ${i + 1} - ${!match ? 'undefined' : 'already processed'}`);
+          continue;
+        }
+
+        try {
+          await this.processTournamentMatch(tournamentId, i);
+          processed++;
+        } catch (error) {
+          console.error(`Error processing match ${i + 1}:`, error);
+          errors++;
+        }
+      }
+
+      // Update tournament status to completed
+      tournament.status = 'completed';
+      await tournament.save();
+
+      console.log(`✅ Tournament processing complete: ${processed} matches processed, ${errors} errors`);
+      return { processed, errors };
+
+    } catch (error) {
+      console.error('Error processing tournament points:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process a single match in a tournament and award game-based points
+   */
+  static async processTournamentMatch(tournamentId: string, matchIndex: number): Promise<void> {
+    try {
+      const tournament = await Tournament.findById(tournamentId);
+      if (!tournament) {
+        throw new Error('Tournament not found');
+      }
+
+      const match = tournament.matches[matchIndex];
+      if (!match) {
+        throw new Error(`Match ${matchIndex} not found in tournament`);
+      }
+
+      if (match.pointsProcessed) {
+        console.log(`⏭️ Match ${matchIndex + 1} already processed`);
+        return;
+      }
+
+      // Parse score to get games won by each player/team
+      const { winnerGames, loserGames } = this.parseGameScore(match.score);
+
+      console.log(`🎾 Processing ${match.matchType} match: ${match.score} - Winner gets ${winnerGames} pts, Loser gets ${loserGames} pts`);
+
+      if (match.matchType === 'doubles') {
+        // Doubles match - award points to all 4 players
+        const winningTeam = match.winner; // "team1" or "team2"
+
+        if (winningTeam === 'team1') {
+          // Team 1 won
+          if (match.team1Player1) {
+            await this.awardTournamentPoints(
+              match.team1Player1,
+              winnerGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Won`,
+              tournamentId,
+              matchIndex,
+              true
+            );
+          }
+          if (match.team1Player2) {
+            await this.awardTournamentPoints(
+              match.team1Player2,
+              winnerGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Won`,
+              tournamentId,
+              matchIndex,
+              true
+            );
+          }
+          // Team 2 lost
+          if (match.team2Player1) {
+            await this.awardTournamentPoints(
+              match.team2Player1,
+              loserGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Played`,
+              tournamentId,
+              matchIndex,
+              false
+            );
+          }
+          if (match.team2Player2) {
+            await this.awardTournamentPoints(
+              match.team2Player2,
+              loserGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Played`,
+              tournamentId,
+              matchIndex,
+              false
+            );
+          }
+        } else {
+          // Team 2 won
+          if (match.team2Player1) {
+            await this.awardTournamentPoints(
+              match.team2Player1,
+              winnerGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Won`,
+              tournamentId,
+              matchIndex,
+              true
+            );
+          }
+          if (match.team2Player2) {
+            await this.awardTournamentPoints(
+              match.team2Player2,
+              winnerGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Won`,
+              tournamentId,
+              matchIndex,
+              true
+            );
+          }
+          // Team 1 lost
+          if (match.team1Player1) {
+            await this.awardTournamentPoints(
+              match.team1Player1,
+              loserGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Played`,
+              tournamentId,
+              matchIndex,
+              false
+            );
+          }
+          if (match.team1Player2) {
+            await this.awardTournamentPoints(
+              match.team1Player2,
+              loserGames,
+              `Tournament doubles - ${tournament.name} (${match.round}) - Played`,
+              tournamentId,
+              matchIndex,
+              false
+            );
+          }
+        }
+      } else {
+        // Singles match - award points to 2 players
+        const winnerId = match.winner;
+        const loserId = match.player1 === winnerId ? match.player2 : match.player1;
+
+        if (winnerId) {
+          await this.awardTournamentPoints(
+            winnerId,
+            winnerGames,
+            `Tournament singles - ${tournament.name} (${match.round}) - Won`,
+            tournamentId,
+            matchIndex,
+            true
+          );
+        }
+
+        if (loserId) {
+          await this.awardTournamentPoints(
+            loserId,
+            loserGames,
+            `Tournament singles - ${tournament.name} (${match.round}) - Played`,
+            tournamentId,
+            matchIndex,
+            false
+          );
+        }
+      }
+
+      // Mark match as processed
+      match.pointsProcessed = true;
+      await tournament.save();
+
+      console.log(`✅ Match ${matchIndex + 1} processed successfully`);
+
+    } catch (error) {
+      console.error(`Error processing tournament match:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reverse/undo all points for a tournament
+   * Used when deleting tournaments with processed points
+   */
+  static async reverseTournamentPoints(tournamentId: string): Promise<{ reversed: number; errors: number }> {
+    let reversed = 0;
+    let errors = 0;
+
+    try {
+      console.log(`♻️ Reversing points for tournament: ${tournamentId}`);
+
+      // Find all seeding points for this tournament
+      const seedingPoints = await SeedingPoint.find({ tournamentId });
+
+      for (const point of seedingPoints) {
+        try {
+          const user = await User.findById(point.userId);
+          if (!user) {
+            console.warn(`⚠️ User ${point.userId} not found, skipping point reversal`);
+            errors++;
+            continue;
+          }
+
+          // Reverse the points
+          await User.findByIdAndUpdate(
+            point.userId,
+            {
+              $inc: {
+                seedPoints: -point.points,
+                matchesPlayed: -1,
+                matchesWon: point.isWinner ? -1 : 0
+              }
+            }
+          );
+
+          // Delete the seeding point record
+          await SeedingPoint.deleteOne({ _id: point._id });
+
+          console.log(`♻️ Reversed ${point.points} points from ${user.fullName || user.username}`);
+          reversed++;
+        } catch (error) {
+          console.error(`Error reversing point:`, error);
+          errors++;
+        }
+      }
+
+      console.log(`✅ Reversed ${reversed} point records with ${errors} errors`);
+      return { reversed, errors };
+    } catch (error) {
+      console.error(`Error reversing tournament points:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Award tournament-based points to a player
+   */
+  static async awardTournamentPoints(
+    userId: string,
+    points: number,
+    description: string,
+    tournamentId: string,
+    matchIndex: number,
+    isWinner: boolean
+  ): Promise<void> {
+    try {
+      // Verify user exists
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error(`User ${userId} not found`);
+      }
+
+      // Create SeedingPoint record
+      const seedingPoint = new SeedingPoint({
+        userId: userId,
+        points: points,
+        description: description,
+        source: 'tournament',
+        tournamentId: tournamentId,
+        matchIndex: matchIndex,
+        isWinner: isWinner
+      });
+
+      await seedingPoint.save();
+
+      // Update user stats
+      await User.findByIdAndUpdate(
+        userId,
+        {
+          $inc: {
+            seedPoints: points,
+            matchesWon: isWinner ? 1 : 0,
+            matchesPlayed: 1
+          }
+        }
+      );
+
+      console.log(`📊 Awarded ${points} points to ${user.fullName || user.username} (${isWinner ? 'Winner' : 'Loser'})`);
+
+    } catch (error) {
+      console.error('Error awarding tournament points:', error);
       throw error;
     }
   }

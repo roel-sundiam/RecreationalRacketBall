@@ -442,7 +442,7 @@ import { environment } from '../../../environments/environment';
                 <mat-icon>poll</mat-icon>
               </div>
               <div class="mobile-card-title">Poll Management</div>
-              
+
               <!-- Desktop Content -->
               <mat-card-header>
                 <mat-icon mat-card-avatar class="action-icon admin-icon">poll</mat-icon>
@@ -456,6 +456,31 @@ import { environment } from '../../../environments/environment';
                 <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/polls')">
                   <mat-icon>poll</mat-icon>
                   Manage Polls
+                </button>
+              </mat-card-actions>
+            </mat-card>
+
+            <!-- Tournament Management -->
+            <mat-card class="action-card admin-card" data-icon="emoji_events" data-title="Tournament Management" (click)="navigateTo('/admin/tournaments')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>emoji_events</mat-icon>
+              </div>
+              <div class="mobile-card-title">Tournament Management</div>
+
+              <!-- Desktop Content -->
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="action-icon admin-icon">emoji_events</mat-icon>
+                <mat-card-title>Tournament Management</mat-card-title>
+                <mat-card-subtitle>Manage tournaments and scoring</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>Create tournaments, record match results, and award points based on games won.</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/tournaments')">
+                  <mat-icon>emoji_events</mat-icon>
+                  Manage Tournaments
                 </button>
               </mat-card-actions>
             </mat-card>

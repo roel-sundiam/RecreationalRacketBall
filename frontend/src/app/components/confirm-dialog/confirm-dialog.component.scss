@@ -1,0 +1,149 @@
+.confirm-dialog {
+  padding: 8px;
+  position: relative;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 16px 20px 12px 20px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2c3e50;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    margin: -8px -8px 0 -8px;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 3px solid #667eea;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, #667eea 0%, #764ba2 100%);
+    }
+
+    mat-icon {
+      color: #ff9800;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border-radius: 50%;
+      padding: 6px;
+      box-shadow: 0 3px 8px rgba(255, 152, 0, 0.3);
+      animation: iconPulse 2s ease-in-out infinite;
+    }
+  }
+
+  mat-dialog-content {
+    padding: 20px;
+    min-width: 350px;
+    background: white;
+
+    p {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #495057;
+      font-weight: 400;
+    }
+  }
+
+  mat-dialog-actions {
+    padding: 14px 20px 16px 20px;
+    margin: 0;
+    gap: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    margin: 0 -8px -8px -8px;
+    border-radius: 0 0 12px 12px;
+    border-top: 1px solid #e9ecef;
+
+    button {
+      min-width: 100px;
+      height: 38px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 20px;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      &[mat-button] {
+        color: #6c757d;
+        background: #e9ecef;
+
+        &:hover {
+          background: #dee2e6;
+          color: #495057;
+        }
+      }
+
+      &[mat-raised-button] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 3px 10px rgba(102, 126, 234, 0.35);
+
+        &:hover {
+          box-shadow: 0 6px 18px rgba(102, 126, 234, 0.45);
+        }
+      }
+    }
+  }
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .confirm-dialog {
+    h2 {
+      font-size: 1.4rem;
+      padding: 20px 20px 14px 20px;
+      gap: 12px;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        padding: 6px;
+      }
+    }
+
+    mat-dialog-content {
+      min-width: 280px;
+      padding: 24px 20px;
+
+      p {
+        font-size: 1rem;
+      }
+    }
+
+    mat-dialog-actions {
+      padding: 16px 20px 20px 20px;
+      flex-direction: column;
+
+      button {
+        width: 100%;
+        min-width: auto;
+      }
+    }
+  }
+}

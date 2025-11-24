@@ -210,6 +210,12 @@ export const getReservationsForDate = asyncHandler(async (req: AuthenticatedRequ
 
   let reservations = await (Reservation as any).getReservationsForDate(queryDate);
 
+  // Ensure reservations is always an array
+  if (!reservations || !Array.isArray(reservations)) {
+    console.warn(`⚠️ getReservationsForDate returned invalid data:`, reservations);
+    reservations = [];
+  }
+
   // Filter out the excluded reservation if in edit mode
   if (excludeId) {
     reservations = reservations.filter((r: any) => r._id.toString() !== excludeId);
@@ -246,7 +252,7 @@ export const getReservationsForDate = asyncHandler(async (req: AuthenticatedRequ
 
   const blockedSlots = new Set();
   openPlayEvents.forEach(event => {
-    if (event.openPlayEvent?.blockedTimeSlots && Array.isArray(event.openPlayEvent.blockedTimeSlots)) {
+    if (event?.openPlayEvent?.blockedTimeSlots && Array.isArray(event.openPlayEvent.blockedTimeSlots)) {
       event.openPlayEvent.blockedTimeSlots.forEach(slot => blockedSlots.add(slot));
     }
   });

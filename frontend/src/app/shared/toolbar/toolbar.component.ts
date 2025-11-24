@@ -180,6 +180,11 @@ import { Subscription } from 'rxjs';
               <span>Poll Management</span>
             </button>
 
+            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/tournaments')">
+              <mat-icon>emoji_events</mat-icon>
+              <span>Tournament Management</span>
+            </button>
+
             <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/coins')">
               <mat-icon>monetization_on</mat-icon>
               <span>Coin Management</span>

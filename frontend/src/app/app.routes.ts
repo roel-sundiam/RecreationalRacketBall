@@ -33,6 +33,7 @@ import { RulesAndRegulationsComponent } from './components/rules-and-regulations
 import { AdminManualCourtUsageComponent } from './components/admin-manual-court-usage/admin-manual-court-usage.component';
 import { AdminBlockCourtComponent } from './components/admin-block-court/admin-block-court.component';
 import { AdminMembershipPaymentsComponent } from './components/admin-membership-payments/admin-membership-payments.component';
+import { TournamentManagementComponent } from './components/tournament-management/tournament-management.component';
 import { authGuard, loginGuard, adminGuard, superadminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -202,5 +203,6 @@ export const routes: Routes = [
   { path: 'admin/manual-court-usage', component: AdminManualCourtUsageComponent, canActivate: [authGuard, superadminGuard] },
   { path: 'admin/block-court', component: AdminBlockCourtComponent, canActivate: [authGuard, adminGuard] },
   { path: 'admin/membership-payments', component: AdminMembershipPaymentsComponent, canActivate: [authGuard, adminGuard] },
+  { path: 'admin/tournaments', component: TournamentManagementComponent, canActivate: [authGuard, adminGuard] },
   { path: '**', redirectTo: '/calendar' }
 ];

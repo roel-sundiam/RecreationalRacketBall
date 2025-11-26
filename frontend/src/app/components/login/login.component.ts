@@ -289,14 +289,22 @@ export class LoginComponent implements OnInit {
         next: (response: any) => {
           console.log('Login successful, response:', response);
           this.loading = false;
-          
+
           // Track successful login
           const username = this.loginForm.value.username;
           this.analyticsService.trackLogin(username);
-          
-          // Success - no toast needed, just navigate
-          console.log('Navigating to calendar...');
-          this.router.navigate(['/calendar']);
+
+          // Check for intended route
+          const intendedRoute = this.authService.getIntendedRoute();
+          if (intendedRoute) {
+            console.log('Redirecting to intended route:', intendedRoute);
+            this.authService.clearIntendedRoute();
+            this.router.navigate([intendedRoute]);
+          } else {
+            // Success - no toast needed, just navigate to default
+            console.log('Navigating to calendar...');
+            this.router.navigate(['/calendar']);
+          }
         },
         error: (error: any) => {
           console.log('Login error:', error);

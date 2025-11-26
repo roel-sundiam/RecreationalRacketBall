@@ -1,0 +1,45 @@
+<div class="session-warning-dialog"
+     role="alertdialog"
+     aria-labelledby="dialog-title"
+     aria-describedby="dialog-description">
+
+  <div class="dialog-header warning">
+    <mat-icon class="warning-icon">schedule</mat-icon>
+    <h2 mat-dialog-title id="dialog-title">Your Session is About to Expire</h2>
+  </div>
+
+  <div mat-dialog-content class="dialog-content">
+    <p class="warning-message" id="dialog-description">
+      For your security, you will be automatically logged out in:
+    </p>
+
+    <div class="countdown-display"
+         role="timer"
+         aria-live="polite"
+         aria-atomic="true">
+      <div class="countdown-time">{{ remainingTime }}</div>
+      <div class="countdown-label">minutes remaining</div>
+    </div>
+
+    <p class="help-text">
+      Click "Stay Logged In" to continue using the app,<br>
+      or "Logout Now" if you're finished.
+    </p>
+  </div>
+
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-button
+            (click)="onLogout()"
+            class="logout-button"
+            aria-label="Logout now">
+      Logout Now
+    </button>
+    <button mat-raised-button
+            color="primary"
+            (click)="onStayLoggedIn()"
+            class="stay-button"
+            aria-label="Stay logged in">
+      Stay Logged In
+    </button>
+  </div>
+</div>

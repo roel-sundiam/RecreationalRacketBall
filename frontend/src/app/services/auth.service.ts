@@ -50,10 +50,12 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
+  private intendedRouteSubject = new BehaviorSubject<string | null>(null);
 
   public currentUser$ = this.currentUserSubject.asObservable();
   public token$ = this.tokenSubject.asObservable();
   public isLoading$ = this.isLoadingSubject.asObservable();
+  public intendedRoute$ = this.intendedRouteSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -109,6 +111,7 @@ export class AuthService {
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
+            localStorage.setItem('loginTime', Date.now().toString());
 
             this.tokenSubject.next(token);
             this.currentUserSubject.next(user);
@@ -122,7 +125,17 @@ export class AuthService {
       );
   }
 
-  logout(): void {
+  logout(saveRoute: boolean = false): void {
+    if (saveRoute) {
+      const currentRoute = this.router.url;
+      // Don't save login/register routes
+      if (currentRoute !== '/login' && currentRoute !== '/register') {
+        this.setIntendedRoute(currentRoute);
+      }
+    } else {
+      this.clearIntendedRoute();
+    }
+
     this.clearAuthState();
     this.router.navigate(['/login']);
   }
@@ -134,6 +147,8 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('tokenExpiration');
+    localStorage.removeItem('loginTime');
+    // Note: intendedRoute is NOT cleared here - handled separately
     this.tokenSubject.next(null);
     this.currentUserSubject.next(null);
     this.isLoadingSubject.next(false);
@@ -277,5 +292,63 @@ export class AuthService {
     }
 
     return now + milliseconds;
+  }
+
+  /**
+   * Save the intended route before logout
+   */
+  setIntendedRoute(route: string): void {
+    localStorage.setItem('intendedRoute', route);
+    this.intendedRouteSubject.next(route);
+    console.log('🔐 Saved intended route:', route);
+  }
+
+  /**
+   * Get the intended route after login
+   */
+  getIntendedRoute(): string | null {
+    return localStorage.getItem('intendedRoute');
+  }
+
+  /**
+   * Clear the intended route
+   */
+  clearIntendedRoute(): void {
+    localStorage.removeItem('intendedRoute');
+    this.intendedRouteSubject.next(null);
+  }
+
+  /**
+   * Get the total token lifetime in milliseconds
+   */
+  getTokenLifetime(): number {
+    const loginTime = localStorage.getItem('loginTime');
+    const expirationTime = localStorage.getItem('tokenExpiration');
+
+    if (!loginTime || !expirationTime) {
+      return 0;
+    }
+
+    return Number(expirationTime) - Number(loginTime);
+  }
+
+  /**
+   * Get remaining session time in milliseconds
+   */
+  getRemainingSessionTime(): number {
+    const expirationTime = localStorage.getItem('tokenExpiration');
+    if (!expirationTime) {
+      return 0;
+    }
+
+    return Number(expirationTime) - Date.now();
+  }
+
+  /**
+   * Check if token is about to expire (within threshold)
+   */
+  isTokenExpiringSoon(thresholdMs: number): boolean {
+    const remaining = this.getRemainingSessionTime();
+    return remaining > 0 && remaining <= thresholdMs;
   }
 }

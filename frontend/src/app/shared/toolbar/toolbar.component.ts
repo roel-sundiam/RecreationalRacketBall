@@ -8,7 +8,6 @@ import { Router } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
 import { NotificationService, OpenPlayNotification } from '../../services/notification.service';
 import { PWANotificationService } from '../../services/pwa-notification.service';
-import { CoinBalanceComponent } from '../../components/coin-balance/coin-balance.component';
 import { AnalyticsService } from '../../services/analytics.service';
 import { Subscription } from 'rxjs';
 
@@ -19,8 +18,7 @@ import { Subscription } from 'rxjs';
     CommonModule,
     MatToolbarModule,
     MatButtonModule,
-    MatIconModule,
-    CoinBalanceComponent
+    MatIconModule
   ],
   template: `
     <!-- Modern Header -->
@@ -61,7 +59,7 @@ import { Subscription } from 'rxjs';
               <mat-icon>people</mat-icon>
               <span>Members</span>
             </button>
-            <button mat-button class="nav-item" (click)="navigateTo('/polls')">
+            <button mat-button class="nav-item" (click)="openPlayClick()">
               <mat-icon>how_to_vote</mat-icon>
               <span>Open Play</span>
             </button>
@@ -108,9 +106,6 @@ import { Subscription } from 'rxjs';
                 <mat-icon>emoji_events</mat-icon>
                 <span>{{getUserPoints()}} points</span>
               </div>
-              <div class="mobile-stat-item">
-                <app-coin-balance [compact]="false"></app-coin-balance>
-              </div>
             </div>
             <span class="mobile-user-role" *ngIf="isAdmin">Administrator</span>
             <span class="mobile-user-role" *ngIf="!isAdmin">Member</span>
@@ -132,22 +127,17 @@ import { Subscription } from 'rxjs';
             <mat-icon>people</mat-icon>
             <span>Members Directory</span>
           </button>
-          
-          <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/polls')">
+
+          <button mat-button class="mobile-nav-item" (click)="openPlayAndClose()">
             <mat-icon>how_to_vote</mat-icon>
             <span>Open Play</span>
           </button>
-          
+
           <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/payments')">
             <mat-icon>payment</mat-icon>
             <span>Payments</span>
           </button>
-          
-          <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/coins')">
-            <mat-icon>monetization_on</mat-icon>
-            <span>Coin Management</span>
-          </button>
-          
+
           <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/rankings')">
             <mat-icon>leaderboard</mat-icon>
             <span>Rankings</span>
@@ -183,11 +173,6 @@ import { Subscription } from 'rxjs';
             <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/tournaments')">
               <mat-icon>emoji_events</mat-icon>
               <span>Tournament Management</span>
-            </button>
-
-            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/coins')">
-              <mat-icon>monetization_on</mat-icon>
-              <span>Coin Management</span>
             </button>
 
             <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/block-court')">
@@ -310,6 +295,52 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  openPlayClick(): void {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // On mobile: Try to open Reclub app
+      this.openReclubApp();
+    } else {
+      // On desktop: Open Reclub website in new tab
+      this.analyticsService.trackButtonClick('Open Play (Reclub Web)', 'toolbar', {
+        platform: 'desktop'
+      });
+      window.open('https://reclub.co/clubs/@rt2-tennis-club?at=TTQSNOQ7', '_blank');
+    }
+  }
+
+  openPlayAndClose(): void {
+    this.openPlayClick();
+    this.closeMobileMenu();
+  }
+
+  private openReclubApp(): void {
+    const reclubWebUrl = 'https://reclub.co/clubs/@rt2-tennis-club?at=TTQSNOQ7';
+    const reclubDeepLink = 'reclub://clubs/@rt2-tennis-club';
+
+    // Track the attempt
+    this.analyticsService.trackButtonClick('Open Play (Reclub App)', 'toolbar', {
+      platform: 'mobile'
+    });
+
+    // Try deep link first
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = reclubDeepLink;
+    document.body.appendChild(iframe);
+
+    // Fallback to web URL after short delay
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+
+      // If page is still visible (app didn't open), use web URL
+      if (!document.hidden) {
+        window.location.href = reclubWebUrl;
+      }
+    }, 1000);
+  }
+
   private getButtonNameForPath(path: string): string {
     const pathMap: Record<string, string> = {
       '/reservations': 'Reserve Court',
@@ -318,13 +349,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       '/polls': 'Open Play',
       '/rankings': 'Rankings',
       '/payments': 'Payments',
-      '/coins': 'Coin Management',
       '/profile': 'My Profile',
       '/dashboard': 'Dashboard',
       '/admin/members': 'Member Management',
       '/admin/reports': 'Reports & Analytics',
       '/admin/polls': 'Poll Management',
-      '/admin/coins': 'Admin Coin Management',
       '/admin/block-court': 'Block Court',
       '/admin/manual-court-usage': 'Manual Court Usage'
     };

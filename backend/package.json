@@ -1,8 +1,12 @@
 {
   "name": "tennis-club-backend",
   "version": "1.0.0",
-  "description": "Tennis Club RT2 Backend API",
+  "description": "Tennis Club RT2 Backend API - December Updates",
   "main": "dist/server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roel-sundiam/TennisClubRT2-December.git"
+  },
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",

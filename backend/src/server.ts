@@ -76,7 +76,8 @@ const allowedOrigins: string[] = [
   'http://192.168.68.113:4200',
   'http://192.168.68.113:4201',
   'https://tennisclubrt2.netlify.app',
-  'https://main--tennisclubrt2.netlify.app'
+  'https://main--tennisclubrt2.netlify.app',
+  'https://tennisclubrt2-2026.netlify.app'
 ];
 
 // Add production frontend URL if available

@@ -105,34 +105,30 @@ import { environment } from '../../../environments/environment';
             <mat-card-header>
               <mat-icon mat-card-avatar class="action-icon">payment</mat-icon>
               <mat-card-title>Payments</mat-card-title>
-              <mat-card-subtitle>Manage your payments and coins</mat-card-subtitle>
+              <mat-card-subtitle>Manage your payments</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <p>View payment history and manage your coin balance.</p>
+              <p>View payment history and manage your transactions.</p>
             </mat-card-content>
             <mat-card-actions>
               <button mat-raised-button class="primary-btn" (click)="navigateTo('/payments')">
                 <mat-icon>payment</mat-icon>
                 Manage Payments
               </button>
-              <button mat-raised-button class="warning-btn" (click)="navigateTo('/coins')">
-                <mat-icon>monetization_on</mat-icon>
-                Coin Management
-              </button>
             </mat-card-actions>
           </mat-card>
 
           <!-- Open Play -->
-          <mat-card class="action-card" data-icon="sports_tennis" data-title="Open Play" 
-                   (click)="navigateTo('/polls')" 
+          <mat-card class="action-card" data-icon="sports_tennis" data-title="Open Play"
+                   (click)="navigateTo('/polls')"
                    (touchstart)="handleTouchStart($event)"
-                   (touchend)="handleTouchEnd($event, '/polls')">
+                   (touchend)="handleTouchEnd($event, '/polls')" *ngIf="false">
             <!-- Mobile Icon -->
             <div class="mobile-card-icon">
               <mat-icon>sports_tennis</mat-icon>
             </div>
             <div class="mobile-card-title">Open Play</div>
-            
+
             <!-- Desktop Content -->
             <mat-card-header>
               <mat-icon mat-card-avatar class="action-icon">sports_tennis</mat-icon>
@@ -280,7 +276,7 @@ import { environment } from '../../../environments/environment';
               <mat-card-subtitle>Club guidelines and policies</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <p>Review club rules, court usage policies, and coin system guidelines.</p>
+              <p>Review club rules and court usage policies.</p>
             </mat-card-content>
             <mat-card-actions>
               <button mat-raised-button class="info-btn" (click)="navigateTo('/rules')">
@@ -435,6 +431,31 @@ import { environment } from '../../../environments/environment';
               </mat-card-actions>
             </mat-card>
 
+            <!-- Payment Management -->
+            <mat-card class="action-card admin-card" data-icon="payment" data-title="Payment Management" (click)="navigateTo('/admin/payments')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>payment</mat-icon>
+              </div>
+              <div class="mobile-card-title">Payment Management</div>
+
+              <!-- Desktop Content -->
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="action-icon admin-icon">payment</mat-icon>
+                <mat-card-title>Payment Management</mat-card-title>
+                <mat-card-subtitle>Manage all payment records</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>Edit payment details, update status, and manage court usage and membership payments.</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/payments')">
+                  <mat-icon>payment</mat-icon>
+                  Manage Payments
+                </button>
+              </mat-card-actions>
+            </mat-card>
+
             <!-- Poll Management -->
             <mat-card class="action-card admin-card" data-icon="poll" data-title="Poll Management" (click)="navigateTo('/admin/polls')">
               <!-- Mobile Icon -->
@@ -442,7 +463,7 @@ import { environment } from '../../../environments/environment';
                 <mat-icon>poll</mat-icon>
               </div>
               <div class="mobile-card-title">Poll Management</div>
-              
+
               <!-- Desktop Content -->
               <mat-card-header>
                 <mat-icon mat-card-avatar class="action-icon admin-icon">poll</mat-icon>
@@ -460,27 +481,27 @@ import { environment } from '../../../environments/environment';
               </mat-card-actions>
             </mat-card>
 
-            <!-- Coin Management -->
-            <mat-card class="action-card admin-card" data-icon="monetization_on" data-title="Coin Management" (click)="navigateTo('/admin/coins')">
+            <!-- Tournament Management -->
+            <mat-card class="action-card admin-card" data-icon="emoji_events" data-title="Tournament Management" (click)="navigateTo('/admin/tournaments')">
               <!-- Mobile Icon -->
               <div class="mobile-card-icon">
-                <mat-icon>monetization_on</mat-icon>
+                <mat-icon>emoji_events</mat-icon>
               </div>
-              <div class="mobile-card-title">Coin Management</div>
+              <div class="mobile-card-title">Tournament Management</div>
 
               <!-- Desktop Content -->
               <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">monetization_on</mat-icon>
-                <mat-card-title>Coin Management</mat-card-title>
-                <mat-card-subtitle>Manage member coins</mat-card-subtitle>
+                <mat-icon mat-card-avatar class="action-icon admin-icon">emoji_events</mat-icon>
+                <mat-card-title>Tournament Management</mat-card-title>
+                <mat-card-subtitle>Manage tournaments and scoring</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-                <p>Award and manage member coin balances.</p>
+                <p>Create tournaments, record match results, and award points based on games won.</p>
               </mat-card-content>
               <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/coins')">
-                  <mat-icon>monetization_on</mat-icon>
-                  Manage Coins
+                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/tournaments')">
+                  <mat-icon>emoji_events</mat-icon>
+                  Manage Tournaments
                 </button>
               </mat-card-actions>
             </mat-card>
@@ -631,6 +652,31 @@ import { environment } from '../../../environments/environment';
                 <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/manual-court-usage')">
                   <mat-icon>edit_calendar</mat-icon>
                   Record Usage
+                </button>
+              </mat-card-actions>
+            </mat-card>
+
+            <!-- Resurfacing Contributions Management -->
+            <mat-card class="action-card admin-card" data-icon="construction" data-title="Resurfacing Contributions" (click)="navigateTo('/admin/resurfacing-contributions')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>construction</mat-icon>
+              </div>
+              <div class="mobile-card-title">Resurfacing Contributions</div>
+
+              <!-- Desktop Content -->
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="action-icon admin-icon">construction</mat-icon>
+                <mat-card-title>Resurfacing Contributions</mat-card-title>
+                <mat-card-subtitle>Manage court resurfacing donations</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>View and manage member contributions for the tennis court resurfacing project.</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/resurfacing-contributions')">
+                  <mat-icon>construction</mat-icon>
+                  View Contributions
                 </button>
               </mat-card-actions>
             </mat-card>

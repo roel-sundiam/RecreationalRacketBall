@@ -1,0 +1,367 @@
+<div class="page-container">
+  <!-- Modern Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="title-section">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">emoji_events</mat-icon>
+          Tournament Management
+        </h1>
+        <p class="page-subtitle">Create and manage tournaments with game-based scoring</p>
+      </div>
+      <div class="header-buttons">
+        <button mat-raised-button color="accent" (click)="openPlayerManagement()" class="manage-button">
+          <mat-icon>groups</mat-icon>
+          Manage Players
+        </button>
+        <button mat-raised-button style="background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%); color: white;" (click)="openMedalAssignment()" class="manage-button">
+          <mat-icon>emoji_events</mat-icon>
+          Award Medal
+        </button>
+        <button mat-raised-button color="primary" (click)="toggleCreateForm()" class="create-button">
+          <mat-icon>{{ showCreateForm ? 'close' : 'add' }}</mat-icon>
+          {{ showCreateForm ? 'Cancel' : 'Create Tournament' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Create Tournament Form -->
+  <mat-card *ngIf="showCreateForm" class="create-form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ editingTournament ? 'edit' : 'add_circle' }}</mat-icon>
+        {{ editingTournament ? 'Edit Tournament' : 'New Tournament' }}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="tournamentForm" (ngSubmit)="createTournament()">
+        <!-- Tournament Details -->
+        <div class="form-section">
+          <h3>Tournament Details</h3>
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Tournament Name</mat-label>
+              <input matInput formControlName="name" placeholder="e.g., Spring Championship 2025">
+              <mat-icon matPrefix>emoji_events</mat-icon>
+              <mat-error *ngIf="tournamentForm.get('name')?.hasError('required')">
+                Tournament name is required
+              </mat-error>
+              <mat-error *ngIf="tournamentForm.get('name')?.hasError('minlength')">
+                Name must be at least 3 characters
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Tournament Date</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="date">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error *ngIf="tournamentForm.get('date')?.hasError('required')">
+                Date is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Matches Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3>Matches</h3>
+            <button mat-raised-button type="button" color="accent" (click)="addMatch()">
+              <mat-icon>add</mat-icon>
+              Add Match
+            </button>
+          </div>
+
+          <div formArrayName="matches" class="matches-container">
+            <mat-expansion-panel *ngFor="let match of matches.controls; let i = index" class="match-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>sports_tennis</mat-icon>
+                  Match {{ i + 1 }} ({{ match.get('matchType')?.value === 'doubles' ? 'Doubles' : 'Singles' }})
+                  <span *ngIf="getMatchPreview(match)" class="match-preview">
+                    - {{ getMatchPreview(match) }}
+                  </span>
+                </mat-panel-title>
+                <mat-panel-description>
+                  <span *ngIf="match.get('score')?.value">Score: {{ match.get('score')?.value }}</span>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div [formGroupName]="i" class="match-form">
+                <!-- Match Type Selector -->
+                <div class="form-row">
+                  <mat-radio-group formControlName="matchType" class="match-type-group">
+                    <mat-label>Match Type:</mat-label>
+                    <mat-radio-button value="singles">Singles</mat-radio-button>
+                    <mat-radio-button value="doubles">Doubles</mat-radio-button>
+                  </mat-radio-group>
+                </div>
+
+                <!-- Singles Player Selection -->
+                <div *ngIf="match.get('matchType')?.value === 'singles'">
+                  <div class="form-row two-column">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Player 1</mat-label>
+                      <mat-select formControlName="player1" required>
+                        <mat-option value="">-- Select Player --</mat-option>
+                        <mat-option *ngFor="let player of players" [value]="player._id">
+                          {{ player.fullName }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error>Player 1 is required</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Player 2</mat-label>
+                      <mat-select formControlName="player2" required>
+                        <mat-option value="">-- Select Player --</mat-option>
+                        <mat-option *ngFor="let player of players" [value]="player._id">
+                          {{ player.fullName }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error>Player 2 is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Doubles Player Selection -->
+                <div *ngIf="match.get('matchType')?.value === 'doubles'">
+                  <div class="team-label">Team 1</div>
+                  <div class="form-row two-column">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Team 1 - Player 1</mat-label>
+                      <mat-select formControlName="team1Player1" required>
+                        <mat-option value="">-- Select Player --</mat-option>
+                        <mat-option *ngFor="let player of players" [value]="player._id">
+                          {{ player.fullName }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error>Player 1 is required</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Team 1 - Player 2</mat-label>
+                      <mat-select formControlName="team1Player2" required>
+                        <mat-option value="">-- Select Player --</mat-option>
+                        <mat-option *ngFor="let player of players" [value]="player._id">
+                          {{ player.fullName }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error>Player 2 is required</mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="team-label">Team 2</div>
+                  <div class="form-row two-column">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Team 2 - Player 1</mat-label>
+                      <mat-select formControlName="team2Player1" required>
+                        <mat-option value="">-- Select Player --</mat-option>
+                        <mat-option *ngFor="let player of players" [value]="player._id">
+                          {{ player.fullName }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error>Player 1 is required</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Team 2 - Player 2</mat-label>
+                      <mat-select formControlName="team2Player2" required>
+                        <mat-option value="">-- Select Player --</mat-option>
+                        <mat-option *ngFor="let player of players" [value]="player._id">
+                          {{ player.fullName }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error>Player 2 is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Score and Round -->
+                <div class="form-row two-column">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Score</mat-label>
+                    <input matInput formControlName="score" placeholder="8-6">
+                    <mat-hint>Format: 8-6, 10-8, etc.</mat-hint>
+                    <mat-error *ngIf="match.get('score')?.hasError('pattern')">
+                      Invalid format. Use format like "8-6"
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Round</mat-label>
+                    <mat-select formControlName="round">
+                      <mat-option value="Elimination">Elimination</mat-option>
+                      <mat-option value="Semi-finals">Semi-finals</mat-option>
+                      <mat-option value="Finals">Finals</mat-option>
+                      <mat-option value="Plate">Plate</mat-option>
+                    </mat-select>
+                    <mat-error>Round is required</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <!-- Winner Selection -->
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Winner</mat-label>
+                    <mat-select formControlName="winner">
+                      <!-- Singles winner options -->
+                      <ng-container *ngIf="match.get('matchType')?.value === 'singles'">
+                        <mat-option
+                          [value]="match.get('player1')?.value"
+                          *ngIf="match.get('player1')?.value">
+                          {{ getPlayerName(match.get('player1')?.value) }}
+                        </mat-option>
+                        <mat-option
+                          [value]="match.get('player2')?.value"
+                          *ngIf="match.get('player2')?.value">
+                          {{ getPlayerName(match.get('player2')?.value) }}
+                        </mat-option>
+                      </ng-container>
+                      <!-- Doubles winner options -->
+                      <ng-container *ngIf="match.get('matchType')?.value === 'doubles'">
+                        <mat-option value="team1"
+                          *ngIf="match.get('team1Player1')?.value && match.get('team1Player2')?.value">
+                          Team 1: {{ getPlayerName(match.get('team1Player1')?.value) }} / {{ getPlayerName(match.get('team1Player2')?.value) }}
+                        </mat-option>
+                        <mat-option value="team2"
+                          *ngIf="match.get('team2Player1')?.value && match.get('team2Player2')?.value">
+                          Team 2: {{ getPlayerName(match.get('team2Player1')?.value) }} / {{ getPlayerName(match.get('team2Player2')?.value) }}
+                        </mat-option>
+                      </ng-container>
+                    </mat-select>
+                    <mat-error>Winner is required</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="match-actions">
+                  <button mat-button type="button" color="warn" (click)="removeMatch(i)">
+                    <mat-icon>delete</mat-icon>
+                    Remove Match
+                  </button>
+                </div>
+              </div>
+            </mat-expansion-panel>
+
+            <div *ngIf="matches.length === 0" class="no-matches">
+              <mat-icon>info</mat-icon>
+              <p>No matches added yet. Click "Add Match" to start.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button mat-raised-button type="button" (click)="resetForm()">
+            <mat-icon>refresh</mat-icon>
+            Reset
+          </button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="tournamentForm.invalid || loading">
+            <mat-icon>save</mat-icon>
+            {{ editingTournament ? 'Update Tournament' : 'Create Tournament' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Tournaments List -->
+  <mat-card class="tournaments-list-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>list</mat-icon>
+        All Tournaments
+      </mat-card-title>
+      <button mat-icon-button (click)="loadTournaments()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="tournaments.length === 0 && !loading" class="no-data">
+        <mat-icon>emoji_events</mat-icon>
+        <p>No tournaments found</p>
+        <p class="hint">Create your first tournament using the button above!</p>
+      </div>
+
+      <table mat-table [dataSource]="tournaments" *ngIf="tournaments.length > 0" class="tournaments-table">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Tournament Name</th>
+          <td mat-cell *matCellDef="let tournament">
+            <strong>{{ tournament.name }}</strong>
+          </td>
+        </ng-container>
+
+        <!-- Date Column -->
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Date</th>
+          <td mat-cell *matCellDef="let tournament">
+            {{ formatDate(tournament.date) }}
+          </td>
+        </ng-container>
+
+        <!-- Matches Column -->
+        <ng-container matColumnDef="matches">
+          <th mat-header-cell *matHeaderCellDef>Matches</th>
+          <td mat-cell *matCellDef="let tournament">
+            <div class="matches-summary">
+              <strong>{{ tournament.totalMatches }} Total</strong>
+              <mat-chip-set *ngIf="tournament.matches.length > 0">
+                <mat-chip *ngFor="let roundSummary of getMatchesByRound(tournament.matches) | keyvalue">
+                  {{ roundSummary.value }} {{ roundSummary.key }}
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let tournament">
+            <mat-chip-set>
+              <mat-chip [color]="tournament.status === 'completed' ? 'primary' : 'accent'" highlighted>
+                {{ tournament.status | titlecase }}
+              </mat-chip>
+            </mat-chip-set>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let tournament">
+            <button mat-icon-button color="accent"
+                    (click)="editTournament(tournament)"
+                    matTooltip="Edit Tournament">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn"
+                    (click)="deleteTournament(tournament._id)"
+                    matTooltip="Delete Tournament">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

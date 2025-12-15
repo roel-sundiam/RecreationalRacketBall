@@ -65,17 +65,7 @@ import { AnalyticsService } from '../../services/analytics.service';
               <p>Participate in open court sessions, earn points from competitive matches, and climb the seeding rankings. Build your tennis reputation!</p>
             </div>
           </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">
-              <i class="pi pi-coins"></i>
-            </div>
-            <div class="feature-content">
-              <h3>Coin System</h3>
-              <p>Earn and spend coins for app features. New members receive 100 free coins to get started!</p>
-            </div>
-          </div>
-          
+
           <div class="feature-item">
             <div class="feature-icon">
               <i class="pi pi-users"></i>
@@ -289,14 +279,22 @@ export class LoginComponent implements OnInit {
         next: (response: any) => {
           console.log('Login successful, response:', response);
           this.loading = false;
-          
+
           // Track successful login
           const username = this.loginForm.value.username;
           this.analyticsService.trackLogin(username);
-          
-          // Success - no toast needed, just navigate
-          console.log('Navigating to calendar...');
-          this.router.navigate(['/calendar']);
+
+          // Check for intended route
+          const intendedRoute = this.authService.getIntendedRoute();
+          if (intendedRoute) {
+            console.log('Redirecting to intended route:', intendedRoute);
+            this.authService.clearIntendedRoute();
+            this.router.navigate([intendedRoute]);
+          } else {
+            // Success - no toast needed, just navigate to default
+            console.log('Navigating to calendar...');
+            this.router.navigate(['/calendar']);
+          }
         },
         error: (error: any) => {
           console.log('Login error:', error);

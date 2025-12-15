@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Management Test UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.danger {
+            background-color: #e74c3c;
+        }
+        button.danger:hover {
+            background-color: #c0392b;
+        }
+        button.success {
+            background-color: #27ae60;
+        }
+        button.success:hover {
+            background-color: #229954;
+        }
+        .match-entry {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        #output {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+        .info { color: #3498db; }
+        label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏆 Tournament Management Test UI</h1>
+
+    <!-- Login Section -->
+    <div class="container">
+        <h2>1. Login (Get Token)</h2>
+        <div>
+            <label>Username:</label>
+            <input type="text" id="username" value="superadmin" placeholder="superadmin">
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" id="password" value="admin123" placeholder="admin123">
+        </div>
+        <button onclick="login()">Login</button>
+        <div id="tokenDisplay" style="margin-top: 10px; font-family: monospace; word-break: break-all;"></div>
+    </div>
+
+    <!-- Get Members Section -->
+    <div class="container">
+        <h2>2. Get Members (for player selection)</h2>
+        <button onclick="getMembers()">Load Members</button>
+        <div id="membersDisplay" style="margin-top: 10px;"></div>
+    </div>
+
+    <!-- Create Tournament Section -->
+    <div class="container">
+        <h2>3. Create Tournament</h2>
+        <div>
+            <label>Tournament Name:</label>
+            <input type="text" id="tournamentName" value="Spring Championship 2025" style="width: 300px;">
+        </div>
+        <div>
+            <label>Tournament Date:</label>
+            <input type="date" id="tournamentDate" value="2025-03-15">
+        </div>
+
+        <h3>Add Matches</h3>
+        <div id="matchesContainer"></div>
+        <button onclick="addMatch()">+ Add Match</button>
+
+        <div style="margin-top: 20px;">
+            <button class="success" onclick="createTournament()">Create Tournament</button>
+        </div>
+    </div>
+
+    <!-- List Tournaments Section -->
+    <div class="container">
+        <h2>4. View Tournaments</h2>
+        <button onclick="getTournaments()">Refresh Tournament List</button>
+        <div id="tournamentsDisplay" style="margin-top: 10px;"></div>
+    </div>
+
+    <!-- Process Points Section -->
+    <div class="container">
+        <h2>5. Process Tournament Points</h2>
+        <div>
+            <label>Tournament ID:</label>
+            <input type="text" id="processTournamentId" style="width: 300px;" placeholder="Paste tournament ID here">
+        </div>
+        <button class="success" onclick="processPoints()">Process Points</button>
+    </div>
+
+    <!-- View Rankings Section -->
+    <div class="container">
+        <h2>6. View Rankings</h2>
+        <button onclick="getRankings()">View Current Rankings</button>
+        <div id="rankingsDisplay" style="margin-top: 10px;"></div>
+    </div>
+
+    <!-- Output Console -->
+    <div class="container">
+        <h2>Output Console</h2>
+        <div id="output">Ready to test tournament management...\n</div>
+        <button onclick="clearOutput()">Clear Console</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let authToken = '';
+        let members = [];
+        let matchCounter = 0;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            output.innerHTML += `<span class="${color}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = 'Console cleared...\n';
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                log(`Logging in as ${username}...`, 'info');
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    authToken = data.token;
+                    log(`✅ Login successful! Token: ${authToken.substring(0, 20)}...`, 'success');
+                    document.getElementById('tokenDisplay').innerHTML =
+                        `<strong>Token:</strong> ${authToken.substring(0, 50)}...<br><strong>User:</strong> ${data.user.fullName} (${data.user.role})`;
+                } else {
+                    log(`❌ Login failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getMembers() {
+            if (!authToken) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            try {
+                log('Loading members...', 'info');
+                const response = await fetch(`${API_BASE}/members`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    members = data.data;
+                    log(`✅ Loaded ${members.length} members`, 'success');
+
+                    let html = '<select id="memberSelect" style="width: 100%; padding: 10px;"><option value="">Select a member...</option>';
+                    members.forEach(m => {
+                        html += `<option value="${m._id}">${m.fullName} (${m.username})</option>`;
+                    });
+                    html += '</select>';
+                    document.getElementById('membersDisplay').innerHTML = html;
+                } else {
+                    log(`❌ Failed to load members: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function addMatch() {
+            if (members.length === 0) {
+                log('❌ Please load members first!', 'error');
+                return;
+            }
+
+            matchCounter++;
+            const container = document.getElementById('matchesContainer');
+            const matchDiv = document.createElement('div');
+            matchDiv.className = 'match-entry';
+            matchDiv.id = `match-${matchCounter}`;
+
+            let html = `<h4>Match ${matchCounter}</h4>`;
+            html += `<div><label>Player 1:</label><select id="p1-${matchCounter}">`;
+            members.forEach(m => html += `<option value="${m._id}">${m.fullName}</option>`);
+            html += `</select></div>`;
+
+            html += `<div><label>Player 2:</label><select id="p2-${matchCounter}">`;
+            members.forEach(m => html += `<option value="${m._id}">${m.fullName}</option>`);
+            html += `</select></div>`;
+
+            html += `<div><label>Score:</label><input type="text" id="score-${matchCounter}" value="8-6" placeholder="8-6"></div>`;
+
+            html += `<div><label>Winner:</label><select id="winner-${matchCounter}">`;
+            html += `<option value="">Select winner...</option>`;
+            members.forEach(m => html += `<option value="${m._id}">${m.fullName}</option>`);
+            html += `</select></div>`;
+
+            html += `<div><label>Round:</label><input type="text" id="round-${matchCounter}" value="Round 1" placeholder="Round 1, Quarterfinal, etc."></div>`;
+            html += `<button class="danger" onclick="removeMatch(${matchCounter})">Remove Match</button>`;
+
+            matchDiv.innerHTML = html;
+            container.appendChild(matchDiv);
+        }
+
+        function removeMatch(id) {
+            document.getElementById(`match-${id}`).remove();
+        }
+
+        async function createTournament() {
+            if (!authToken) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            const name = document.getElementById('tournamentName').value;
+            const date = document.getElementById('tournamentDate').value;
+
+            // Collect matches
+            const matches = [];
+            for (let i = 1; i <= matchCounter; i++) {
+                const matchDiv = document.getElementById(`match-${i}`);
+                if (!matchDiv) continue;
+
+                const player1 = document.getElementById(`p1-${i}`).value;
+                const player2 = document.getElementById(`p2-${i}`).value;
+                const score = document.getElementById(`score-${i}`).value;
+                const winner = document.getElementById(`winner-${i}`).value;
+                const round = document.getElementById(`round-${i}`).value;
+
+                if (player1 && player2 && score && winner && round) {
+                    matches.push({ player1, player2, score, winner, round });
+                }
+            }
+
+            if (matches.length === 0) {
+                log('❌ Please add at least one match!', 'error');
+                return;
+            }
+
+            try {
+                log(`Creating tournament "${name}" with ${matches.length} matches...`, 'info');
+                const response = await fetch(`${API_BASE}/tournaments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, date, matches })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    log(`✅ Tournament created! ID: ${data.data._id}`, 'success');
+                    log(`Tournament: ${data.data.name}, Matches: ${data.data.totalMatches}`, 'info');
+                    document.getElementById('processTournamentId').value = data.data._id;
+                } else {
+                    log(`❌ Failed to create tournament: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getTournaments() {
+            if (!authToken) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            try {
+                log('Loading tournaments...', 'info');
+                const response = await fetch(`${API_BASE}/tournaments`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    log(`✅ Loaded ${data.data.length} tournaments`, 'success');
+
+                    let html = '<table style="width:100%; border-collapse: collapse;">';
+                    html += '<tr style="background:#3498db; color:white;"><th>Name</th><th>Date</th><th>Matches</th><th>Status</th><th>ID</th></tr>';
+                    data.data.forEach(t => {
+                        html += `<tr style="border-bottom:1px solid #ddd;">`;
+                        html += `<td>${t.name}</td>`;
+                        html += `<td>${new Date(t.date).toLocaleDateString()}</td>`;
+                        html += `<td>${t.totalMatches}</td>`;
+                        html += `<td><strong>${t.status}</strong></td>`;
+                        html += `<td style="font-family:monospace; font-size:10px;">${t._id}</td>`;
+                        html += `</tr>`;
+                    });
+                    html += '</table>';
+                    document.getElementById('tournamentsDisplay').innerHTML = html;
+                } else {
+                    log(`❌ Failed to load tournaments: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function processPoints() {
+            if (!authToken) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            const tournamentId = document.getElementById('processTournamentId').value;
+            if (!tournamentId) {
+                log('❌ Please enter tournament ID!', 'error');
+                return;
+            }
+
+            try {
+                log(`Processing points for tournament ${tournamentId}...`, 'info');
+                const response = await fetch(`${API_BASE}/tournaments/${tournamentId}/process-points`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    log(`✅ ${data.message}`, 'success');
+                    log(`Processed: ${data.data.processed} matches, Errors: ${data.data.errors}`, 'info');
+                } else {
+                    log(`❌ Failed to process points: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getRankings() {
+            if (!authToken) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            try {
+                log('Loading rankings...', 'info');
+                const response = await fetch(`${API_BASE}/seeding/rankings?limit=20`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    log(`✅ Loaded top ${data.data.length} players`, 'success');
+
+                    let html = '<table style="width:100%; border-collapse: collapse;">';
+                    html += '<tr style="background:#27ae60; color:white;"><th>Rank</th><th>Player</th><th>Points</th><th>Wins</th><th>Played</th></tr>';
+                    data.data.forEach(p => {
+                        html += `<tr style="border-bottom:1px solid #ddd;">`;
+                        html += `<td><strong>${p.rank}</strong></td>`;
+                        html += `<td>${p.fullName}</td>`;
+                        html += `<td><strong>${p.seedPoints}</strong></td>`;
+                        html += `<td>${p.matchesWon}</td>`;
+                        html += `<td>${p.matchesPlayed}</td>`;
+                        html += `</tr>`;
+                    });
+                    html += '</table>';
+                    document.getElementById('rankingsDisplay').innerHTML = html;
+                } else {
+                    log(`❌ Failed to load rankings: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

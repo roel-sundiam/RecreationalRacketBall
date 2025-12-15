@@ -1,0 +1,131 @@
+.session-warning-dialog {
+  min-width: 450px;
+
+  @media (max-width: 768px) {
+    min-width: 300px;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-bottom: 3px solid #ff9800;
+
+  &.warning {
+    color: #e65100;
+  }
+
+  .warning-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: #ff9800;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 22px; // Large for seniors
+    font-weight: 600;
+  }
+}
+
+.dialog-content {
+  padding: 32px 24px;
+  text-align: center;
+
+  .warning-message {
+    font-size: 18px; // Large readable text
+    line-height: 1.6;
+    margin-bottom: 24px;
+    color: #424242;
+  }
+
+  .countdown-display {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 24px 0;
+    border: 3px solid #ff9800;
+
+    .countdown-time {
+      font-size: 48px; // Very large countdown
+      font-weight: 700;
+      color: #e65100;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 4px;
+    }
+
+    .countdown-label {
+      font-size: 16px;
+      color: #616161;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+  }
+
+  .help-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #757575;
+    margin-top: 20px;
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px 24px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+
+  button {
+    min-width: 140px;
+    height: 48px; // Large touch target
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 24px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  .logout-button {
+    background: #e0e0e0;
+    color: #616161;
+
+    &:hover {
+      background: #d6d6d6;
+    }
+  }
+
+  .stay-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}

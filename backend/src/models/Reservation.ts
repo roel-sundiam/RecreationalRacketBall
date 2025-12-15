@@ -293,19 +293,26 @@ reservationSchema.statics.isSlotAvailable = async function(date: Date, timeSlot:
 };
 
 // Static method to get reservations for a specific date
-reservationSchema.statics.getReservationsForDate = function(date: Date) {
+reservationSchema.statics.getReservationsForDate = async function(date: Date) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
-  
+
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
-  
-  return this.find({
-    date: {
-      $gte: startOfDay,
-      $lte: endOfDay
-    }
-  }).populate('userId', 'username fullName').sort({ timeSlot: 1 });
+
+  try {
+    const reservations = await this.find({
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    }).populate('userId', 'username fullName').sort({ timeSlot: 1 });
+
+    return reservations || [];
+  } catch (error) {
+    console.error('Error fetching reservations for date:', error);
+    return [];
+  }
 };
 
 // Virtual for formatted date

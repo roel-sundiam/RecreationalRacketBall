@@ -1154,6 +1154,12 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
 
     // Calculate membership fees from database and update Annual Membership Fees line items
     try {
+      // FIRST: Remove all existing Annual Membership Fees line items from JSON
+      financialData.receiptsCollections = financialData.receiptsCollections.filter((item: any) =>
+        !item.description.startsWith('Annual Membership Fees')
+      );
+      console.log(`🗑️ Removed all hardcoded Annual Membership Fees line items`);
+
       // Get all membership payments from database, grouped by year
       const membershipPayments = await Payment.find({
         type: 'membership'
@@ -1169,27 +1175,20 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
         return acc;
       }, {});
 
-      console.log(`💳 Membership fees by year:`, membershipByYear);
+      console.log(`💳 Membership fees by year from database:`, membershipByYear);
 
-      // Update each Annual Membership Fees line item in receipts
+      // THEN: Add back only the years with actual payments from database
       for (const [year, amount] of Object.entries(membershipByYear)) {
         const membershipDescription = `Annual Membership Fees ${year}`;
-        const membershipIndex = financialData.receiptsCollections.findIndex((item: any) =>
-          item.description === membershipDescription
-        );
+        financialData.receiptsCollections.push({
+          description: membershipDescription,
+          amount: amount as number
+        });
+        console.log(`➕ Added ${membershipDescription}: ₱${amount}`);
+      }
 
-        if (membershipIndex !== -1) {
-          // Update existing line item
-          financialData.receiptsCollections[membershipIndex].amount = amount as number;
-          console.log(`🧮 Updated ${membershipDescription}: ₱${amount}`);
-        } else {
-          // Add new line item for this year
-          financialData.receiptsCollections.push({
-            description: membershipDescription,
-            amount: amount as number
-          });
-          console.log(`➕ Added ${membershipDescription}: ₱${amount}`);
-        }
+      if (Object.keys(membershipByYear).length === 0) {
+        console.log(`ℹ️ No membership payments found in database - no membership fee line items added`);
       }
 
       // Recalculate totals with updated membership fees

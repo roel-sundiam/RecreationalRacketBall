@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   publish = "dist/tennis-club-frontend/browser"
-  command = "npm install && npx ng build --configuration=production"
+  command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -13,13 +13,13 @@
   status = 200
 
 [context.production]
-  command = "npm install && npx ng build --configuration=production"
+  command = "npm run build"
 
 [context.deploy-preview]
-  command = "npm install && npx ng build --configuration=production"
+  command = "npm run build"
 
 [context.branch-deploy]
-  command = "npm install && npx ng build --configuration=production"
+  command = "npm run build"
 
 [[headers]]
   for = "/*"

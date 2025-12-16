@@ -183,7 +183,7 @@ interface CourtUsageData {
           </div>
 
           <!-- Liabilities Section -->
-          <div class="statement-section liabilities-section" *ngIf="financialData.liabilities?.appServiceFee">
+          <div class="statement-section liabilities-section" *ngIf="financialData.liabilities?.appServiceFee && financialData.liabilities.appServiceFee.remainingLiability > 0">
             <div class="section-header">
               <div class="section-title">LIABILITIES</div>
             </div>

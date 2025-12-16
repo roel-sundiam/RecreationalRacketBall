@@ -190,15 +190,7 @@ interface CourtUsageData {
             <div class="section-items">
               <div class="line-item liability-item">
                 <div class="item-description">Accrued App Service Fee (10%)</div>
-                <div class="item-amount">{{ formatCurrency(financialData.liabilities.appServiceFee.totalAccrued) }}</div>
-              </div>
-              <div class="line-item liability-item paid" *ngIf="financialData.liabilities.appServiceFee.totalPaid > 0">
-                <div class="item-description indent">Less: Paid to Developer</div>
-                <div class="item-amount negative">({{ formatCurrency(financialData.liabilities.appServiceFee.totalPaid) }})</div>
-              </div>
-              <div class="line-item liability-item total">
-                <div class="item-description strong">Remaining Liability</div>
-                <div class="item-amount highlight strong">{{ formatCurrency(financialData.liabilities.appServiceFee.remainingLiability) }}</div>
+                <div class="item-amount">{{ formatCurrency(financialData.liabilities.appServiceFee.remainingLiability) }}</div>
               </div>
             </div>
           </div>

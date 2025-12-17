@@ -302,7 +302,7 @@ Important Notes:
         console.log(`  💳 Special handling for payments collection...`);
 
         // Save existing membership payments from test database
-        const existingMembershipPayments = await destCollection.find({ type: 'membership' }).toArray();
+        const existingMembershipPayments = await destCollection.find({ paymentType: 'membership_fee' }).toArray();
         console.log(`  💾 Found ${existingMembershipPayments.length} membership payments to preserve`);
 
         // Drop the collection

@@ -1156,7 +1156,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
     try {
       // Get all membership payments from database, grouped by year
       const membershipPayments = await Payment.find({
-        type: 'membership'
+        paymentType: 'membership_fee'
       });
 
       // Group by membership year and calculate totals

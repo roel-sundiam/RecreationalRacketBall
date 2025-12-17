@@ -34,12 +34,26 @@ Before copying the database:
 
 2. **Switch to Production Database (if needed)**
 
-   To copy from production to test, ensure `.env` points to production:
+   To copy from production to test, ensure `.env` points to production.
+
+   Edit `backend/.env` and modify **lines 3 and 6**:
+
+   **Current state (Test database active):**
    ```bash
-   # In backend/.env
-   MONGODB_URI=mongodb+srv://admin:***@mydb.zxr9i5k.mongodb.net/TennisClubRT2?...
-   # MONGODB_URI=mongodb+srv://admin:***@mydb.zxr9i5k.mongodb.net/TennisClubRT2_Test?...
+   Line 3:  # MONGODB_URI=mongodb+srv://...TennisClubRT2?...        # Production (commented)
+   Line 6:  MONGODB_URI=mongodb+srv://...TennisClubRT2_Test?...     # Test (active)
    ```
+
+   **Change to (Production database active):**
+   ```bash
+   Line 3:  MONGODB_URI=mongodb+srv://...TennisClubRT2?...          # Production (active)
+   Line 6:  # MONGODB_URI=mongodb+srv://...TennisClubRT2_Test?...   # Test (commented)
+   ```
+
+   **Quick steps:**
+   - Remove `#` from line 3 (uncomment production)
+   - Add `#` to line 6 (comment out test)
+   - Save the file
 
 3. **Backend Must NOT Be Running**
 
@@ -272,7 +286,7 @@ Complete refresh of test database with all production data:
 ```bash
 # 1. Switch to production database
 cd backend
-# Edit .env: Uncomment MONGODB_URI for TennisClubRT2
+# Edit .env: Remove # from line 3, add # to line 6
 
 # 2. Preview what will be copied
 npm run copy-to-test:dry-run
@@ -281,7 +295,7 @@ npm run copy-to-test:dry-run
 npm run copy-to-test
 
 # 4. Switch back to test database for development
-# Edit .env: Comment out production, uncomment test
+# Edit .env: Add # to line 3, remove # from line 6
 ```
 
 ### Update Specific Collections Only

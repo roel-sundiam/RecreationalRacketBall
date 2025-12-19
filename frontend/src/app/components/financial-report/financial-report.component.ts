@@ -564,6 +564,11 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
     try {
       this.socket = io(environment.socketUrl, {
         transports: ['websocket', 'polling'],
+        timeout: 10000,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 3,
         auth: {
           token: this.authService.token
         }
@@ -578,6 +583,16 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
 
       this.socket.on('disconnect', () => {
         console.log('🔌 Disconnected from WebSocket server');
+        this.socketConnected = false;
+      });
+
+      this.socket.on('connect_error', (error) => {
+        console.warn('⚠️ WebSocket connection error (will retry):', error.message);
+        this.socketConnected = false;
+      });
+
+      this.socket.on('connect_timeout', () => {
+        console.warn('⚠️ WebSocket connection timeout (will retry)');
         this.socketConnected = false;
       });
 

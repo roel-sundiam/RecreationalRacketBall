@@ -265,23 +265,6 @@ interface MembershipPayment {
                   </td>
                 </ng-container>
 
-                <!-- Recorded By Column -->
-                <ng-container matColumnDef="recordedBy">
-                  <th mat-header-cell *matHeaderCellDef>Recorded By</th>
-                  <td mat-cell *matCellDef="let payment">
-                    {{ payment.recordedBy?.fullName || 'Unknown' }}<br>
-                    <small class="text-muted">{{ payment.recordedAt | date:'short' }}</small>
-                  </td>
-                </ng-container>
-
-                <!-- Notes Column -->
-                <ng-container matColumnDef="notes">
-                  <th mat-header-cell *matHeaderCellDef>Notes</th>
-                  <td mat-cell *matCellDef="let payment">
-                    <span class="notes-text">{{ payment.notes || '-' }}</span>
-                  </td>
-                </ng-container>
-
                 <!-- Actions Column -->
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef>Actions</th>
@@ -767,7 +750,7 @@ export class AdminMembershipPaymentsComponent implements OnInit {
   isSubmitting = false;
   filterYear: number | null = null;
   currentYear = new Date().getFullYear();
-  displayedColumns: string[] = ['member', 'year', 'amount', 'method', 'date', 'recordedBy', 'notes', 'actions'];
+  displayedColumns: string[] = ['member', 'year', 'amount', 'method', 'date', 'actions'];
   summary = {
     count: 0,
     totalAmount: 0,

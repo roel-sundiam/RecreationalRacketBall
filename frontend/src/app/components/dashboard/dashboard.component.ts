@@ -382,7 +382,20 @@ import { environment } from '../../../environments/environment';
             <mat-icon>admin_panel_settings</mat-icon>
             Administration
           </h2>
-          
+
+          <!-- Database Indicator -->
+          <mat-card class="database-indicator-card" [ngClass]="getDatabaseClass()">
+            <mat-card-content>
+              <div class="database-info">
+                <mat-icon class="database-icon">storage</mat-icon>
+                <div class="database-text">
+                  <span class="database-label">Connected Database:</span>
+                  <span class="database-name">{{ databaseName }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
           <div class="admin-grid">
             <!-- Member Management -->
             <mat-card class="action-card admin-card" data-icon="people_alt" data-title="Member Management" (click)="navigateTo('/admin/members')">
@@ -858,6 +871,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isSuperAdmin = false;
   private apiUrl = environment.apiUrl;
   private subscriptions: Subscription[] = [];
+  databaseName: string = 'Loading...';
 
   constructor(
     private authService: AuthService,
@@ -884,11 +898,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(userSub);
 
+    // Fetch database name for admin users
+    if (this.isAdmin) {
+      this.fetchDatabaseInfo();
+    }
+
     // Set up WebSocket listeners for real-time open play notifications
     this.setupWebSocketListeners();
 
     // Check for any pending PWA notifications that were clicked while app was closed
     this.pwaNotificationService.checkAndShowPendingNotification();
+  }
+
+  private fetchDatabaseInfo(): void {
+    this.http.get<any>(`${this.apiUrl}/health`).subscribe({
+      next: (response) => {
+        if (response && response.database) {
+          this.databaseName = response.database;
+        } else {
+          this.databaseName = 'Unknown';
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching database info:', error);
+        this.databaseName = 'Error';
+      }
+    });
+  }
+
+  getDatabaseClass(): string {
+    if (this.databaseName.toLowerCase().includes('test')) {
+      return 'database-test';
+    } else if (this.databaseName.toLowerCase().includes('prod') ||
+               !this.databaseName.toLowerCase().includes('test')) {
+      return 'database-production';
+    }
+    return 'database-unknown';
   }
 
   testNavigation(): void {

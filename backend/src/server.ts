@@ -181,12 +181,29 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
+  // Extract database name from MongoDB URI
+  let databaseName = 'Unknown';
+  try {
+    const mongoUri = process.env.MONGODB_URI || '';
+    const url = new URL(mongoUri);
+    const pathname = url.pathname;
+    if (pathname && pathname.length > 1) {
+      const extracted = pathname.substring(1).split('?')[0];
+      if (extracted) {
+        databaseName = extracted;
+      }
+    }
+  } catch (error) {
+    console.error('Error extracting database name:', error);
+  }
+
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV,
-    api: 'v1'
+    api: 'v1',
+    database: databaseName
   });
 });
 

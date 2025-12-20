@@ -177,7 +177,7 @@ reservationSchema.pre('save', function(next) {
   // Calculate total fee for multi-hour reservations if not explicitly provided
   if ((reservation.isNew || reservation.isModified('timeSlot') || reservation.isModified('players') || reservation.isModified('duration')) &&
       (!reservation.totalFee || reservation.totalFee === 0)) {
-    const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+    const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
 
     // Check if players use new format (objects with isMember/isGuest)
     const hasNewPlayerFormat = reservation.players.length > 0 &&

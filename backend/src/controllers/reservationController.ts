@@ -653,7 +653,7 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
   
   if (!finalTotalFee) {
     // Fallback calculation if frontend doesn't provide totalFee
-    const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+    const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
     const peakHourFee = parseInt(process.env.PEAK_HOUR_FEE || '100');
     const offPeakFeePerMember = parseInt(process.env.OFF_PEAK_FEE_PER_MEMBER || '20');
     
@@ -730,7 +730,7 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
   const paymentIds: string[] = [];
   const members = playerObjects.filter(p => p.isMember);
   const guests = playerObjects.filter(p => p.isGuest);
-  const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+  const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
 
   if (members.length > 0) {
     // Calculate payment amounts
@@ -948,7 +948,7 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
     const paymentIds: string[] = [];
     const members = playerObjects.filter((p: any) => p.isMember);
     const guests = playerObjects.filter((p: any) => p.isGuest);
-    const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+    const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
 
     if (members.length > 0) {
       const PEAK_BASE_FEE = 150;
@@ -1026,7 +1026,7 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
     const paymentIds: string[] = [];
     const members = reservation.players.filter((p: any) => p.isMember);
     const guests = reservation.players.filter((p: any) => p.isGuest);
-    const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+    const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
 
     if (members.length > 0) {
       const PEAK_BASE_FEE = 150;

@@ -502,7 +502,7 @@ export const createPayment = asyncHandler(async (req: AuthenticatedRequest, res:
       isAdminOverride = req.user.role === 'admin' || req.user.role === 'superadmin';
     } else if (!paymentAmount && reservation) {
       // Calculate payment amount with proper member/non-member pricing
-      const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+      const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
       const peakHourFee = parseInt(process.env.PEAK_HOUR_FEE || '100');
       const offPeakFeePerMember = parseInt(process.env.OFF_PEAK_FEE_PER_MEMBER || '20');
       const offPeakFeePerNonMember = parseInt(process.env.OFF_PEAK_FEE_PER_NON_MEMBER || '50');
@@ -2442,7 +2442,7 @@ export const payOnBehalf = asyncHandler(async (req: AuthenticatedRequest, res: R
   });
 
   // Calculate if peak hour
-  const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+  const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
   const isPeakHour = peakHours.includes(reservation.timeSlot);
 
   // Create payment record

@@ -17,6 +17,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PaymentEditDialogComponent } from './payment-edit-dialog/payment-edit-dialog.component';
 import { environment } from '../../../environments/environment';
@@ -63,6 +64,16 @@ interface PaymentSummary {
   refunded: number;
 }
 
+interface OverdueMemberSummary {
+  userId: string;
+  fullName: string;
+  username: string;
+  totalOverdueAmount: number;
+  overdueCount: number;
+  oldestOverdueDays: number;
+  payments: Payment[];
+}
+
 @Component({
   selector: 'app-admin-payment-management',
   standalone: true,
@@ -84,7 +95,8 @@ interface PaymentSummary {
     MatChipsModule,
     MatTooltipModule,
     MatMenuModule,
-    MatDialogModule
+    MatDialogModule,
+    MatTabsModule
   ],
   templateUrl: './admin-payment-management.component.html',
   styleUrl: './admin-payment-management.component.scss'
@@ -107,6 +119,7 @@ export class AdminPaymentManagementComponent implements OnInit {
 
   // Table
   displayedColumns = ['reference', 'user', 'amount', 'method', 'status', 'type', 'paymentDate', 'actions'];
+  overdueDisplayedColumns = ['fullName', 'overdueCount', 'totalOverdueAmount', 'oldestOverdueDays', 'actions'];
 
   // Pagination
   pageSize = 100;
@@ -115,6 +128,12 @@ export class AdminPaymentManagementComponent implements OnInit {
 
   // State
   isLoading = false;
+
+  // Tabs
+  selectedTabIndex = 0;
+
+  // Overdue Report
+  overdueSummaries: OverdueMemberSummary[] = [];
 
   // Summary
   summary: PaymentSummary = {
@@ -156,6 +175,7 @@ export class AdminPaymentManagementComponent implements OnInit {
         this.payments = response.data || [];
         this.applyFilters();
         this.calculateSummary();
+        this.calculateOverdueSummaries();
         this.isLoading = false;
       },
       error: (error) => {
@@ -269,6 +289,45 @@ export class AdminPaymentManagementComponent implements OnInit {
       failed: this.payments.filter(p => p.status === 'failed').length,
       refunded: this.payments.filter(p => p.status === 'refunded').length
     };
+  }
+
+  calculateOverdueSummaries(): void {
+    // Get all overdue payments
+    const overduePayments = this.payments.filter(p => this.isOverdue(p));
+
+    // Group by user
+    const memberMap = new Map<string, OverdueMemberSummary>();
+
+    overduePayments.forEach(payment => {
+      const userId = payment.userId._id;
+
+      if (!memberMap.has(userId)) {
+        memberMap.set(userId, {
+          userId: userId,
+          fullName: payment.userId.fullName,
+          username: payment.userId.username,
+          totalOverdueAmount: 0,
+          overdueCount: 0,
+          oldestOverdueDays: 0,
+          payments: []
+        });
+      }
+
+      const summary = memberMap.get(userId)!;
+      summary.totalOverdueAmount += payment.amount;
+      summary.overdueCount++;
+      summary.payments.push(payment);
+
+      // Calculate days overdue for this payment
+      const daysOverdue = this.getDaysOverdue(payment);
+      if (daysOverdue > summary.oldestOverdueDays) {
+        summary.oldestOverdueDays = daysOverdue;
+      }
+    });
+
+    // Convert map to array and sort by total overdue amount (descending)
+    this.overdueSummaries = Array.from(memberMap.values())
+      .sort((a, b) => b.totalOverdueAmount - a.totalOverdueAmount);
   }
 
   openEditDialog(payment: Payment): void {
@@ -409,8 +468,9 @@ export class AdminPaymentManagementComponent implements OnInit {
   }
 
   isOverdue(payment: Payment): boolean {
-    // Only show overdue for pending or failed payments
-    if (payment.status !== 'pending' && payment.status !== 'failed') {
+    // Only show overdue for pending payments
+    // Failed, cancelled, refunded, or completed payments should not be considered overdue
+    if (payment.status !== 'pending') {
       return false;
     }
 
@@ -426,5 +486,45 @@ export class AdminPaymentManagementComponent implements OnInit {
     dueDate.setHours(0, 0, 0, 0);
 
     return dueDate < today;
+  }
+
+  getDaysOverdue(payment: Payment): number {
+    if (!this.isOverdue(payment)) {
+      return 0;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dueDate = new Date(payment.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+
+    const diffTime = today.getTime() - dueDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  }
+
+  viewMemberOverdueDetails(member: OverdueMemberSummary): void {
+    // Switch to All Payments tab
+    this.selectedTabIndex = 0;
+
+    // Small delay to ensure tab switch completes before filtering
+    setTimeout(() => {
+      // Filter to show only this member's overdue payments
+      this.searchTerm = member.username;
+      this.filterStatus = 'pending'; // Show pending overdue payments
+      this.applyFilters();
+
+      this.snackBar.open(`Showing ${member.overdueCount} overdue payment(s) for ${member.fullName}`, 'Close', { duration: 4000 });
+    }, 100);
+  }
+
+  getTotalOverdueAmount(): number {
+    return this.overdueSummaries.reduce((sum, member) => sum + member.totalOverdueAmount, 0);
+  }
+
+  getTotalOverdueCount(): number {
+    return this.overdueSummaries.reduce((sum, member) => sum + member.overdueCount, 0);
   }
 }

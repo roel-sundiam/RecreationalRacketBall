@@ -10,52 +10,137 @@
     </div>
   </div>
 
-  <!-- Filters Section -->
+  <!-- Tabs -->
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="0ms">
+    <!-- All Payments Tab -->
+    <mat-tab label="All Payments">
+      <!-- Filters Section -->
   <mat-card class="filters-card">
     <mat-card-content>
-      <div class="filters-grid">
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Status</mat-label>
-          <mat-select [(ngModel)]="filterStatus" (selectionChange)="applyFilters()">
-            <mat-option value="all">All Statuses</mat-option>
-            <mat-option value="pending">Pending</mat-option>
-            <mat-option value="completed">Completed</mat-option>
-            <mat-option value="record">Recorded</mat-option>
-            <mat-option value="failed">Failed</mat-option>
-            <mat-option value="refunded">Refunded</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Payment Method</mat-label>
-          <mat-select [(ngModel)]="filterMethod" (selectionChange)="applyFilters()">
-            <mat-option value="all">All Methods</mat-option>
-            <mat-option value="cash">Cash</mat-option>
-            <mat-option value="bank_transfer">Bank Transfer</mat-option>
-            <mat-option value="gcash">GCash</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Payment Type</mat-label>
-          <mat-select [(ngModel)]="filterType" (selectionChange)="applyFilters()">
-            <mat-option value="all">All Types</mat-option>
-            <mat-option value="court_usage">Court Usage</mat-option>
-            <mat-option value="membership_fee">Membership Fee</mat-option>
-            <mat-option value="tournament_entry">Tournament Entry</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Search</mat-label>
-          <input matInput [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Name, username, or ref#">
-          <mat-icon matPrefix>search</mat-icon>
-        </mat-form-field>
-
-        <button mat-stroked-button (click)="clearFilters()" class="clear-filters-btn">
-          <mat-icon>clear</mat-icon>
-          Clear
+      <div class="filters-header">
+        <div class="filters-title">
+          <mat-icon>filter_list</mat-icon>
+          <span>Filter Payments</span>
+        </div>
+        <button mat-button (click)="clearFilters()" class="clear-filters-btn">
+          <mat-icon>restart_alt</mat-icon>
+          Reset Filters
         </button>
+      </div>
+
+      <div class="filters-grid">
+        <div class="filter-group">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="filterStatus" (selectionChange)="applyFilters()">
+              <mat-option value="all">
+                <mat-icon class="option-icon">check_circle_outline</mat-icon>
+                All Statuses
+              </mat-option>
+              <mat-option value="pending">
+                <mat-icon class="option-icon status-pending-icon">schedule</mat-icon>
+                Pending
+              </mat-option>
+              <mat-option value="completed">
+                <mat-icon class="option-icon status-completed-icon">check_circle</mat-icon>
+                Completed
+              </mat-option>
+              <mat-option value="record">
+                <mat-icon class="option-icon status-recorded-icon">lock</mat-icon>
+                Recorded
+              </mat-option>
+              <mat-option value="failed">
+                <mat-icon class="option-icon status-failed-icon">cancel</mat-icon>
+                Failed
+              </mat-option>
+              <mat-option value="refunded">
+                <mat-icon class="option-icon status-refunded-icon">undo</mat-icon>
+                Refunded
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix class="field-icon">assignment</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="filter-group">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Payment Method</mat-label>
+            <mat-select [(ngModel)]="filterMethod" (selectionChange)="applyFilters()">
+              <mat-option value="all">
+                <mat-icon class="option-icon">payment</mat-icon>
+                All Methods
+              </mat-option>
+              <mat-option value="cash">
+                <mat-icon class="option-icon">payments</mat-icon>
+                Cash
+              </mat-option>
+              <mat-option value="bank_transfer">
+                <mat-icon class="option-icon">account_balance</mat-icon>
+                Bank Transfer
+              </mat-option>
+              <mat-option value="gcash">
+                <mat-icon class="option-icon">phone_android</mat-icon>
+                GCash
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix class="field-icon">credit_card</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="filter-group">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Payment Type</mat-label>
+            <mat-select [(ngModel)]="filterType" (selectionChange)="applyFilters()">
+              <mat-option value="all">
+                <mat-icon class="option-icon">category</mat-icon>
+                All Types
+              </mat-option>
+              <mat-option value="court_usage">
+                <mat-icon class="option-icon">sports_tennis</mat-icon>
+                Court Usage
+              </mat-option>
+              <mat-option value="membership_fee">
+                <mat-icon class="option-icon">card_membership</mat-icon>
+                Membership Fee
+              </mat-option>
+              <mat-option value="tournament_entry">
+                <mat-icon class="option-icon">emoji_events</mat-icon>
+                Tournament Entry
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix class="field-icon">label</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="filter-group search-group">
+          <mat-form-field appearance="outline" class="filter-field search-field" subscriptSizing="dynamic">
+            <input matInput [(ngModel)]="searchTerm" (input)="applyFilters()">
+            <mat-icon matPrefix class="field-icon">search</mat-icon>
+            <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="searchTerm=''; applyFilters()" class="clear-search-btn">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="active-filters" *ngIf="filterStatus !== 'all' || filterMethod !== 'all' || filterType !== 'all' || searchTerm">
+        <span class="active-filters-label">Active filters:</span>
+        <mat-chip *ngIf="filterStatus !== 'all'" class="filter-chip" (removed)="filterStatus='all'; applyFilters()">
+          {{ filterStatus }}
+          <button matChipRemove><mat-icon>cancel</mat-icon></button>
+        </mat-chip>
+        <mat-chip *ngIf="filterMethod !== 'all'" class="filter-chip" (removed)="filterMethod='all'; applyFilters()">
+          {{ filterMethod === 'bank_transfer' ? 'Bank Transfer' : filterMethod === 'gcash' ? 'GCash' : 'Cash' }}
+          <button matChipRemove><mat-icon>cancel</mat-icon></button>
+        </mat-chip>
+        <mat-chip *ngIf="filterType !== 'all'" class="filter-chip" (removed)="filterType='all'; applyFilters()">
+          {{ filterType === 'court_usage' ? 'Court Usage' : filterType === 'membership_fee' ? 'Membership Fee' : 'Tournament Entry' }}
+          <button matChipRemove><mat-icon>cancel</mat-icon></button>
+        </mat-chip>
+        <mat-chip *ngIf="searchTerm" class="filter-chip" (removed)="searchTerm=''; applyFilters()">
+          "{{ searchTerm }}"
+          <button matChipRemove><mat-icon>cancel</mat-icon></button>
+        </mat-chip>
       </div>
     </mat-card-content>
   </mat-card>
@@ -132,7 +217,9 @@
             <td mat-cell *matCellDef="let payment">
               <div class="amount-container">
                 <span class="amount">{{ formatAmount(payment.amount, payment.currency) }}</span>
-                <span class="overdue-badge" *ngIf="isOverdue(payment)">Overdue</span>
+                <span class="overdue-badge" *ngIf="isOverdue(payment)">
+                  Overdue {{ getDaysOverdue(payment) }} {{ getDaysOverdue(payment) === 1 ? 'day' : 'days' }}
+                </span>
               </div>
             </td>
           </ng-container>
@@ -215,4 +302,109 @@
       </div>
     </mat-card-content>
   </mat-card>
+    </mat-tab>
+
+    <!-- Overdue Report Tab -->
+    <mat-tab label="Overdue Report">
+      <mat-card class="overdue-summary-card">
+        <mat-card-content>
+          <div class="overdue-header">
+            <div class="overdue-stats">
+              <div class="stat-item">
+                <mat-icon>people</mat-icon>
+                <div>
+                  <div class="stat-label">Members with Overdues</div>
+                  <div class="stat-value">{{ overdueSummaries.length }}</div>
+                </div>
+              </div>
+              <div class="stat-item">
+                <mat-icon>receipt_long</mat-icon>
+                <div>
+                  <div class="stat-label">Total Overdue Payments</div>
+                  <div class="stat-value">{{ getTotalOverdueCount() }}</div>
+                </div>
+              </div>
+              <div class="stat-item">
+                <mat-icon>attach_money</mat-icon>
+                <div>
+                  <div class="stat-label">Total Overdue Amount</div>
+                  <div class="stat-value">{{ formatAmount(getTotalOverdueAmount()) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="table-card">
+        <mat-card-content>
+          <div *ngIf="isLoading" class="loading-container">
+            <mat-spinner diameter="50"></mat-spinner>
+            <p>Loading overdue report...</p>
+          </div>
+
+          <div *ngIf="!isLoading && overdueSummaries.length === 0" class="no-data">
+            <mat-icon>celebration</mat-icon>
+            <p>No overdue payments found!</p>
+          </div>
+
+          <div *ngIf="!isLoading && overdueSummaries.length > 0" class="table-container">
+            <table mat-table [dataSource]="overdueSummaries" class="overdue-table">
+              <!-- Member Name Column -->
+              <ng-container matColumnDef="fullName">
+                <th mat-header-cell *matHeaderCellDef>Member</th>
+                <td mat-cell *matCellDef="let member">
+                  <div class="user-info">
+                    <span class="user-name">{{ member.fullName }}</span>
+                    <span class="user-username">@{{ member.username }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Overdue Count Column -->
+              <ng-container matColumnDef="overdueCount">
+                <th mat-header-cell *matHeaderCellDef>Overdue Payments</th>
+                <td mat-cell *matCellDef="let member">
+                  <mat-chip class="count-chip">{{ member.overdueCount }}</mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Total Overdue Amount Column -->
+              <ng-container matColumnDef="totalOverdueAmount">
+                <th mat-header-cell *matHeaderCellDef>Total Amount</th>
+                <td mat-cell *matCellDef="let member">
+                  <span class="overdue-amount">{{ formatAmount(member.totalOverdueAmount) }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Oldest Overdue Days Column -->
+              <ng-container matColumnDef="oldestOverdueDays">
+                <th mat-header-cell *matHeaderCellDef>Oldest Overdue</th>
+                <td mat-cell *matCellDef="let member">
+                  <div class="overdue-days">
+                    <mat-icon class="warning-icon">warning</mat-icon>
+                    <span>{{ member.oldestOverdueDays }} {{ member.oldestOverdueDays === 1 ? 'day' : 'days' }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let member">
+                  <button mat-stroked-button color="primary" (click)="viewMemberOverdueDetails(member)">
+                    <mat-icon>visibility</mat-icon>
+                    View Details
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="overdueDisplayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: overdueDisplayedColumns;"></tr>
+            </table>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+  </mat-tab-group>
 </div>

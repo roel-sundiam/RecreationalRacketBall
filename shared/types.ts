@@ -44,6 +44,12 @@ export interface AnalyticsStats {
     clicks: number;
     uniqueUsers: number;
   }>;
+  userVisitCounts: Array<{
+    userId: string;
+    username: string;
+    fullName: string;
+    pageViewCount: number;
+  }>;
   engagement: {
     totalSessions: number;
     avgDuration: number;

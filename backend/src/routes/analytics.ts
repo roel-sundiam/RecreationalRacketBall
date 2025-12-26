@@ -486,6 +486,45 @@ router.get('/dashboard', (req, res, next) => {
       browserBreakdown[stat._id] = stat.count;
     });
 
+    // Get user visit counts - exclude superadmin users
+    const userVisitCounts = await PageView.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: fromDate, $lte: toDate },
+          userId: { $exists: true, $ne: null } // Only include logged-in users
+        }
+      },
+      {
+        $addFields: {
+          userIdObj: { $toObjectId: '$userId' } // Convert string userId to ObjectId
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userIdObj',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+      {
+        $match: {
+          'user.role': { $ne: 'superadmin' }
+        }
+      },
+      {
+        $group: {
+          _id: '$userId',
+          username: { $first: '$user.username' },
+          fullName: { $first: '$user.fullName' },
+          pageViewCount: { $sum: 1 }
+        }
+      },
+      { $sort: { pageViewCount: -1 } },
+      { $limit: 20 }
+    ]);
+
     // Calculate average session duration - exclude superadmin users
     const avgSessionDuration = await SessionInfo.aggregate([
       { $match: { startTime: { $gte: fromDate, $lte: toDate }, duration: { $exists: true } } },
@@ -523,6 +562,12 @@ router.get('/dashboard', (req, res, next) => {
       popularPages: popularPages || [],
       userActivity: userActivity || [],
       partnerClickStats: partnerClickStats || [],
+      userVisitCounts: userVisitCounts.map(u => ({
+        userId: u._id,
+        username: u.username,
+        fullName: u.fullName,
+        pageViewCount: u.pageViewCount
+      })),
       engagement: {
         totalSessions: totalSessions,
         avgDuration: avgSessionDuration[0]?.avgDuration || 45000,

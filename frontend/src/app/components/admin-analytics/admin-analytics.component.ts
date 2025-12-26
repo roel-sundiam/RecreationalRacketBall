@@ -196,33 +196,54 @@ interface ActivityHistoryItem {
         </div>
 
         <mat-tab-group [(selectedIndex)]="selectedTab">
-          
-          <!-- Popular Pages Tab -->
-          <mat-tab label="Popular Pages">
+
+          <!-- User Site Visits Tab -->
+          <mat-tab label="User Site Visits">
             <div class="tab-content">
-              <mat-card>
+              <mat-card class="stat-card">
                 <mat-card-header>
-                  <mat-card-title>Most Visited Pages</mat-card-title>
-                  <mat-card-subtitle>Ranking by total page views</mat-card-subtitle>
+                  <mat-card-title>
+                    <mat-icon class="title-icon">people</mat-icon>
+                    Top Users by Site Visits
+                  </mat-card-title>
+                  <mat-card-subtitle>
+                    Users ranked by total page views
+                    <strong *ngIf="selectedPeriod === '1d'">in the last 24 hours</strong>
+                    <strong *ngIf="selectedPeriod === '7d'">in the last 7 days</strong>
+                    <strong *ngIf="selectedPeriod === '30d'">in the last 30 days</strong>
+                    <strong *ngIf="selectedPeriod === '90d'">in the last 90 days</strong>
+                    <strong *ngIf="selectedPeriod === 'custom' && customDateFrom && customDateTo">
+                      from {{ formatDate(customDateFrom) }} to {{ formatDate(customDateTo) }}
+                    </strong>
+                  </mat-card-subtitle>
                 </mat-card-header>
+
                 <mat-card-content>
-                  <div class="popular-pages-list">
-                    <div *ngFor="let page of analyticsData.popularPages; let i = index" 
-                         class="page-item">
-                      <div class="page-rank">{{ i + 1 }}</div>
-                      <div class="page-info">
-                        <h4>{{ page.page }}</h4>
-                        <div class="page-stats">
-                          <span class="views">{{ page.views }} views</span>
-                          <span class="users">{{ page.uniqueUsers }} unique users</span>
-                          <span class="duration">{{ formatDuration(page.avgDuration) }} avg time</span>
+                  <div class="user-visits-chart" *ngIf="analyticsData?.userVisitCounts && analyticsData.userVisitCounts.length > 0">
+                    <div class="chart-container">
+                      <div class="chart-bars">
+                        <div class="bar-item" *ngFor="let user of analyticsData.userVisitCounts; let i = index">
+                          <div class="bar-wrapper">
+                            <div class="bar-value">{{ user.pageViewCount }}</div>
+                            <div class="bar-column">
+                              <div class="bar-fill"
+                                   [style.height.%]="(user.pageViewCount / analyticsData.userVisitCounts[0].pageViewCount) * 100"
+                                   [matTooltip]="user.pageViewCount + ' visits'">
+                              </div>
+                            </div>
+                            <div class="bar-label">
+                              <div class="user-name">{{ user.fullName || user.username }}</div>
+                              <div class="user-rank">#{{ i + 1 }}</div>
+                            </div>
+                          </div>
                         </div>
-                        <small class="last-visit">Last visit: {{ formatDate(page.lastVisit) }}</small>
-                      </div>
-                      <div class="page-chart">
-                        <div class="bar" [style.width.%]="getPageViewPercentage(page.views)"></div>
                       </div>
                     </div>
+                  </div>
+
+                  <div class="no-data" *ngIf="!analyticsData?.userVisitCounts || analyticsData.userVisitCounts.length === 0">
+                    <mat-icon>info</mat-icon>
+                    <p>No user visit data available for the selected period</p>
                   </div>
                 </mat-card-content>
               </mat-card>
@@ -293,7 +314,7 @@ interface ActivityHistoryItem {
                       <mat-spinner diameter="30"></mat-spinner>
                       Loading activity history...
                     </div>
-                    
+
                     <div *ngIf="!loadingActivity" class="activity-table">
                       <table mat-table [dataSource]="activityDataSource" class="activity-history-table">
                         <ng-container matColumnDef="timestamp">
@@ -336,7 +357,7 @@ interface ActivityHistoryItem {
                         <tr mat-row *matRowDef="let row; columns: activityColumns;"></tr>
                       </table>
 
-                      <mat-paginator 
+                      <mat-paginator
                         [length]="activityPagination.totalCount"
                         [pageSize]="activityPagination.pageSize"
                         [pageSizeOptions]="[10, 25, 50, 100]"
@@ -348,6 +369,38 @@ interface ActivityHistoryItem {
                   </mat-card-content>
                 </mat-card>
               </div>
+            </div>
+          </mat-tab>
+
+          <!-- Popular Pages Tab -->
+          <mat-tab label="Popular Pages">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>Most Visited Pages</mat-card-title>
+                  <mat-card-subtitle>Ranking by total page views</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="popular-pages-list">
+                    <div *ngFor="let page of analyticsData.popularPages; let i = index" 
+                         class="page-item">
+                      <div class="page-rank">{{ i + 1 }}</div>
+                      <div class="page-info">
+                        <h4>{{ page.page }}</h4>
+                        <div class="page-stats">
+                          <span class="views">{{ page.views }} views</span>
+                          <span class="users">{{ page.uniqueUsers }} unique users</span>
+                          <span class="duration">{{ formatDuration(page.avgDuration) }} avg time</span>
+                        </div>
+                        <small class="last-visit">Last visit: {{ formatDate(page.lastVisit) }}</small>
+                      </div>
+                      <div class="page-chart">
+                        <div class="bar" [style.width.%]="getPageViewPercentage(page.views)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
             </div>
           </mat-tab>
 

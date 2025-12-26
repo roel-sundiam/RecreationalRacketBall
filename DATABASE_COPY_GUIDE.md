@@ -619,3 +619,5 @@ npm run copy-to-test -- --help          # Show all options
 **Last Updated:** December 17, 2025
 **Script Location:** `backend/src/scripts/copyDatabaseToTest.ts`
 **Package.json:** Lines 39-42
+
+\*\*\* node list-reservations-no-payments.js

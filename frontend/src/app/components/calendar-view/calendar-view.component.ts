@@ -36,6 +36,19 @@ export class CalendarViewComponent implements OnInit {
   isInitialLoad = true;
   private isRefetching = false;
 
+  debugInfo: any = {
+    totalReservations: 0,
+    blockedCount: 0,
+    eventsRendered: 0,
+    blockedReservations: [],
+    dateRange: { startDate: '', endDate: '', month: 0, year: 0 },
+    backendResponse: { total: 0, blocked: 0, blockedDates: [] }
+  };
+
+  get serviceDebugInfo() {
+    return this.calendarService.debugInfo;
+  }
+
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
@@ -51,9 +64,28 @@ export class CalendarViewComponent implements OnInit {
     events: (fetchInfo, successCallback, failureCallback) => {
       // Return current events from monthData
       const events: EventInput[] = [];
+      let blockedCount = 0;
+      let allReservations = 0;
+      const blockedReservations: any[] = [];
+
       this.monthData.forEach((dayInfo, dateKey) => {
         // Add reservation events
         dayInfo.reservations.forEach(reservation => {
+          allReservations++;
+
+          // Collect blocked reservations for debug info
+          if (reservation.status === 'blocked') {
+            blockedCount++;
+            blockedReservations.push({
+              date: dateKey,
+              timeSlot: reservation.timeSlot,
+              blockNotes: reservation.blockNotes,
+              blockReason: reservation.blockReason,
+              status: reservation.status,
+              _id: reservation._id
+            });
+          }
+
           // Show only confirmed, pending, blocked, and completed reservations
           // Hide: cancelled (user cancelled) and no-show (didn't show up)
           if (reservation.status === 'confirmed' || reservation.status === 'pending' || reservation.status === 'blocked' || reservation.status === 'completed') {
@@ -148,6 +180,14 @@ export class CalendarViewComponent implements OnInit {
           });
         }
       });
+
+      // Update debug info (kept for potential future debugging)
+      this.debugInfo = {
+        totalReservations: allReservations,
+        blockedCount: blockedCount,
+        eventsRendered: events.length,
+        blockedReservations: blockedReservations
+      };
 
       // Sort events by timeSlot to show them in chronological order
       events.sort((a, b) => {

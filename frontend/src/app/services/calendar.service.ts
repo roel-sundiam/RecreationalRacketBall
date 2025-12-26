@@ -46,6 +46,12 @@ export class CalendarService {
   private monthDataSubject = new BehaviorSubject<Map<string, DayReservationInfo>>(new Map());
   public monthData$ = this.monthDataSubject.asObservable();
 
+  // Debug info for UI
+  public debugInfo: any = {
+    dateRange: { startDate: '', endDate: '' },
+    backendResponse: { total: 0, blocked: 0, blockedDates: [] }
+  };
+
   constructor(private http: HttpClient) {}
 
   /**
@@ -56,8 +62,17 @@ export class CalendarService {
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0); // Last day of month
 
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
+    // Fix timezone issue: format dates without timezone conversion
+    const startDateStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const endDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+
+    // Store date range for debug (kept for potential future debugging)
+    this.debugInfo.dateRange = {
+      startDate: startDateStr,
+      endDate: endDateStr,
+      month: month + 1,
+      year: year
+    };
 
     // Fetch both reservations and weather forecast in parallel
     const reservations$ = this.http.get<any>(`${this.apiUrl}/reservations`, {
@@ -84,6 +99,23 @@ export class CalendarService {
       map(({ reservations, weather }) => {
         const reservationData = reservations.success && reservations.data ? reservations.data : [];
         const weatherForecast = weather.forecast || [];
+
+        const blockedFromBackend = reservationData
+          .filter((r: any) => r.status === 'blocked')
+          .map((r: any) => ({
+            date: typeof r.date === 'string' ? r.date.split('T')[0] : new Date(r.date).toISOString().split('T')[0],
+            timeSlot: r.timeSlot,
+            notes: r.blockNotes,
+            reason: r.blockReason,
+            _id: r._id
+          }));
+
+        // Store backend response for debug (kept for potential future debugging)
+        this.debugInfo.backendResponse = {
+          total: reservationData.length,
+          blocked: blockedFromBackend.length,
+          blockedDates: blockedFromBackend
+        };
 
         return this.processMonthData(reservationData, year, month, weatherForecast);
       }),

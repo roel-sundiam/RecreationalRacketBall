@@ -41,7 +41,10 @@
     "copy-to-test:dry-run": "npx ts-node src/scripts/copyDatabaseToTest.ts -- --dry-run",
     "copy-to-test:force": "npx ts-node src/scripts/copyDatabaseToTest.ts -- --force",
     "copy-to-test:no-tournaments": "npx ts-node src/scripts/copyDatabaseToTest.ts -- --exclude tournaments",
-    "migrate-tournaments-completed": "npx ts-node src/scripts/migrateTournamentsToCompleted.ts"
+    "migrate-tournaments-completed": "npx ts-node src/scripts/migrateTournamentsToCompleted.ts",
+    "delete-blocked-reservation": "npx ts-node src/scripts/delete-blocked-reservation.ts",
+    "search-reservations": "npx ts-node src/scripts/search-all-reservations.ts",
+    "fix-blocked-status": "node fix-blocked-status.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.88.0",

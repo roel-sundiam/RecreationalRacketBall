@@ -1733,10 +1733,36 @@ click "Try Again" below to reconnect.
   }
 
   canEdit(reservation: Reservation): boolean {
+    if (reservation.status === 'cancelled') return false;
+
     const reservationDate = new Date(reservation.date);
     const now = new Date();
-    // Can edit if reservation is in the future and not cancelled
-    return reservationDate > now && reservation.status !== 'cancelled';
+
+    // Set both dates to start of day for comparison
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    reservationDate.setHours(0, 0, 0, 0);
+
+    // If reservation is in the future, can edit
+    if (reservationDate > today) return true;
+
+    // If reservation is today, check if time slot hasn't started yet
+    if (reservationDate.getTime() === today.getTime()) {
+      const currentHour = now.getHours();
+      if (reservation.timeSlot > currentHour) return true;
+    }
+
+    // For past reservations: Only admins can edit, and ONLY if all payments are pending
+    const user = this.authService.currentUser;
+    const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
+    if (isAdmin && reservation.paymentStatus === 'pending') {
+      // Admin can edit past reservations if all payments are still pending
+      return true;
+    }
+
+    // Past date with completed payments or non-admin user
+    return false;
   }
 
   canCancel(reservation: Reservation): boolean {

@@ -3,7 +3,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import User from '../models/User';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
-import { RegisterRequest, LoginRequest, AuthResponse } from '../types';
+import { RegisterRequest, LoginRequest, AuthResponse, User as IUser } from '../types';
 
 const generateToken = (userId: string): string => {
   const jwtSecret = process.env.JWT_SECRET;
@@ -55,7 +55,7 @@ export const register = asyncHandler(async (req: AuthenticatedRequest, res: Resp
       ...user.toObject(),
       _id: user._id.toString(),
       deletedBy: user.deletedBy?.toString() || null
-    } as Omit<User, 'password'>,
+    } as Omit<IUser, 'password'>,
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   };
 
@@ -103,7 +103,7 @@ export const login = asyncHandler(async (req: AuthenticatedRequest, res: Respons
       ...user.toObject(),
       _id: user._id.toString(),
       deletedBy: user.deletedBy?.toString() || null
-    } as Omit<User, 'password'>,
+    } as Omit<IUser, 'password'>,
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   };
 

@@ -5,7 +5,7 @@ import Reservation from '../models/Reservation';
 import Poll from '../models/Poll';
 import SeedingPoint from '../models/SeedingPoint';
 import Tournament from '../models/Tournament';
-import { PlayerRanking, PlayerStats, MatchResult } from '../types';
+import { PlayerRanking, PlayerStats, MatchResult, User as IUser } from '../types';
 
 export class SeedingService {
   // Point values for each tournament tier
@@ -167,7 +167,7 @@ export class SeedingService {
             ...user.toObject(),
             _id: user._id.toString(),
             deletedBy: user.deletedBy?.toString() || null
-          } as User,
+          } as IUser,
           rank: 0, // Unranked
           totalPlayers: allRankings.length,
           recentMatches: []
@@ -214,7 +214,7 @@ export class SeedingService {
           ...user.toObject(),
           _id: user._id.toString(),
           deletedBy: user.deletedBy?.toString() || null
-        } as User,
+        } as IUser,
         rank: playerRanking.rank,
         totalPlayers: allRankings.length,
         recentMatches: recentMatches.slice(0, 10)

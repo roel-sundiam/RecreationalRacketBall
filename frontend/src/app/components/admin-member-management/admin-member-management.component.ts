@@ -35,6 +35,11 @@ interface Member {
   isApproved: boolean;
   isActive: boolean;
   membershipFeesPaid: boolean;
+  deletedAt?: Date;
+  deletedBy?: {
+    _id: string;
+    fullName: string;
+  };
 }
 
 interface MemberResponse {
@@ -96,7 +101,7 @@ interface MemberResponse {
             <ng-template mat-tab-label>
               <mat-icon>pending</mat-icon>
               Pending Approvals
-              <mat-chip *ngIf="pendingMembers.length > 0" class="count-chip">
+              <mat-chip *ngIf="pendingMembers.length > 0" class="count-chip pending-count">
                 {{pendingMembers.length}}
               </mat-chip>
             </ng-template>
@@ -189,11 +194,11 @@ interface MemberResponse {
             </div>
           </mat-tab>
 
-          <!-- All Members Tab -->
+          <!-- Active Members Tab -->
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>people</mat-icon>
-              All Members
+              Active Members
             </ng-template>
 
             <div class="tab-content">
@@ -341,6 +346,135 @@ interface MemberResponse {
               </div>
             </div>
           </mat-tab>
+
+          <!-- Inactive Members Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon>person_off</mat-icon>
+              Inactive Members
+              <mat-chip *ngIf="inactiveMembers.length > 0" class="count-chip inactive-count">
+                {{inactiveMembersPagination?.total || inactiveMembers.length}}
+              </mat-chip>
+            </ng-template>
+
+            <div class="tab-content">
+              <div class="loading-container" *ngIf="loadingInactive">
+                <mat-spinner></mat-spinner>
+                <p>Loading inactive members...</p>
+              </div>
+
+              <div class="empty-state" *ngIf="!loadingInactive && inactiveMembers.length === 0">
+                <mat-icon class="empty-icon">check_circle</mat-icon>
+                <h3>No Inactive Members</h3>
+                <p>All members are currently active.</p>
+              </div>
+
+              <div class="members-table" *ngIf="!loadingInactive && inactiveMembers.length > 0">
+                <table mat-table [dataSource]="inactiveMembers" class="members-data-table">
+                  <!-- Name Column -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Member</th>
+                    <td mat-cell *matCellDef="let member">
+                      <div class="member-info">
+                        <strong>{{member.fullName}}</strong>
+                        <span class="username">@{{member.username}}</span>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Contact Column -->
+                  <ng-container matColumnDef="contact">
+                    <th mat-header-cell *matHeaderCellDef>Contact</th>
+                    <td mat-cell *matCellDef="let member">
+                      <div class="contact-info">
+                        <span>{{member.email}}</span>
+                        <span *ngIf="member.phone" class="phone">{{member.phone}}</span>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Role Column (Display Only) -->
+                  <ng-container matColumnDef="role">
+                    <th mat-header-cell *matHeaderCellDef>Role</th>
+                    <td mat-cell *matCellDef="let member">
+                      <mat-chip [class]="'role-chip ' + getRoleClass(member.role)">
+                        <mat-icon class="role-icon">{{getRoleIcon(member.role)}}</mat-icon>
+                        {{member.role | titlecase}}
+                      </mat-chip>
+                    </td>
+                  </ng-container>
+
+                  <!-- Deactivation Info Column -->
+                  <ng-container matColumnDef="deactivationInfo">
+                    <th mat-header-cell *matHeaderCellDef>Deactivated</th>
+                    <td mat-cell *matCellDef="let member">
+                      <div class="deactivation-info">
+                        <span class="date">{{member.deletedAt | date:'mediumDate'}}</span>
+                        <span class="by" *ngIf="member.deletedBy">
+                          by {{member.deletedBy.fullName}}
+                        </span>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Status Column (Hide Active badge) -->
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let member">
+                      <div class="status-badges">
+                        <mat-chip [class]="member.isApproved ? 'status-chip approved' : 'status-chip pending'">
+                          <mat-icon>{{member.isApproved ? 'verified' : 'pending'}}</mat-icon>
+                          {{member.isApproved ? 'Approved' : 'Pending'}}
+                        </mat-chip>
+                        <mat-chip [class]="member.membershipFeesPaid ? 'status-chip paid' : 'status-chip unpaid'">
+                          <mat-icon>{{member.membershipFeesPaid ? 'paid' : 'payment'}}</mat-icon>
+                          {{member.membershipFeesPaid ? 'Paid' : 'Unpaid'}}
+                        </mat-chip>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Registered Column -->
+                  <ng-container matColumnDef="registered">
+                    <th mat-header-cell *matHeaderCellDef>Registered</th>
+                    <td mat-cell *matCellDef="let member">{{member.registrationDate | date:'mediumDate'}}</td>
+                  </ng-container>
+
+                  <!-- Actions Column -->
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Actions</th>
+                    <td mat-cell *matCellDef="let member">
+                      <div class="table-actions">
+                        <button mat-icon-button (click)="viewMemberDetails(member)" matTooltip="View Details">
+                          <mat-icon>visibility</mat-icon>
+                        </button>
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="reactivateMember(member)"
+                          matTooltip="Reactivate Member">
+                          <mat-icon>person_add</mat-icon>
+                          Reactivate
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsInactive"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsInactive;"></tr>
+                </table>
+
+                <mat-paginator
+                  [length]="inactiveMembersPagination?.total || 0"
+                  [pageSize]="inactiveMembersPagination?.limit || 20"
+                  [pageIndex]="(inactiveMembersPagination?.page || 1) - 1"
+                  [pageSizeOptions]="[10, 20, 50, 100]"
+                  (page)="onInactivePageChange($event)"
+                  showFirstLastButtons>
+                </mat-paginator>
+              </div>
+            </div>
+          </mat-tab>
         </mat-tab-group>
       </div>
     </div>
@@ -351,12 +485,16 @@ export class AdminMemberManagementComponent implements OnInit {
   pendingMembers: Member[] = [];
   allMembers: Member[] = [];
   allMembersPagination: any = null;
+  inactiveMembers: Member[] = [];
+  inactiveMembersPagination: any = null;
 
   loadingPending = false;
   loadingAll = false;
+  loadingInactive = false;
   updating = '';
 
   displayedColumns: string[] = ['name', 'contact', 'role', 'status', 'registered', 'actions'];
+  displayedColumnsInactive: string[] = ['name', 'contact', 'role', 'deactivationInfo', 'status', 'registered', 'actions'];
 
   private apiUrl = environment.apiUrl;
 
@@ -372,6 +510,7 @@ export class AdminMemberManagementComponent implements OnInit {
   ngOnInit(): void {
     this.loadPendingMembers();
     this.loadAllMembers();
+    this.loadInactiveMembers();
   }
 
   goBack(): void {
@@ -400,7 +539,7 @@ export class AdminMemberManagementComponent implements OnInit {
     this.loadingAll = true;
     const headers = { 'Authorization': `Bearer ${this.authService.token}` };
 
-    this.http.get<MemberResponse>(`${this.apiUrl}/members?includeAll=true&page=${page}`, { headers })
+    this.http.get<MemberResponse>(`${this.apiUrl}/members?page=${page}`, { headers })
       .subscribe({
         next: (response) => {
           this.allMembers = response.data;
@@ -411,6 +550,25 @@ export class AdminMemberManagementComponent implements OnInit {
           console.error('Error loading all members:', error);
           this.loadingAll = false;
           this.snackBar.open('Failed to load members', 'Close', { duration: 3000 });
+        }
+      });
+  }
+
+  loadInactiveMembers(page: number = 1): void {
+    this.loadingInactive = true;
+    const headers = { 'Authorization': `Bearer ${this.authService.token}` };
+
+    this.http.get<MemberResponse>(`${this.apiUrl}/members/admin/inactive?page=${page}`, { headers })
+      .subscribe({
+        next: (response) => {
+          this.inactiveMembers = response.data;
+          this.inactiveMembersPagination = response.pagination;
+          this.loadingInactive = false;
+        },
+        error: (error) => {
+          console.error('Error loading inactive members:', error);
+          this.loadingInactive = false;
+          this.snackBar.open('Failed to load inactive members', 'Close', { duration: 3000 });
         }
       });
   }
@@ -547,6 +705,7 @@ export class AdminMemberManagementComponent implements OnInit {
                 panelClass: ['success-snackbar']
               });
               this.loadAllMembers();
+              this.loadInactiveMembers();
             },
             error: (error) => {
               console.error('Error reactivating member:', error);
@@ -655,6 +814,11 @@ export class AdminMemberManagementComponent implements OnInit {
     this.loadAllMembers(page);
   }
 
+  onInactivePageChange(event: PageEvent): void {
+    const page = event.pageIndex + 1;
+    this.loadInactiveMembers(page);
+  }
+
   onRoleChange(member: Member, newRole: string): void {
     const roleNames: any = {
       'member': 'Member',
@@ -718,5 +882,15 @@ export class AdminMemberManagementComponent implements OnInit {
       'superadmin': 'role-superadmin'
     };
     return classes[role] || 'role-member';
+  }
+
+  getRoleIcon(role: string): string {
+    const icons: any = {
+      'member': 'person',
+      'treasurer': 'account_balance',
+      'admin': 'admin_panel_settings',
+      'superadmin': 'shield'
+    };
+    return icons[role] || 'person';
   }
 }

@@ -11,6 +11,7 @@ import {
   deleteMember,
   reactivateMember,
   getPendingMembers,
+  getInactiveMembers,
   resetMemberPassword
 } from '../controllers/memberController';
 import { authenticateToken, requireRole, preventImpersonationFor, AuthenticatedRequest } from '../middleware/auth';
@@ -65,6 +66,20 @@ router.get(
 );
 
 /**
+ * @route GET /api/members/admin/pending
+ * @desc Get pending members awaiting approval (admin only)
+ * @access Private (Admin/SuperAdmin)
+ */
+router.get('/admin/pending', authenticateToken, requireRole(['admin', 'superadmin']), getPendingMembers);
+
+/**
+ * @route GET /api/members/admin/inactive
+ * @desc Get inactive/deactivated members (admin only)
+ * @access Private (Admin/SuperAdmin)
+ */
+router.get('/admin/inactive', authenticateToken, requireRole(['admin', 'superadmin']), getInactiveMembers);
+
+/**
  * @route GET /api/members/:id
  * @desc Get member profile details
  * @access Private
@@ -77,13 +92,6 @@ router.get('/:id', authenticateToken, getMemberProfile);
  * @access Private
  */
 router.get('/:id/activity', authenticateToken, getMemberActivity);
-
-/**
- * @route GET /api/members/admin/pending
- * @desc Get pending members awaiting approval (admin only)
- * @access Private (Admin/SuperAdmin)
- */
-router.get('/admin/pending', authenticateToken, requireRole(['admin', 'superadmin']), getPendingMembers);
 
 /**
  * @route PUT /api/members/:id/approval

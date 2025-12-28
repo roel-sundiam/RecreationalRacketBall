@@ -10,6 +10,8 @@ export interface User {
   profilePicture?: string;
   isApproved: boolean;
   isActive: boolean;
+  deletedAt?: Date | null;
+  deletedBy?: string | null;
   role: 'member' | 'admin' | 'superadmin' | 'treasurer';
   creditBalance: number;
   registrationDate: Date;

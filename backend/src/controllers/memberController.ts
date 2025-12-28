@@ -618,6 +618,59 @@ export const getPendingMembers = asyncHandler(async (req: AuthenticatedRequest, 
   }
 });
 
+// Get inactive members (Admin only)
+export const getInactiveMembers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  // Check if user is admin
+  if (req.user?.role !== 'admin' && req.user?.role !== 'superadmin') {
+    return res.status(403).json({
+      success: false,
+      error: 'Access denied. Admin privileges required.'
+    });
+  }
+
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+  const skip = (page - 1) * limit;
+
+  try {
+    const filter = {
+      isActive: false
+    };
+
+    const [inactiveMembers, total] = await Promise.all([
+      User.find(filter)
+        .select('-password')
+        .populate('deletedBy', 'fullName')
+        .sort({ deletedAt: -1 })
+        .limit(limit)
+        .skip(skip),
+      User.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      success: true,
+      data: inactiveMembers,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching inactive members:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to fetch inactive members'
+    });
+  }
+});
+
 // Reset member password to default (Admin only)
 export const resetMemberPassword = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;

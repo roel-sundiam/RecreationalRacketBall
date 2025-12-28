@@ -2,9 +2,10 @@ import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User as IUser } from '../types';
 
-export interface IUserDocument extends Omit<IUser, '_id'>, Document {
+export interface IUserDocument extends Omit<IUser, '_id' | 'deletedBy'>, Document {
   _id: mongoose.Types.ObjectId;
   password: string;
+  deletedBy?: mongoose.Types.ObjectId | null;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -74,6 +75,15 @@ const userSchema = new Schema<IUserDocument>({
     type: Boolean,
     default: true,
     index: true
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  deletedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   },
   role: {
     type: String,

@@ -1224,10 +1224,10 @@ click "Try Again" below to reconnect.
           return false;
         });
         
-        console.log('🔍 Before grouping - Upcoming:', upcomingRaw.length, 'Past:', pastRaw.length);
-        
-        this.upcomingReservations = this.groupConsecutiveReservations(upcomingRaw);
-        this.pastReservations = this.groupConsecutiveReservations(pastRaw);
+        console.log('🔍 Before formatting - Upcoming:', upcomingRaw.length, 'Past:', pastRaw.length);
+
+        this.upcomingReservations = this.formatReservationTimeDisplay(upcomingRaw);
+        this.pastReservations = this.formatReservationTimeDisplay(pastRaw);
 
         // Ensure all time displays use AM/PM format
         this.convertToAMPMFormat(this.upcomingReservations);
@@ -1343,7 +1343,7 @@ click "Try Again" below to reconnect.
           
           return false;
         });
-        console.log('🔍 Active reservations before grouping:', activeReservations.length);
+        console.log('🔍 Active reservations before formatting:', activeReservations.length);
         console.log('🔍 Active reservations details:', activeReservations.map(r => ({
           id: r._id,
           user: r.userId?.fullName,
@@ -1351,12 +1351,12 @@ click "Try Again" below to reconnect.
           timeSlot: r.timeSlot,
           players: r.players
         })));
-        
-        this.allReservations = this.groupConsecutiveReservations(activeReservations);
+
+        this.allReservations = this.formatReservationTimeDisplay(activeReservations);
 
         // Ensure all time displays use AM/PM format
         this.convertToAMPMFormat(this.allReservations);
-        console.log('🔍 After grouping:', this.allReservations.length);
+        console.log('🔍 After formatting:', this.allReservations.length);
 
         // Add Homeowner's Day entries for upcoming Wednesdays
         this.addHomeownerDayEntries();
@@ -1671,6 +1671,26 @@ click "Try Again" below to reconnect.
         }
       }
     });
+  }
+
+  /**
+   * Format reservation time displays without grouping consecutive slots
+   * Each reservation is displayed as a separate row
+   */
+  formatReservationTimeDisplay(reservations: any[]): Reservation[] {
+    // Sort by date and timeSlot first
+    const sorted = reservations.sort((a, b) => {
+      const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (dateCompare !== 0) return dateCompare;
+      return a.timeSlot - b.timeSlot;
+    });
+
+    // Format time display for each reservation individually
+    return sorted.map(res => ({
+      ...res,
+      timeSlotDisplay: res.timeSlotDisplay ||
+        this.formatTimeRange(res.timeSlot, res.timeSlot + (res.duration || 1))
+    }));
   }
 
   getDateMonth(date: Date | string): string {

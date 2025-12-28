@@ -115,6 +115,19 @@
       }
     },
     {
+      "name": "members-api-nocache",
+      "urls": [
+        "https://tennis-club-rt2-backend.onrender.com/api/members/**",
+        "http://localhost:3000/api/members/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 0,
+        "maxAge": "0s",
+        "timeout": "10s"
+      }
+    },
+    {
       "name": "api-cache",
       "urls": [
         "https://tennis-club-rt2-backend.onrender.com/api/**"

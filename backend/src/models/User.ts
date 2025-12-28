@@ -76,6 +76,11 @@ const userSchema = new Schema<IUserDocument>({
     default: true,
     index: true
   },
+  isHomeowner: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
   deletedAt: {
     type: Date,
     default: null

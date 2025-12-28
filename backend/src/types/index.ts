@@ -10,6 +10,7 @@ export interface User {
   profilePicture?: string;
   isApproved: boolean;
   isActive: boolean;
+  isHomeowner?: boolean;
   deletedAt?: Date | null;
   deletedBy?: string | null;
   role: 'member' | 'admin' | 'superadmin' | 'treasurer';

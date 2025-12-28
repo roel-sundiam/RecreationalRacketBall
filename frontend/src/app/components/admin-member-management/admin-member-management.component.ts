@@ -34,7 +34,10 @@ interface Member {
   lastLogin?: Date;
   isApproved: boolean;
   isActive: boolean;
+  isHomeowner?: boolean;
   membershipFeesPaid: boolean;
+  membershipYearsPaid?: number[];
+  membership2026Amount?: number;
   deletedAt?: Date;
   deletedBy?: {
     _id: string;
@@ -96,104 +99,6 @@ interface MemberResponse {
       <!-- Page Content -->
       <div class="page-content">
         <mat-tab-group class="management-tabs">
-          <!-- Pending Approvals Tab -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <mat-icon>pending</mat-icon>
-              Pending Approvals
-              <mat-chip *ngIf="pendingMembers.length > 0" class="count-chip pending-count">
-                {{pendingMembers.length}}
-              </mat-chip>
-            </ng-template>
-
-            <div class="tab-content">
-              <div class="loading-container" *ngIf="loadingPending">
-                <mat-spinner></mat-spinner>
-                <p>Loading pending members...</p>
-              </div>
-
-              <div class="empty-state" *ngIf="!loadingPending && pendingMembers.length === 0">
-                <mat-icon class="empty-icon">check_circle</mat-icon>
-                <h3>No Pending Approvals</h3>
-                <p>All member registrations have been processed.</p>
-              </div>
-
-              <div class="members-grid" *ngIf="!loadingPending && pendingMembers.length > 0">
-                <mat-card *ngFor="let member of pendingMembers" class="member-card pending-card">
-                  <mat-card-header>
-                    <div mat-card-avatar class="member-avatar">
-                      <mat-icon>person</mat-icon>
-                    </div>
-                    <mat-card-title>{{member.fullName}}</mat-card-title>
-                    <mat-card-subtitle>@{{member.username}}</mat-card-subtitle>
-                  </mat-card-header>
-
-                  <mat-card-content>
-                    <div class="member-details">
-                      <div class="detail-row">
-                        <mat-icon>email</mat-icon>
-                        <span>{{member.email}}</span>
-                      </div>
-                      <div class="detail-row" *ngIf="member.phone">
-                        <mat-icon>phone</mat-icon>
-                        <span>{{member.phone}}</span>
-                      </div>
-                      <div class="detail-row" *ngIf="member.gender">
-                        <mat-icon>wc</mat-icon>
-                        <span>{{member.gender | titlecase}}</span>
-                      </div>
-                      <div class="detail-row">
-                        <mat-icon>calendar_today</mat-icon>
-                        <span>Registered: {{member.registrationDate | date:'short'}}</span>
-                      </div>
-                    </div>
-
-                    <div class="status-chips">
-                      <mat-chip class="status-chip pending">
-                        <mat-icon>pending</mat-icon>
-                        Pending Approval
-                      </mat-chip>
-                      <mat-chip 
-                        [class]="member.membershipFeesPaid ? 'status-chip paid' : 'status-chip unpaid'"
-                        [matTooltip]="member.membershipFeesPaid ? 'Membership fees paid' : 'Membership fees not paid'">
-                        <mat-icon>{{member.membershipFeesPaid ? 'paid' : 'payment'}}</mat-icon>
-                        {{member.membershipFeesPaid ? 'Paid' : 'Unpaid'}}
-                      </mat-chip>
-                    </div>
-                  </mat-card-content>
-
-                  <mat-card-actions class="member-actions">
-                    <button 
-                      mat-raised-button 
-                      color="primary" 
-                      (click)="approveMember(member)"
-                      [disabled]="updating === member._id">
-                      <mat-spinner *ngIf="updating === member._id" diameter="16"></mat-spinner>
-                      <mat-icon *ngIf="updating !== member._id">check</mat-icon>
-                      Approve
-                    </button>
-                    
-                    <button 
-                      mat-stroked-button 
-                      color="warn" 
-                      (click)="rejectMember(member)"
-                      [disabled]="updating === member._id">
-                      <mat-icon>close</mat-icon>
-                      Reject
-                    </button>
-
-                    <button 
-                      mat-button 
-                      (click)="viewMemberDetails(member)">
-                      <mat-icon>visibility</mat-icon>
-                      Details
-                    </button>
-                  </mat-card-actions>
-                </mat-card>
-              </div>
-            </div>
-          </mat-tab>
-
           <!-- Active Members Tab -->
           <mat-tab>
             <ng-template mat-tab-label>
@@ -207,8 +112,19 @@ interface MemberResponse {
                 <p>Loading all members...</p>
               </div>
 
-              <div class="members-table" *ngIf="!loadingAll">
-                <table mat-table [dataSource]="allMembers" class="members-data-table">
+              <mat-tab-group class="sub-tabs" *ngIf="!loadingAll">
+                <!-- Homeowners Sub-tab -->
+                <mat-tab>
+                  <ng-template mat-tab-label>
+                    <mat-icon>home</mat-icon>
+                    Homeowners
+                    <mat-chip class="count-chip homeowner-count">
+                      {{homeownerMembers.length}}
+                    </mat-chip>
+                  </ng-template>
+
+                  <div class="members-table">
+                    <table mat-table [dataSource]="homeownerMembers" class="members-data-table">
                   <ng-container matColumnDef="name">
                     <th mat-header-cell *matHeaderCellDef>Member</th>
                     <td mat-cell *matCellDef="let member">
@@ -270,9 +186,11 @@ interface MemberResponse {
                           <mat-icon>{{member.isApproved ? 'verified' : 'pending'}}</mat-icon>
                           {{member.isApproved ? 'Approved' : 'Pending'}}
                         </mat-chip>
-                        <mat-chip [class]="member.membershipFeesPaid ? 'status-chip paid' : 'status-chip unpaid'">
-                          <mat-icon>{{member.membershipFeesPaid ? 'paid' : 'payment'}}</mat-icon>
-                          {{member.membershipFeesPaid ? 'Paid' : 'Unpaid'}}
+                        <mat-chip
+                          [class]="hasPaidFor2026(member) ? 'status-chip paid' : 'status-chip unpaid'"
+                          [matTooltip]="hasPaidFor2026(member) ? '2026 membership fees paid' : '2026 membership fees not paid'">
+                          <mat-icon>{{hasPaidFor2026(member) ? 'paid' : 'payment'}}</mat-icon>
+                          {{hasPaidFor2026(member) ? (member.membership2026Amount ? 'Paid - ₱' + member.membership2026Amount : 'Paid') : 'Unpaid'}}
                         </mat-chip>
                       </div>
                     </td>
@@ -335,14 +253,265 @@ interface MemberResponse {
                   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                 </table>
 
-                <mat-paginator 
-                  [length]="allMembersPagination?.total || 0"
-                  [pageSize]="allMembersPagination?.limit || 20"
-                  [pageIndex]="(allMembersPagination?.page || 1) - 1"
-                  [pageSizeOptions]="[10, 20, 50, 100]"
-                  (page)="onPageChange($event)"
-                  showFirstLastButtons>
-                </mat-paginator>
+                    <mat-paginator
+                      [length]="homeownerMembersPagination?.total || homeownerMembers.length"
+                      [pageSize]="100"
+                      [pageSizeOptions]="[10, 20, 50, 100]"
+                      showFirstLastButtons>
+                    </mat-paginator>
+                  </div>
+                </mat-tab>
+
+                <!-- Non-Homeowners Sub-tab -->
+                <mat-tab>
+                  <ng-template mat-tab-label>
+                    <mat-icon>people</mat-icon>
+                    Non-Homeowners
+                    <mat-chip class="count-chip">
+                      {{nonHomeownerMembers.length}}
+                    </mat-chip>
+                  </ng-template>
+
+                  <div class="members-table">
+                    <table mat-table [dataSource]="nonHomeownerMembers" class="members-data-table">
+                      <ng-container matColumnDef="name">
+                        <th mat-header-cell *matHeaderCellDef>Member</th>
+                        <td mat-cell *matCellDef="let member">
+                          <div class="member-info">
+                            <strong>{{member.fullName}}</strong>
+                            <span class="username">@{{member.username}}</span>
+                          </div>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="contact">
+                        <th mat-header-cell *matHeaderCellDef>Contact</th>
+                        <td mat-cell *matCellDef="let member">
+                          <div class="contact-info">
+                            <span>{{member.email}}</span>
+                            <span *ngIf="member.phone" class="phone">{{member.phone}}</span>
+                          </div>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="role">
+                        <th mat-header-cell *matHeaderCellDef>Role</th>
+                        <td mat-cell *matCellDef="let member">
+                          <mat-select
+                            [value]="member.role"
+                            (selectionChange)="onRoleChange(member, $event.value)"
+                            [disabled]="!authService.isSuperAdmin() || member._id === authService.currentUser?._id"
+                            class="role-selector"
+                            [ngClass]="getRoleClass(member.role)">
+                            <mat-option value="member">
+                              <mat-icon class="role-icon member-icon">person</mat-icon>
+                              Member
+                            </mat-option>
+                            <mat-option value="treasurer">
+                              <mat-icon class="role-icon treasurer-icon">account_balance</mat-icon>
+                              Treasurer
+                            </mat-option>
+                            <mat-option value="admin">
+                              <mat-icon class="role-icon admin-icon">admin_panel_settings</mat-icon>
+                              Admin
+                            </mat-option>
+                            <mat-option value="superadmin">
+                              <mat-icon class="role-icon superadmin-icon">shield</mat-icon>
+                              Superadmin
+                            </mat-option>
+                          </mat-select>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Status</th>
+                        <td mat-cell *matCellDef="let member">
+                          <div class="status-badges">
+                            <mat-chip [class]="member.isActive !== false ? 'status-chip active' : 'status-chip inactive'">
+                              <mat-icon>{{member.isActive !== false ? 'check_circle' : 'cancel'}}</mat-icon>
+                              {{member.isActive !== false ? 'Active' : 'Inactive'}}
+                            </mat-chip>
+                            <mat-chip [class]="member.isApproved ? 'status-chip approved' : 'status-chip pending'">
+                              <mat-icon>{{member.isApproved ? 'verified' : 'pending'}}</mat-icon>
+                              {{member.isApproved ? 'Approved' : 'Pending'}}
+                            </mat-chip>
+                            <mat-chip
+                              [class]="hasPaidFor2026(member) ? 'status-chip paid' : 'status-chip unpaid'"
+                              [matTooltip]="hasPaidFor2026(member) ? '2026 membership fees paid' : '2026 membership fees not paid'">
+                              <mat-icon>{{hasPaidFor2026(member) ? 'paid' : 'payment'}}</mat-icon>
+                              {{hasPaidFor2026(member) ? (member.membership2026Amount ? 'Paid - ₱' + member.membership2026Amount : 'Paid') : 'Unpaid'}}
+                            </mat-chip>
+                          </div>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="registered">
+                        <th mat-header-cell *matHeaderCellDef>Registered</th>
+                        <td mat-cell *matCellDef="let member">{{member.registrationDate | date:'mediumDate'}}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="coins">
+                        <th mat-header-cell *matHeaderCellDef>Coins</th>
+                        <td mat-cell *matCellDef="let member">
+                          <span class="coin-balance">{{member.coinBalance}}</span>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Actions</th>
+                        <td mat-cell *matCellDef="let member">
+                          <div class="table-actions">
+                            <button mat-icon-button (click)="viewMemberDetails(member)" matTooltip="View Details">
+                              <mat-icon>visibility</mat-icon>
+                            </button>
+                            <button
+                              mat-icon-button
+                              color="primary"
+                              (click)="toggleApproval(member)"
+                              [matTooltip]="member.isApproved ? 'Revoke Approval' : 'Approve Member'">
+                              <mat-icon>{{member.isApproved ? 'block' : 'check'}}</mat-icon>
+                            </button>
+                            <button
+                              mat-icon-button
+                              color="accent"
+                              (click)="impersonateUser(member)"
+                              matTooltip="Impersonate User (Login as them)"
+                              [disabled]="member.role === 'admin' || member.role === 'superadmin'">
+                              <mat-icon>supervisor_account</mat-icon>
+                            </button>
+                            <button
+                              mat-icon-button
+                              color="accent"
+                              (click)="resetPassword(member)"
+                              matTooltip="Reset Password to RT2Tennis"
+                              [disabled]="updating === member._id">
+                              <mat-icon>lock_reset</mat-icon>
+                            </button>
+                            <button
+                              mat-icon-button
+                              [color]="member.isActive !== false ? 'warn' : 'primary'"
+                              (click)="member.isActive !== false ? deactivateMember(member) : reactivateMember(member)"
+                              [matTooltip]="member.isActive !== false ? 'Deactivate Member' : 'Reactivate Member'">
+                              <mat-icon>{{member.isActive !== false ? 'person_remove' : 'person_add'}}</mat-icon>
+                            </button>
+                          </div>
+                        </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    </table>
+
+                    <mat-paginator
+                      [length]="nonHomeownerMembersPagination?.total || nonHomeownerMembers.length"
+                      [pageSize]="100"
+                      [pageSizeOptions]="[10, 20, 50, 100]"
+                      showFirstLastButtons>
+                    </mat-paginator>
+                  </div>
+                </mat-tab>
+              </mat-tab-group>
+            </div>
+          </mat-tab>
+
+          <!-- Pending Approvals Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon>pending</mat-icon>
+              Pending Approvals
+              <mat-chip *ngIf="pendingMembers.length > 0" class="count-chip pending-count">
+                {{pendingMembers.length}}
+              </mat-chip>
+            </ng-template>
+
+            <div class="tab-content">
+              <div class="loading-container" *ngIf="loadingPending">
+                <mat-spinner></mat-spinner>
+                <p>Loading pending members...</p>
+              </div>
+
+              <div class="empty-state" *ngIf="!loadingPending && pendingMembers.length === 0">
+                <mat-icon class="empty-icon">check_circle</mat-icon>
+                <h3>No Pending Approvals</h3>
+                <p>All member registrations have been processed.</p>
+              </div>
+
+              <div class="members-grid" *ngIf="!loadingPending && pendingMembers.length > 0">
+                <mat-card *ngFor="let member of pendingMembers" class="member-card pending-card">
+                  <mat-card-header>
+                    <div mat-card-avatar class="member-avatar">
+                      <mat-icon>person</mat-icon>
+                    </div>
+                    <mat-card-title>{{member.fullName}}</mat-card-title>
+                    <mat-card-subtitle>@{{member.username}}</mat-card-subtitle>
+                  </mat-card-header>
+
+                  <mat-card-content>
+                    <div class="member-details">
+                      <div class="detail-row">
+                        <mat-icon>email</mat-icon>
+                        <span>{{member.email}}</span>
+                      </div>
+                      <div class="detail-row" *ngIf="member.phone">
+                        <mat-icon>phone</mat-icon>
+                        <span>{{member.phone}}</span>
+                      </div>
+                      <div class="detail-row" *ngIf="member.gender">
+                        <mat-icon>wc</mat-icon>
+                        <span>{{member.gender | titlecase}}</span>
+                      </div>
+                      <div class="detail-row">
+                        <mat-icon>calendar_today</mat-icon>
+                        <span>Registered: {{member.registrationDate | date:'short'}}</span>
+                      </div>
+                    </div>
+
+                    <div class="status-chips">
+                      <mat-chip class="status-chip pending">
+                        <mat-icon>pending</mat-icon>
+                        Pending Approval
+                      </mat-chip>
+                      <mat-chip
+                        [class]="hasPaidFor2026(member) ? 'status-chip paid' : 'status-chip unpaid'"
+                        [matTooltip]="hasPaidFor2026(member) ? '2026 membership fees paid' : '2026 membership fees not paid'">
+                        <mat-icon>{{hasPaidFor2026(member) ? 'paid' : 'payment'}}</mat-icon>
+                        {{hasPaidFor2026(member) ? (member.membership2026Amount ? 'Paid - ₱' + member.membership2026Amount : 'Paid') : 'Unpaid'}}
+                      </mat-chip>
+                      <mat-chip *ngIf="member.isHomeowner" class="status-chip homeowner" matTooltip="Homeowner">
+                        <mat-icon>home</mat-icon>
+                        Homeowner
+                      </mat-chip>
+                    </div>
+                  </mat-card-content>
+
+                  <mat-card-actions class="member-actions">
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      (click)="approveMember(member)"
+                      [disabled]="updating === member._id">
+                      <mat-spinner *ngIf="updating === member._id" diameter="16"></mat-spinner>
+                      <mat-icon *ngIf="updating !== member._id">check</mat-icon>
+                      Approve
+                    </button>
+
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      (click)="rejectMember(member)"
+                      [disabled]="updating === member._id">
+                      <mat-icon>close</mat-icon>
+                      Reject
+                    </button>
+
+                    <button
+                      mat-button
+                      (click)="viewMemberDetails(member)">
+                      <mat-icon>visibility</mat-icon>
+                      Details
+                    </button>
+                  </mat-card-actions>
+                </mat-card>
               </div>
             </div>
           </mat-tab>
@@ -426,9 +595,11 @@ interface MemberResponse {
                           <mat-icon>{{member.isApproved ? 'verified' : 'pending'}}</mat-icon>
                           {{member.isApproved ? 'Approved' : 'Pending'}}
                         </mat-chip>
-                        <mat-chip [class]="member.membershipFeesPaid ? 'status-chip paid' : 'status-chip unpaid'">
-                          <mat-icon>{{member.membershipFeesPaid ? 'paid' : 'payment'}}</mat-icon>
-                          {{member.membershipFeesPaid ? 'Paid' : 'Unpaid'}}
+                        <mat-chip
+                          [class]="hasPaidFor2026(member) ? 'status-chip paid' : 'status-chip unpaid'"
+                          [matTooltip]="hasPaidFor2026(member) ? '2026 membership fees paid' : '2026 membership fees not paid'">
+                          <mat-icon>{{hasPaidFor2026(member) ? 'paid' : 'payment'}}</mat-icon>
+                          {{hasPaidFor2026(member) ? (member.membership2026Amount ? 'Paid - ₱' + member.membership2026Amount : 'Paid') : 'Unpaid'}}
                         </mat-chip>
                       </div>
                     </td>
@@ -466,7 +637,7 @@ interface MemberResponse {
 
                 <mat-paginator
                   [length]="inactiveMembersPagination?.total || 0"
-                  [pageSize]="inactiveMembersPagination?.limit || 20"
+                  [pageSize]="inactiveMembersPagination?.limit || 100"
                   [pageIndex]="(inactiveMembersPagination?.page || 1) - 1"
                   [pageSizeOptions]="[10, 20, 50, 100]"
                   (page)="onInactivePageChange($event)"
@@ -485,6 +656,7 @@ export class AdminMemberManagementComponent implements OnInit {
   pendingMembers: Member[] = [];
   allMembers: Member[] = [];
   allMembersPagination: any = null;
+
   inactiveMembers: Member[] = [];
   inactiveMembersPagination: any = null;
 
@@ -535,14 +707,32 @@ export class AdminMemberManagementComponent implements OnInit {
       });
   }
 
-  loadAllMembers(page: number = 1): void {
+  loadAllMembers(page: number = 1, limit: number = 100): void {
     this.loadingAll = true;
-    const headers = { 'Authorization': `Bearer ${this.authService.token}` };
+    const headers = {
+      'Authorization': `Bearer ${this.authService.token}`
+    };
 
-    this.http.get<MemberResponse>(`${this.apiUrl}/members?page=${page}`, { headers })
+    // Add cache buster to force fresh data
+    const cacheBuster = Date.now();
+    const url = `${this.apiUrl}/members?page=${page}&limit=${limit}&_=${cacheBuster}`;
+
+    this.http.get<MemberResponse>(url, { headers })
       .subscribe({
         next: (response) => {
-          this.allMembers = response.data;
+          // Sort members: paid status first, then by name
+          const sorted = response.data.sort((a, b) => {
+            // Primary sort: paid members first
+            const aPaid = this.hasPaidFor2026(a) ? 1 : 0;
+            const bPaid = this.hasPaidFor2026(b) ? 1 : 0;
+            if (bPaid !== aPaid) {
+              return bPaid - aPaid; // Paid (1) comes before Unpaid (0)
+            }
+            // Secondary sort: alphabetical by full name
+            return a.fullName.localeCompare(b.fullName);
+          });
+
+          this.allMembers = sorted;
           this.allMembersPagination = response.pagination;
           this.loadingAll = false;
         },
@@ -554,11 +744,11 @@ export class AdminMemberManagementComponent implements OnInit {
       });
   }
 
-  loadInactiveMembers(page: number = 1): void {
+  loadInactiveMembers(page: number = 1, limit: number = 100): void {
     this.loadingInactive = true;
     const headers = { 'Authorization': `Bearer ${this.authService.token}` };
 
-    this.http.get<MemberResponse>(`${this.apiUrl}/members/admin/inactive?page=${page}`, { headers })
+    this.http.get<MemberResponse>(`${this.apiUrl}/members/admin/inactive?page=${page}&limit=${limit}`, { headers })
       .subscribe({
         next: (response) => {
           this.inactiveMembers = response.data;
@@ -893,4 +1083,25 @@ export class AdminMemberManagementComponent implements OnInit {
     };
     return icons[role] || 'person';
   }
+
+  /**
+   * Check if member has paid membership fee for 2026
+   */
+  hasPaidFor2026(member: Member): boolean {
+    return member.membershipYearsPaid?.includes(2026) || false;
+  }
+
+  // Getter for homeowner members
+  get homeownerMembers(): Member[] {
+    return this.allMembers.filter(member => member.isHomeowner === true);
+  }
+
+  // Getter for non-homeowner members
+  get nonHomeownerMembers(): Member[] {
+    return this.allMembers.filter(member => !member.isHomeowner);
+  }
+
+  // Pagination objects for sub-tabs (client-side pagination)
+  homeownerMembersPagination: any = null;
+  nonHomeownerMembersPagination: any = null;
 }

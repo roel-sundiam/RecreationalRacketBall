@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { query } from 'express-validator';
 import User from '../models/User';
 import Reservation from '../models/Reservation';
+import Payment from '../models/Payment';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 
@@ -64,16 +65,49 @@ export const getMembers = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const total = await User.countDocuments(filter);
 
   // Select only public fields for members directory
-  const publicFields = 'fullName username email gender profilePicture registrationDate lastLogin role coinBalance membershipFeesPaid isActive isApproved membershipYearsPaid';
+  const publicFields = 'fullName username email gender profilePicture registrationDate lastLogin role coinBalance membershipFeesPaid isActive isApproved isHomeowner membershipYearsPaid';
 
   const members = await User.find(filter, publicFields)
     .sort(sortOption)
     .skip(skip)
     .limit(limit);
 
+  // Fetch 2026 membership payment amounts for all members
+  const memberIds = members.map(m => m._id.toString());
+
+  const payments2026 = await Payment.find({
+    userId: { $in: memberIds },
+    paymentType: 'membership_fee',
+    membershipYear: 2026,
+    status: 'record'
+  }).select('userId amount');
+
+  // Create a map of userId -> payment amount
+  const paymentMap = new Map();
+  payments2026.forEach((payment: any) => {
+    const userIdStr = typeof payment.userId === 'string' ? payment.userId : payment.userId.toString();
+    paymentMap.set(userIdStr, payment.amount);
+  });
+
+  // Attach payment amounts to member objects
+  const membersWithPayments = members.map((member: any) => {
+    const memberObj = member.toObject();
+    const amount = paymentMap.get(member._id.toString());
+    memberObj.membership2026Amount = amount || null;
+
+    // Debug logging
+    if (amount) {
+      console.log(`✅ ${member.fullName}: ₱${amount}`);
+    }
+
+    return memberObj;
+  });
+
+  console.log(`📊 Found ${payments2026.length} payments for ${members.length} members`);
+
   return res.status(200).json({
     success: true,
-    data: members,
+    data: membersWithPayments,
     pagination: {
       page,
       limit,

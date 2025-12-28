@@ -152,6 +152,8 @@ export const requireRole = (roles: string[]) => {
 
 export const requireAdmin = requireRole(['admin', 'superadmin']);
 export const requireSuperAdmin = requireRole(['superadmin']);
+export const requireTreasurer = requireRole(['treasurer', 'admin', 'superadmin']);
+export const requireFinancialAccess = requireRole(['treasurer', 'admin', 'superadmin']);
 
 export const requireApprovedUser = (
   req: AuthenticatedRequest,

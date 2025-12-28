@@ -13,7 +13,7 @@ export const getMembers = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   // Build filter query
   const filter: any = {
-    role: { $in: ['member', 'admin'] }
+    role: { $in: ['member', 'admin', 'treasurer', 'superadmin'] }
   };
 
   // Include active/approved filters unless explicitly requesting all users
@@ -377,6 +377,78 @@ export const updateMemberApproval = asyncHandler(async (req: AuthenticatedReques
     return res.status(500).json({
       success: false,
       error: 'Failed to update member'
+    });
+  }
+});
+
+// Update member role (Superadmin only)
+export const updateMemberRole = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { role } = req.body;
+
+  if (!id) {
+    return res.status(400).json({
+      success: false,
+      error: 'Member ID is required'
+    });
+  }
+
+  // Check if user is superadmin
+  if (req.user?.role !== 'superadmin') {
+    return res.status(403).json({
+      success: false,
+      error: 'Access denied. Superadmin privileges required to change roles.'
+    });
+  }
+
+  // Validate role
+  const validRoles = ['member', 'admin', 'superadmin', 'treasurer'];
+  if (!role || !validRoles.includes(role)) {
+    return res.status(400).json({
+      success: false,
+      error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+    });
+  }
+
+  try {
+    const member = await User.findById(id);
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        error: 'Member not found'
+      });
+    }
+
+    // Prevent changing own role
+    if (member._id.toString() === req.user?._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        error: 'You cannot change your own role'
+      });
+    }
+
+    const oldRole = member.role;
+
+    // Update role
+    const updatedMember = await User.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true }
+    ).select('-password');
+
+    console.log(`👤 Role changed: ${member.username} from ${oldRole} to ${role} by ${req.user?.username}`);
+
+    return res.status(200).json({
+      success: true,
+      message: `${updatedMember?.fullName}'s role changed from ${oldRole} to ${role}`,
+      data: updatedMember
+    });
+
+  } catch (error) {
+    console.error('Error updating member role:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to update member role'
     });
   }
 });

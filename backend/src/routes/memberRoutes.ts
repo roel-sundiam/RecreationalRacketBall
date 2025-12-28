@@ -7,6 +7,7 @@ import {
   searchMembers,
   getMembersValidation,
   updateMemberApproval,
+  updateMemberRole,
   deleteMember,
   reactivateMember,
   getPendingMembers,
@@ -90,6 +91,13 @@ router.get('/admin/pending', authenticateToken, requireRole(['admin', 'superadmi
  * @access Private (Admin/SuperAdmin)
  */
 router.put('/:id/approval', authenticateToken, requireRole(['admin', 'superadmin']), preventImpersonationFor(['approve members']), updateMemberApproval);
+
+/**
+ * @route PUT /api/members/:id/role
+ * @desc Update member role (superadmin only)
+ * @access Private (SuperAdmin only)
+ */
+router.put('/:id/role', authenticateToken, requireRole(['superadmin']), preventImpersonationFor(['change roles']), updateMemberRole);
 
 /**
  * @route DELETE /api/members/:id

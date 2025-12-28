@@ -376,15 +376,15 @@ import { environment } from '../../../environments/environment';
 
         </div>
 
-        <!-- Admin Section -->
-        <div class="admin-section" *ngIf="isAdmin">
-          <h2 class="section-title admin-title">
-            <mat-icon>admin_panel_settings</mat-icon>
-            Administration
+        <!-- Financial Management Section -->
+        <div class="financial-section" *ngIf="hasFinancialAccess">
+          <h2 class="section-title financial-title">
+            <mat-icon>account_balance</mat-icon>
+            Financial Management
           </h2>
 
-          <!-- Database Indicator -->
-          <mat-card class="database-indicator-card" [ngClass]="getDatabaseClass()">
+          <!-- Database Indicator (only show for admins) -->
+          <mat-card class="database-indicator-card" [ngClass]="getDatabaseClass()" *ngIf="isAdmin">
             <mat-card-content>
               <div class="database-info">
                 <mat-icon class="database-icon">storage</mat-icon>
@@ -395,6 +395,91 @@ import { environment } from '../../../environments/environment';
               </div>
             </mat-card-content>
           </mat-card>
+
+          <div class="financial-grid">
+            <!-- Reports & Analytics -->
+            <mat-card class="action-card financial-card" data-icon="analytics" data-title="Reports & Analytics" (click)="navigateTo('/admin/reports')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>analytics</mat-icon>
+              </div>
+              <div class="mobile-card-title">Reports & Analytics</div>
+
+              <!-- Desktop Content -->
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="action-icon financial-icon">analytics</mat-icon>
+                <mat-card-title>Reports & Analytics</mat-card-title>
+                <mat-card-subtitle>View system reports</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>Generate reports and view system analytics.</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-raised-button class="financial-btn" (click)="navigateTo('/admin/reports')">
+                  <mat-icon>analytics</mat-icon>
+                  View Reports
+                </button>
+              </mat-card-actions>
+            </mat-card>
+
+            <!-- Membership Payments -->
+            <mat-card class="action-card financial-card" data-icon="card_membership" data-title="Membership Payments" (click)="navigateTo('/admin/membership-payments')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>card_membership</mat-icon>
+              </div>
+              <div class="mobile-card-title">Membership Payments</div>
+
+              <!-- Desktop Content -->
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="action-icon financial-icon">card_membership</mat-icon>
+                <mat-card-title>Membership Payments</mat-card-title>
+                <mat-card-subtitle>Record annual membership fees</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>Record and track annual membership fee payments for club members.</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-raised-button class="financial-btn" (click)="navigateTo('/admin/membership-payments')">
+                  <mat-icon>card_membership</mat-icon>
+                  Manage Fees
+                </button>
+              </mat-card-actions>
+            </mat-card>
+
+            <!-- Financial Report -->
+            <mat-card class="action-card financial-card" data-icon="account_balance" data-title="Financial Report" (click)="navigateTo('/admin/financial-report')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>account_balance</mat-icon>
+              </div>
+              <div class="mobile-card-title">Financial Report</div>
+
+              <!-- Desktop Content -->
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="action-icon financial-icon">account_balance</mat-icon>
+                <mat-card-title>Financial Report</mat-card-title>
+                <mat-card-subtitle>View club financial statements</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>Access detailed financial reports and revenue analysis.</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-raised-button class="financial-btn" (click)="navigateTo('/admin/financial-report')">
+                  <mat-icon>account_balance</mat-icon>
+                  View Report
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+
+        <!-- Admin Section -->
+        <div class="admin-section" *ngIf="isAdmin">
+          <h2 class="section-title admin-title">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Administration
+          </h2>
 
           <div class="admin-grid">
             <!-- Member Management -->
@@ -418,56 +503,6 @@ import { environment } from '../../../environments/environment';
                 <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/members')">
                   <mat-icon>people_alt</mat-icon>
                   Manage Members
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
-            <!-- Reports & Analytics -->
-            <mat-card class="action-card admin-card" data-icon="analytics" data-title="Reports & Analytics" (click)="navigateTo('/admin/reports')">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>analytics</mat-icon>
-              </div>
-              <div class="mobile-card-title">Reports & Analytics</div>
-              
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">analytics</mat-icon>
-                <mat-card-title>Reports & Analytics</mat-card-title>
-                <mat-card-subtitle>View system reports</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Generate reports and view system analytics.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/reports')">
-                  <mat-icon>analytics</mat-icon>
-                  View Reports
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
-            <!-- Membership Payments -->
-            <mat-card class="action-card admin-card" data-icon="card_membership" data-title="Membership Payments" (click)="navigateTo('/admin/membership-payments')">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>card_membership</mat-icon>
-              </div>
-              <div class="mobile-card-title">Membership Payments</div>
-
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">card_membership</mat-icon>
-                <mat-card-title>Membership Payments</mat-card-title>
-                <mat-card-subtitle>Record annual membership fees</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Record and track annual membership fee payments for club members.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/membership-payments')">
-                  <mat-icon>card_membership</mat-icon>
-                  Manage Fees
                 </button>
               </mat-card-actions>
             </mat-card>
@@ -643,31 +678,6 @@ import { environment } from '../../../environments/environment';
                 <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/analytics')">
                   <mat-icon>analytics</mat-icon>
                   View Analytics
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
-            <!-- Financial Report -->
-            <mat-card class="action-card admin-card" data-icon="account_balance" data-title="Financial Report" (click)="navigateTo('/admin/financial-report')">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>account_balance</mat-icon>
-              </div>
-              <div class="mobile-card-title">Financial Report</div>
-
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">account_balance</mat-icon>
-                <mat-card-title>Financial Report</mat-card-title>
-                <mat-card-subtitle>View club financial statements</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Access detailed financial reports and revenue analysis.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/financial-report')">
-                  <mat-icon>account_balance</mat-icon>
-                  View Report
                 </button>
               </mat-card-actions>
             </mat-card>
@@ -869,14 +879,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   isAdmin = false;
   isSuperAdmin = false;
+  isTreasurer = false;
+  hasFinancialAccess = false;
   private apiUrl = environment.apiUrl;
   private subscriptions: Subscription[] = [];
   databaseName: string = 'Loading...';
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private analyticsService: AnalyticsService,
-    private router: Router,
+    public router: Router,
     private dialog: MatDialog,
     private http: HttpClient,
     private webSocketService: WebSocketService,
@@ -889,17 +901,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.currentUser = this.authService.currentUser;
     this.isAdmin = this.authService.isAdmin();
     this.isSuperAdmin = this.authService.isSuperAdmin();
+    this.isTreasurer = this.authService.isTreasurer();
+    this.hasFinancialAccess = this.authService.hasFinancialAccess();
 
     // Subscribe to user changes
     const userSub = this.authService.currentUser$.subscribe((user: any) => {
       this.currentUser = user;
       this.isAdmin = this.authService.isAdmin();
       this.isSuperAdmin = this.authService.isSuperAdmin();
+      this.isTreasurer = this.authService.isTreasurer();
+      this.hasFinancialAccess = this.authService.hasFinancialAccess();
     });
     this.subscriptions.push(userSub);
 
-    // Fetch database name for admin users
-    if (this.isAdmin) {
+    // Fetch database name for admin users or treasurers
+    if (this.isAdmin || this.isTreasurer) {
       this.fetchDatabaseInfo();
     }
 
@@ -942,7 +958,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   navigateTo(route: string): void {
-    console.log('📱 Dashboard: Navigating to:', route);
     this.router.navigate([route]);
   }
 

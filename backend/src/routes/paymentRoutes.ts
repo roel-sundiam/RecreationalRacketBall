@@ -26,7 +26,7 @@ import {
   deleteMembershipPayment,
   validateMembershipFeePayment
 } from '../controllers/paymentController';
-import { authenticateToken, requireRole, AuthenticatedRequest } from '../middleware/auth';
+import { authenticateToken, requireRole, requireFinancialAccess, AuthenticatedRequest } from '../middleware/auth';
 import { autoFixPaymentsMiddleware } from '../middleware/autoFixPayments';
 import { validationResult } from 'express-validator';
 
@@ -87,7 +87,7 @@ router.post(
 router.get(
   '/',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getPayments
 );
 
@@ -166,13 +166,13 @@ router.post(
 
 /**
  * @route POST /api/payments/membership-fee
- * @desc Record membership fee payment for a member (Admin only)
- * @access Private (Admin/SuperAdmin only)
+ * @desc Record membership fee payment for a member
+ * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.post(
   '/membership-fee',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   validateMembershipFeePayment,
   handleValidationErrors,
   recordMembershipFeePayment
@@ -181,48 +181,48 @@ router.post(
 /**
  * @route GET /api/payments/membership-fees
  * @desc Get all membership fee payments with filtering
- * @access Private (Admin/SuperAdmin only)
+ * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.get(
   '/membership-fees',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getMembershipPayments
 );
 
 /**
  * @route GET /api/payments/membership-fees/summary
  * @desc Get membership fee payment summary by year
- * @access Private (Admin/SuperAdmin only)
+ * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.get(
   '/membership-fees/summary',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getMembershipPaymentSummary
 );
 
 /**
  * @route PATCH /api/payments/membership-fees/:id
  * @desc Update membership fee payment
- * @access Private (Admin/SuperAdmin only)
+ * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.patch(
   '/membership-fees/:id',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   updateMembershipPayment
 );
 
 /**
  * @route DELETE /api/payments/membership-fees/:id
  * @desc Delete membership fee payment
- * @access Private (Admin/SuperAdmin only)
+ * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.delete(
   '/membership-fees/:id',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   deleteMembershipPayment
 );
 

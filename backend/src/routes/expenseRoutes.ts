@@ -9,7 +9,7 @@ import {
   getExpenseStats,
   expenseValidationRules
 } from '../controllers/expenseController';
-import { authenticateToken, requireRole } from '../middleware/auth';
+import { authenticateToken, requireRole, requireFinancialAccess } from '../middleware/auth';
 
 const router = Router();
 
@@ -21,7 +21,7 @@ const router = Router();
 router.get(
   '/',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getAllExpenses
 );
 
@@ -33,7 +33,7 @@ router.get(
 router.get(
   '/categories',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getExpenseCategories
 );
 
@@ -45,7 +45,7 @@ router.get(
 router.get(
   '/stats',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getExpenseStats
 );
 
@@ -57,7 +57,7 @@ router.get(
 router.get(
   '/:id',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getExpenseById
 );
 
@@ -69,7 +69,7 @@ router.get(
 router.post(
   '/',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   expenseValidationRules,
   createExpense
 );
@@ -82,7 +82,7 @@ router.post(
 router.put(
   '/:id',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   expenseValidationRules,
   updateExpense
 );
@@ -95,7 +95,7 @@ router.put(
 router.delete(
   '/:id',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   deleteExpense
 );
 

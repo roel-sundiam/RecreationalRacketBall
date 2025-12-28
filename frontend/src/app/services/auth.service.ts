@@ -9,7 +9,7 @@ export interface User {
   username: string;
   fullName: string;
   email: string;
-  role: 'member' | 'admin' | 'superadmin';
+  role: 'member' | 'admin' | 'superadmin' | 'treasurer';
   seedPoints?: number;
   matchesWon?: number;
   matchesPlayed?: number;
@@ -210,6 +210,16 @@ export class AuthService {
 
   isSuperAdmin(): boolean {
     return this.currentUser?.role === 'superadmin';
+  }
+
+  isTreasurer(): boolean {
+    return this.currentUser?.role === 'treasurer';
+  }
+
+  hasFinancialAccess(): boolean {
+    return this.currentUser?.role === 'treasurer' ||
+           this.currentUser?.role === 'admin' ||
+           this.currentUser?.role === 'superadmin';
   }
 
   /**

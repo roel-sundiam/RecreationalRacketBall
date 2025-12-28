@@ -78,8 +78,8 @@ const userSchema = new Schema<IUserDocument>({
   role: {
     type: String,
     enum: {
-      values: ['member', 'admin', 'superadmin'],
-      message: 'Role must be member, admin, or superadmin'
+      values: ['member', 'admin', 'superadmin', 'treasurer'],
+      message: 'Role must be member, admin, superadmin, or treasurer'
     },
     default: 'member',
     index: true

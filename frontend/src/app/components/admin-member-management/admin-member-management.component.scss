@@ -409,3 +409,89 @@
   background-color: #f59e0b !important;
   color: white !important;
 }
+
+::ng-deep .error-snackbar {
+  background-color: #ef4444 !important;
+  color: white !important;
+}
+
+// Role Selector Styles
+.role-selector {
+  min-width: 140px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 6px;
+
+  &.role-member {
+    color: #6b7280;
+    border-color: #d1d5db;
+
+    ::ng-deep .mat-mdc-select-value {
+      color: #6b7280;
+    }
+  }
+
+  &.role-treasurer {
+    color: #4CAF50;
+    border-color: #4CAF50;
+
+    ::ng-deep .mat-mdc-select-value {
+      color: #4CAF50;
+    }
+  }
+
+  &.role-admin {
+    color: #3b82f6;
+    border-color: #3b82f6;
+
+    ::ng-deep .mat-mdc-select-value {
+      color: #3b82f6;
+    }
+  }
+
+  &.role-superadmin {
+    color: #dc2626;
+    border-color: #dc2626;
+
+    ::ng-deep .mat-mdc-select-value {
+      color: #dc2626;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Role option icons
+.role-icon {
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+
+  &.member-icon {
+    color: #6b7280;
+  }
+
+  &.treasurer-icon {
+    color: #4CAF50;
+  }
+
+  &.admin-icon {
+    color: #3b82f6;
+  }
+
+  &.superadmin-icon {
+    color: #dc2626;
+  }
+}
+
+// Mat-option styling for role selector
+::ng-deep .mat-mdc-option {
+  .role-icon {
+    margin-right: 0.5rem;
+  }
+}

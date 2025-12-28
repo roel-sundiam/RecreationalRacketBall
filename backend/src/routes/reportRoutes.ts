@@ -14,7 +14,7 @@ import {
   getSyncStatus
 } from '../controllers/reportController';
 import { getStaticCourtUsageReport } from '../controllers/staticReportController';
-import { authenticateToken, requireRole } from '../middleware/auth';
+import { authenticateToken, requireRole, requireFinancialAccess } from '../middleware/auth';
 
 const router = Router();
 
@@ -81,12 +81,12 @@ router.get(
 /**
  * @route GET /api/reports/court-receipts
  * @desc Get court payment receipts with service fee breakdown
- * @access Private (Admin/SuperAdmin)
+ * @access Private (Treasurer/Admin/SuperAdmin)
  */
 router.get(
   '/court-receipts',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getCourtReceiptsReport
 );
 
@@ -115,24 +115,24 @@ router.get(
 /**
  * @route GET /api/reports/financial-sheet
  * @desc Get financial report from spreadsheet data
- * @access Private (Admin/SuperAdmin)
+ * @access Private (Treasurer/Admin/SuperAdmin)
  */
 router.get(
   '/financial-sheet',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   getFinancialReport
 );
 
 /**
  * @route POST /api/reports/financial-sheet/force-refresh
  * @desc Force refresh financial report bypassing cache
- * @access Private (Admin/SuperAdmin)
+ * @access Private (Treasurer/Admin/SuperAdmin)
  */
 router.post(
   '/financial-sheet/force-refresh',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  requireFinancialAccess,
   forceRefreshFinancialReport
 );
 

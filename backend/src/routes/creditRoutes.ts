@@ -10,7 +10,7 @@ import {
   getAllCreditDeposits,
   recordCreditDeposit
 } from '../controllers/creditController';
-import { authenticateToken, requireApprovedUser, requireAdmin } from '../middleware/auth';
+import { authenticateToken, requireApprovedUser, requireAdmin, requireFinancialAccess } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { body, query } from 'express-validator';
 
@@ -66,8 +66,8 @@ router.get('/stats',
   getCreditStats
 );
 
-// Admin routes
-router.use(requireAdmin);
+// Admin routes - Allow financial access (treasurer, admin, superadmin)
+router.use(requireFinancialAccess);
 
 // Get all users' credit balances (admin only)
 router.get('/admin/all-balances',

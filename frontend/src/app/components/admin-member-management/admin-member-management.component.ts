@@ -13,6 +13,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
@@ -27,7 +28,7 @@ interface Member {
   email: string;
   gender?: 'male' | 'female' | 'other';
   phone?: string;
-  role: 'member' | 'admin' | 'superadmin';
+  role: 'member' | 'admin' | 'superadmin' | 'treasurer';
   coinBalance: number;
   registrationDate: Date;
   lastLogin?: Date;
@@ -66,7 +67,8 @@ interface MemberResponse {
     MatDialogModule,
     MatToolbarModule,
     MatPaginatorModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSelectModule
   ],
   template: `
     <div class="page-container">
@@ -222,6 +224,35 @@ interface MemberResponse {
                     </td>
                   </ng-container>
 
+                  <ng-container matColumnDef="role">
+                    <th mat-header-cell *matHeaderCellDef>Role</th>
+                    <td mat-cell *matCellDef="let member">
+                      <mat-select
+                        [value]="member.role"
+                        (selectionChange)="onRoleChange(member, $event.value)"
+                        [disabled]="!authService.isSuperAdmin() || member._id === authService.currentUser?._id"
+                        class="role-selector"
+                        [ngClass]="getRoleClass(member.role)">
+                        <mat-option value="member">
+                          <mat-icon class="role-icon member-icon">person</mat-icon>
+                          Member
+                        </mat-option>
+                        <mat-option value="treasurer">
+                          <mat-icon class="role-icon treasurer-icon">account_balance</mat-icon>
+                          Treasurer
+                        </mat-option>
+                        <mat-option value="admin">
+                          <mat-icon class="role-icon admin-icon">admin_panel_settings</mat-icon>
+                          Admin
+                        </mat-option>
+                        <mat-option value="superadmin">
+                          <mat-icon class="role-icon superadmin-icon">shield</mat-icon>
+                          Superadmin
+                        </mat-option>
+                      </mat-select>
+                    </td>
+                  </ng-container>
+
                   <ng-container matColumnDef="status">
                     <th mat-header-cell *matHeaderCellDef>Status</th>
                     <td mat-cell *matCellDef="let member">
@@ -325,13 +356,13 @@ export class AdminMemberManagementComponent implements OnInit {
   loadingAll = false;
   updating = '';
 
-  displayedColumns: string[] = ['name', 'contact', 'status', 'registered', 'coins', 'actions'];
+  displayedColumns: string[] = ['name', 'contact', 'role', 'status', 'registered', 'actions'];
 
   private apiUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService,
+    public authService: AuthService,
     private memberService: MemberService,
     private router: Router,
     private snackBar: MatSnackBar,
@@ -622,5 +653,70 @@ export class AdminMemberManagementComponent implements OnInit {
   onPageChange(event: PageEvent): void {
     const page = event.pageIndex + 1;
     this.loadAllMembers(page);
+  }
+
+  onRoleChange(member: Member, newRole: string): void {
+    const roleNames: any = {
+      'member': 'Member',
+      'treasurer': 'Treasurer',
+      'admin': 'Admin',
+      'superadmin': 'Superadmin'
+    };
+
+    const dialogData: ConfirmationDialogData = {
+      title: 'Change User Role',
+      message: `Are you sure you want to change ${member.fullName}'s role from ${roleNames[member.role]} to ${roleNames[newRole]}?`,
+      confirmText: 'Change Role',
+      cancelText: 'Cancel',
+      type: 'warning',
+      icon: 'admin_panel_settings'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '450px',
+      data: dialogData,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        const headers = { 'Authorization': `Bearer ${this.authService.token}` };
+
+        this.http.put<any>(`${this.apiUrl}/members/${member._id}/role`, { role: newRole }, { headers })
+          .subscribe({
+            next: (response) => {
+              this.snackBar.open(response.message || 'Role updated successfully', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+              // Update the local member object
+              member.role = newRole as any;
+            },
+            error: (error) => {
+              console.error('Error updating role:', error);
+              this.snackBar.open(
+                error.error?.error || 'Failed to update role',
+                'Close',
+                { duration: 3000, panelClass: ['error-snackbar'] }
+              );
+              // Refresh to revert the UI change
+              this.loadAllMembers();
+            }
+          });
+      } else {
+        // User cancelled - refresh to revert the select
+        this.loadAllMembers();
+      }
+    });
+  }
+
+  getRoleClass(role: string): string {
+    const classes: any = {
+      'member': 'role-member',
+      'treasurer': 'role-treasurer',
+      'admin': 'role-admin',
+      'superadmin': 'role-superadmin'
+    };
+    return classes[role] || 'role-member';
   }
 }

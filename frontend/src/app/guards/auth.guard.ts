@@ -6,10 +6,6 @@ export const authGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  console.log('Auth guard - isAuthenticated:', authService.isAuthenticated());
-  console.log('Auth guard - current user:', authService.currentUser);
-  console.log('Auth guard - token:', authService.token);
-
   if (authService.isAuthenticated()) {
     return true;
   }
@@ -47,6 +43,22 @@ export const superadminGuard = () => {
   const router = inject(Router);
 
   if (authService.isAuthenticated() && authService.isSuperAdmin()) {
+    return true;
+  }
+
+  router.navigate(['/dashboard']);
+  return false;
+};
+
+export const treasurerGuard = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  const user = authService.currentUser;
+  const role = user?.role;
+
+  // Check if user is authenticated and has financial access role
+  if (authService.isAuthenticated() && user && (role === 'treasurer' || role === 'admin' || role === 'superadmin')) {
     return true;
   }
 

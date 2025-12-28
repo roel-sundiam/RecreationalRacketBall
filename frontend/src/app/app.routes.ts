@@ -35,7 +35,7 @@ import { AdminResurfacingContributionsComponent } from './components/admin-resur
 import { ResurfacingContributionsComponent } from './components/resurfacing-contributions/resurfacing-contributions.component';
 import { GalleryComponent } from './components/gallery/gallery.component';
 import { AdminGalleryUploadComponent } from './components/admin-gallery-upload/admin-gallery-upload.component';
-import { authGuard, loginGuard, adminGuard, superadminGuard } from './guards/auth.guard';
+import { authGuard, loginGuard, adminGuard, superadminGuard, treasurerGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/calendar', pathMatch: 'full' },
@@ -113,10 +113,10 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   // Admin reports
-  { 
-    path: 'admin/reports', 
+  {
+    path: 'admin/reports',
     component: CourtReceiptsReportComponent,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [authGuard, treasurerGuard]
   },
   // Polls and voting
   { 
@@ -165,11 +165,11 @@ export const routes: Routes = [
     component: CourtUsageReportComponent,
     canActivate: [authGuard]
   },
-  // Financial Report (Admin only)
-  { 
-    path: 'admin/financial-report', 
+  // Financial Report (Treasurer/Admin/SuperAdmin)
+  {
+    path: 'admin/financial-report',
     component: FinancialReportComponent,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [authGuard, treasurerGuard]
   },
   // Expense Report (Admin only)
   { 
@@ -192,7 +192,7 @@ export const routes: Routes = [
   { path: 'admin/analytics', component: AdminAnalyticsComponent, canActivate: [authGuard, adminGuard] },
   { path: 'admin/manual-court-usage', component: AdminManualCourtUsageComponent, canActivate: [authGuard, superadminGuard] },
   { path: 'admin/block-court', component: AdminBlockCourtComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/membership-payments', component: AdminMembershipPaymentsComponent, canActivate: [authGuard, adminGuard] },
+  { path: 'admin/membership-payments', component: AdminMembershipPaymentsComponent, canActivate: [authGuard, treasurerGuard] },
   { path: 'admin/tournaments', component: TournamentManagementComponent, canActivate: [authGuard, adminGuard] },
   { path: 'admin/payments', component: AdminPaymentManagementComponent, canActivate: [authGuard, adminGuard] },
   { path: 'admin/resurfacing-contributions', component: AdminResurfacingContributionsComponent, canActivate: [authGuard, adminGuard] },

@@ -1917,12 +1917,12 @@ export class CourtReceiptsReportComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Check if user is admin
-    if (!this.authService.isAdmin()) {
+    // Check if user has financial access (treasurer, admin, or superadmin)
+    if (!this.authService.hasFinancialAccess()) {
       this.router.navigate(['/dashboard']);
       return;
     }
-    
+
     this.loadReport();
     this.loadCreditDeposits();
   }

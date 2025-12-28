@@ -339,6 +339,293 @@
   }
 }
 
+/* Financial Management Section */
+.financial-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(76, 175, 80, 0.3);
+}
+
+/* Debug Panel */
+.debug-panel {
+  background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+
+  mat-card-header {
+    background: #ffc107;
+    color: #000;
+    padding: 0.75rem 1rem;
+    margin: -16px -16px 16px -16px;
+    border-radius: 10px 10px 0 0;
+
+    mat-card-title {
+      margin: 0;
+      font-weight: 600;
+    }
+  }
+
+  .debug-icon {
+    background: #000;
+    color: #ffc107;
+  }
+
+  .debug-info {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .debug-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    font-size: 0.95rem;
+
+    strong {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .role-badge {
+      background: #6b7280;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    .status-yes {
+      color: #16a34a;
+      font-weight: 700;
+    }
+
+    .status-no {
+      color: #dc2626;
+      font-weight: 700;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .debug-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+/* Navigation Log Panel */
+.nav-log-panel {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+
+  mat-card-header {
+    background: #3b82f6;
+    color: white;
+    padding: 0.75rem 1rem;
+    margin: -16px -16px 16px -16px;
+    border-radius: 10px 10px 0 0;
+
+    mat-card-title {
+      margin: 0;
+      font-weight: 600;
+    }
+  }
+
+  .nav-log-icon {
+    background: white;
+    color: #3b82f6;
+  }
+
+  .nav-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav-log-entry {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    padding: 0.75rem;
+    border-left: 4px solid #3b82f6;
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+
+      .log-time {
+        font-weight: 600;
+        color: #1e40af;
+      }
+
+      .log-result {
+        font-weight: 700;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+
+        &.result-success {
+          background: #22c55e;
+          color: white;
+        }
+
+        &.result-blocked {
+          background: #ef4444;
+          color: white;
+        }
+
+        &.result-warning {
+          background: #f59e0b;
+          color: white;
+        }
+      }
+    }
+
+    .log-details {
+      font-size: 0.9rem;
+      color: #334155;
+      line-height: 1.6;
+
+      div {
+        margin-bottom: 0.25rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+
+      strong {
+        color: #1e293b;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .log-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .log-details {
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.financial-title {
+  color: #4CAF50;
+  font-size: 1.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  mat-icon {
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+
+    mat-icon {
+      font-size: 1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+}
+
+.financial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 1.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+  }
+}
+
+.financial-card {
+  border-left: 4px solid #4CAF50;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .card-icon {
+      width: 40px !important;
+      height: 40px !important;
+
+      mat-icon {
+        font-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+
+    mat-card-title {
+      font-size: 0.75rem !important;
+      line-height: 1.2;
+    }
+
+    mat-card-content {
+      font-size: 0.7rem !important;
+      padding: 0.5rem 0 !important;
+    }
+
+    button {
+      font-size: 0.7rem !important;
+      padding: 0.4rem 0.5rem !important;
+      min-width: auto !important;
+
+      mat-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        margin-left: 0.25rem;
+      }
+    }
+  }
+}
+
+.financial-icon {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+}
+
+.financial-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+
+  &:hover {
+    background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  }
+}
+
 /* Admin Section */
 .admin-section {
   margin-top: 4rem;
@@ -783,6 +1070,31 @@ app-coin-balance-alerts {
     -ms-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none !important;
+
+    /* IMPORTANT: Financial cards should keep buttons visible and clickable on mobile */
+    &.financial-card {
+      mat-card-header,
+      mat-card-content,
+      mat-card-actions {
+        display: block !important;
+        pointer-events: auto !important;
+      }
+
+      mat-card-actions {
+        display: flex !important;
+        pointer-events: auto !important;
+
+        button {
+          pointer-events: auto !important;
+          cursor: pointer !important;
+        }
+      }
+
+      .mobile-card-icon,
+      .mobile-card-title {
+        pointer-events: auto !important;
+      }
+    }
     
     /* Layout and visual properties */
     flex: unset !important;

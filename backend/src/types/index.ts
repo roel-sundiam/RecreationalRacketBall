@@ -10,7 +10,7 @@ export interface User {
   profilePicture?: string;
   isApproved: boolean;
   isActive: boolean;
-  role: 'member' | 'admin' | 'superadmin';
+  role: 'member' | 'admin' | 'superadmin' | 'treasurer';
   creditBalance: number;
   registrationDate: Date;
   lastLogin?: Date;

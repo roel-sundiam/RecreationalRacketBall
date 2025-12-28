@@ -51,7 +51,11 @@ export const register = asyncHandler(async (req: AuthenticatedRequest, res: Resp
 
   const response: AuthResponse = {
     token,
-    user: { ...user.toObject(), _id: user._id.toString() },
+    user: {
+      ...user.toObject(),
+      _id: user._id.toString(),
+      deletedBy: user.deletedBy?.toString() || null
+    } as Omit<User, 'password'>,
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   };
 
@@ -95,7 +99,11 @@ export const login = asyncHandler(async (req: AuthenticatedRequest, res: Respons
 
   const response: AuthResponse = {
     token,
-    user: { ...user.toObject(), _id: user._id.toString() },
+    user: {
+      ...user.toObject(),
+      _id: user._id.toString(),
+      deletedBy: user.deletedBy?.toString() || null
+    } as Omit<User, 'password'>,
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   };
 

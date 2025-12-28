@@ -165,8 +165,9 @@ export class SeedingService {
         return {
           user: {
             ...user.toObject(),
-            _id: user._id.toString()
-          },
+            _id: user._id.toString(),
+            deletedBy: user.deletedBy?.toString() || null
+          } as User,
           rank: 0, // Unranked
           totalPlayers: allRankings.length,
           recentMatches: []
@@ -211,8 +212,9 @@ export class SeedingService {
       return {
         user: {
           ...user.toObject(),
-          _id: user._id.toString()
-        },
+          _id: user._id.toString(),
+          deletedBy: user.deletedBy?.toString() || null
+        } as User,
         rank: playerRanking.rank,
         totalPlayers: allRankings.length,
         recentMatches: recentMatches.slice(0, 10)

@@ -78,7 +78,7 @@ Before copying the database:
 ```bash
 cd backend
 npm run copy-to-test:dry-run
-//npm run copy-to-test:dry-run -- --exclude tournaments,polls,resurfacingcontributions,players
+//npm run copy-to-test:dry-run -- --exclude tournaments,polls,resurfacingcontributions,players,users
 ```
 
 This shows:
@@ -126,7 +126,7 @@ Copy only the collections you need:
 ```bash
 # Copy only users and players
 npm run copy-to-test -- --collections users,players,reservations
-// npm run copy-to-test -- --exclude tournaments,polls,resurfacingcontributions, players
+// npm run copy-to-test -- --exclude tournaments,polls,resurfacingcontributions, players,users
 
 # Dry run for specific collections
 npm run copy-to-test -- --dry-run --collections payments,expenses
@@ -139,7 +139,7 @@ Preserve test-specific data by excluding certain collections:
 ```bash
 # Exclude tournaments (preserve test tournament data)
 npm run copy-to-test -- --exclude tournaments,polls
-// npm run copy-to-test -- --exclude tournaments,polls,resurfacingcontributions,players
+// npm run copy-to-test -- --exclude tournaments,polls,resurfacingcontributions,players,users
 # Convenient shortcut
 npm run copy-to-test:no-tournaments
 ```

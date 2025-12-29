@@ -562,7 +562,9 @@
   margin-top: 1.5rem;
 
   @media (max-width: 768px) {
-    gap: 0.5rem;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1rem !important;
   }
 }
 
@@ -576,38 +578,10 @@
   }
 
   @media (max-width: 768px) {
-    .card-icon {
-      width: 40px !important;
-      height: 40px !important;
-
-      mat-icon {
-        font-size: 1.25rem;
-        width: 1.25rem;
-        height: 1.25rem;
-      }
-    }
-
-    mat-card-title {
-      font-size: 0.75rem !important;
-      line-height: 1.2;
-    }
-
-    mat-card-content {
-      font-size: 0.7rem !important;
-      padding: 0.5rem 0 !important;
-    }
-
-    button {
-      font-size: 0.7rem !important;
-      padding: 0.4rem 0.5rem !important;
-      min-width: auto !important;
-
-      mat-icon {
-        font-size: 1rem;
-        width: 1rem;
-        height: 1rem;
-        margin-left: 0.25rem;
-      }
+    // Financial cards use the same compact mobile layout as other action cards
+    .mobile-card-icon {
+      background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+      box-shadow: 0 3px 6px rgba(76, 175, 80, 0.3) !important;
     }
   }
 }
@@ -1071,31 +1045,6 @@ app-coin-balance-alerts {
     user-select: none !important;
     -webkit-touch-callout: none !important;
 
-    /* IMPORTANT: Financial cards should keep buttons visible and clickable on mobile */
-    &.financial-card {
-      mat-card-header,
-      mat-card-content,
-      mat-card-actions {
-        display: block !important;
-        pointer-events: auto !important;
-      }
-
-      mat-card-actions {
-        display: flex !important;
-        pointer-events: auto !important;
-
-        button {
-          pointer-events: auto !important;
-          cursor: pointer !important;
-        }
-      }
-
-      .mobile-card-icon,
-      .mobile-card-title {
-        pointer-events: auto !important;
-      }
-    }
-    
     /* Layout and visual properties */
     flex: unset !important;
     min-width: unset !important;

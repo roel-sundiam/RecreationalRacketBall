@@ -35,6 +35,7 @@ export interface RegisterRequest {
   gender: 'male' | 'female' | 'other';
   phone?: string;
   dateOfBirth?: string;
+  isHomeowner?: boolean;
 }
 
 export interface LoginRequest {

@@ -288,12 +288,15 @@
     // Select dropdown styling
     &.form-select {
       cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
       background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
       background-repeat: no-repeat;
       background-position: right 1rem center;
       background-size: 1rem;
       padding-right: 3rem;
-      
+
       option {
         padding: 0.5rem;
         background: white;
@@ -459,9 +462,18 @@
   padding: 0.75rem 1.5rem;
   font-weight: 600;
   transition: all 0.3s ease;
-  
+
   &:hover:not(:disabled) {
     background: linear-gradient(135deg, #2c5aa0, #5a6fd8) !important;
+  }
+
+  &:disabled {
+    background: #cbd5e0 !important;
+    color: #a0aec0 !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none !important;
+    box-shadow: none !important;
   }
 }
 
@@ -578,12 +590,50 @@ button,
 // Ensure proper spacing between interactive elements
 .form-row .form-field:not(:last-child) {
   margin-right: 0;
-  
+
   @media (min-width: 769px) {
     margin-bottom: 0;
   }
-  
+
   @media (max-width: 768px) {
     margin-bottom: 1.5rem;
+  }
+}
+
+// Homeowner Checkbox Styles
+.checkbox-field {
+  margin-bottom: 1.5rem;
+
+  .homeowner-checkbox {
+    ::ng-deep .mdc-checkbox {
+      padding: 8px;
+    }
+
+    ::ng-deep .mdc-form-field {
+      vertical-align: middle;
+    }
+
+    .checkbox-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #374151;
+
+      mat-icon {
+        font-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        color: #3b82f6;
+      }
+    }
+  }
+
+  .field-hint {
+    margin: 0.5rem 0 0 2.25rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-style: italic;
   }
 }

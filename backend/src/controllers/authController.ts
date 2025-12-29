@@ -17,7 +17,7 @@ const generateToken = (userId: string): string => {
 };
 
 export const register = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { username, fullName, email, password, gender, phone, dateOfBirth }: RegisterRequest = req.body;
+  const { username, fullName, email, password, gender, phone, dateOfBirth, isHomeowner }: RegisterRequest = req.body;
 
   // Check if user already exists
   const existingUser = await User.findOne({
@@ -41,6 +41,7 @@ export const register = asyncHandler(async (req: AuthenticatedRequest, res: Resp
     gender,
     phone,
     dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+    isHomeowner: isHomeowner || false,
     isApproved: false // Requires admin approval
   });
 

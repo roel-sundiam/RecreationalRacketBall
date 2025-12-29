@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -18,7 +19,8 @@ import { environment } from '../../../environments/environment';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatIconModule
+    MatIconModule,
+    MatCheckboxModule
   ],
   template: `
     <div class="page-container">
@@ -59,8 +61,6 @@ import { environment } from '../../../environments/environment';
                 <ul>
                   <li>Membership fee payment required before account approval</li>
                   <li>Your account will be reviewed by an administrator</li>
-                  <li>New members receive 100 free coins to get started</li>
-                  <li>Coins are required to use the application features</li>
                 </ul>
               </div>
             </div>
@@ -265,7 +265,18 @@ import { environment } from '../../../environments/environment';
                   rows="3">
                 </textarea>
               </div>
-              
+
+              <!-- Homeowner Checkbox -->
+              <div class="form-field checkbox-field">
+                <mat-checkbox formControlName="isHomeowner" class="homeowner-checkbox">
+                  <div class="checkbox-content">
+                    <mat-icon>home</mat-icon>
+                    <span>I am a homeowner in Rich Town 2</span>
+                  </div>
+                </mat-checkbox>
+                <p class="field-hint">Check this box if you own a property in the Rich Town 2 subdivision</p>
+              </div>
+
               <!-- Action Buttons -->
               <div class="register-actions">
                 <button 
@@ -316,7 +327,8 @@ export class RegisterComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
       phone: [''],
-      address: ['']
+      address: [''],
+      isHomeowner: [false]
     }, { validators: this.passwordMatchValidator });
   }
 

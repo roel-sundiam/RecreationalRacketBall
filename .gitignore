@@ -78,3 +78,16 @@ gumroad/
 # Temporary fix scripts
 backend/fix-poll.js
 backend/src/scripts/fixOpenPlayPoll.ts
+
+# Utility and debugging scripts
+backend/check-*.js
+backend/delete-*.js
+backend/fix-*.js
+backend/cleanup-*.js
+backend/list-*.js
+backend/revert-*.js
+backend/test-*.js
+backend/verify-*.js
+
+# Frontend temporary files
+frontend/public/_redirects

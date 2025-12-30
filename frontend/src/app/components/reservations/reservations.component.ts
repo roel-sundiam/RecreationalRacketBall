@@ -272,13 +272,13 @@ interface Reservation {
               <div *ngFor="let player of playersArray.controls; let i = index" class="player-input">
                 <div class="field">
                   <label>
-                    <span *ngIf="i === 0">Player 1 (You) - Member</span>
+                    <span *ngIf="i === 0">Player 1 (You) - Member 🔒</span>
                     <span *ngIf="i > 0">Player {{ i + 1 }} - Member</span>
                   </label>
                   <div class="player-row">
                     <!-- Modern Custom Dropdown -->
-                    <div class="custom-dropdown" [class.open]="dropdownStates[i]">
-                      <div class="dropdown-trigger" (click)="toggleDropdown(i)">
+                    <div class="custom-dropdown" [class.open]="dropdownStates[i]" [class.disabled]="i === 0">
+                      <div class="dropdown-trigger" (click)="i > 0 ? toggleDropdown(i) : null">
                         <div class="selected-value">
                           <span *ngIf="getSelectedMemberDisplay(i)" class="member-info">
                             {{ getSelectedMemberDisplay(i) }}
@@ -291,12 +291,12 @@ interface Reservation {
                           <button
                             type="button"
                             class="clear-btn"
-                            *ngIf="getSelectedMemberDisplay(i)"
+                            *ngIf="i > 0 && getSelectedMemberDisplay(i)"
                             (click)="$event.stopPropagation(); clearSelection(i)"
                           >
                             ×
                           </button>
-                          <div class="dropdown-arrow">
+                          <div class="dropdown-arrow" *ngIf="i > 0">
                             <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
                               <path
                                 d="M1 1.5L6 6.5L11 1.5"
@@ -310,7 +310,7 @@ interface Reservation {
                         </div>
                       </div>
 
-                      <div class="dropdown-menu" *ngIf="dropdownStates[i]">
+                      <div class="dropdown-menu" *ngIf="dropdownStates[i] && i > 0">
                         <div class="search-box">
                           <input
                             type="text"

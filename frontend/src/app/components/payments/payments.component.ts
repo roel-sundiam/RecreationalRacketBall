@@ -2413,7 +2413,7 @@ export class PaymentsComponent implements OnInit {
     reservation.totalFee = calculatedFee;
 
     // Calculate isPeakHour for member amount calculations
-    const peakHours = [5, 18, 19, 21];
+    const peakHours = [5, 18, 19, 20, 21];
     const isPeakHour = peakHours.includes(reservation.timeSlot);
     (reservation as any).isPeakHour = isPeakHour;
 
@@ -2750,9 +2750,9 @@ export class PaymentsComponent implements OnInit {
 
   isPeakHourReservation(): boolean {
     if (!this.selectedReservation) return false;
-    
-    // Peak hours: 5AM, 6PM, 7PM, 9PM (5, 18, 19, 21)
-    const peakHours = [5, 18, 19, 21];
+
+    // Peak hours: 5AM, 6PM, 7PM, 8PM, 9PM (5, 18, 19, 20, 21)
+    const peakHours = [5, 18, 19, 20, 21];
     return peakHours.includes(this.selectedReservation.timeSlot);
   }
 
@@ -3046,7 +3046,7 @@ export class PaymentsComponent implements OnInit {
     const timeSlot = reservation.timeSlot;
 
     // Determine if it's peak hour for context
-    const peakHours = [5, 18, 19, 21];
+    const peakHours = [5, 18, 19, 20, 21];
     const isPeakHour = peakHours.includes(timeSlot);
     const timeContext = isPeakHour ? ' (Peak)' : ' (Off-Peak)';
 

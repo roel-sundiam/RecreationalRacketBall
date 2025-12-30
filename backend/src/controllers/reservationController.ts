@@ -1213,6 +1213,19 @@ export const cancelReservation = asyncHandler(async (req: AuthenticatedRequest, 
   await reservation.save({ validateBeforeSave: false });
   await reservation.populate('userId', 'username fullName email');
 
+  // Delete associated pending payments when cancelling a reservation
+  try {
+    const Payment = require('../models/Payment').default;
+    const deletedPayments = await Payment.deleteMany({
+      reservationId: reservation._id,
+      status: 'pending'
+    });
+    console.log(`🗑️  Deleted ${deletedPayments.deletedCount} pending payment(s) for cancelled reservation`);
+  } catch (error) {
+    console.error('Failed to delete payments for cancelled reservation:', error);
+    // Continue even if payment deletion fails
+  }
+
   const message = creditRefundAmount > 0 
     ? `Reservation cancelled successfully. ₱${creditRefundAmount} credits refunded.`
     : `Reservation cancelled successfully.`;

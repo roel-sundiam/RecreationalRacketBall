@@ -34,6 +34,7 @@
     "migrate-players": "npx ts-node src/scripts/migrateUsersToPlayers.ts",
     "migrate-players:rollback": "npx ts-node src/scripts/migrateUsersToPlayers.ts -- --rollback",
     "update-homeowners": "npx ts-node src/scripts/update-homeowners.ts",
+    "update-user-genders": "npx ts-node src/scripts/update-user-genders.ts",
     "sync-membership-payments": "npx ts-node src/scripts/sync-membership-payments.ts",
     "audit-tournament-data": "npx ts-node src/scripts/auditTournamentData.ts",
     "cleanup-duplicate-points": "npx ts-node src/scripts/cleanupDuplicatePoints.ts",

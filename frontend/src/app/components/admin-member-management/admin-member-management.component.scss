@@ -668,3 +668,218 @@
     display: none;
   }
 }
+
+// Reports Tab Styling - Modern Professional Theme
+.reports-tab {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+
+  .controls-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    flex-wrap: wrap;
+    align-items: center;
+
+    mat-form-field {
+      flex: 0 1 auto;
+      min-width: 140px;
+      max-width: 220px;
+      font-size: 0.75rem;
+
+      ::ng-deep .mat-mdc-text-field-wrapper {
+        padding-bottom: 0;
+      }
+
+      ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+
+      ::ng-deep .mat-mdc-form-field-infix {
+        min-height: 40px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      ::ng-deep .mat-mdc-select {
+        font-size: 0.75rem;
+      }
+
+      ::ng-deep .mat-mdc-form-field-label {
+        font-size: 0.75rem;
+      }
+    }
+  }
+}
+
+.grouped-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.group-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border-color: #3b82f6;
+  }
+
+  mat-card-header {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.938rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  mat-card-content {
+    padding: 0 !important;
+  }
+
+  .count-chip {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    min-width: 28px;
+    text-align: center;
+  }
+}
+
+.members-list {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 0;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.15s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f8fafc;
+    border-left: 3px solid #3b82f6;
+    padding-left: 13px;
+  }
+
+  .member-name {
+    flex: 1;
+    font-weight: 500;
+    font-size: 0.813rem;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .member-email {
+    flex: 1.2;
+    color: #64748b;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role-chip {
+    font-size: 0.688rem;
+    height: 20px;
+    min-height: 20px;
+    padding: 0 8px;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 500;
+
+    &.mat-mdc-chip {
+      --mdc-chip-label-text-size: 0.688rem;
+    }
+  }
+}
+
+// Responsive adjustments for reports tab
+@media (max-width: 768px) {
+  .reports-tab {
+    padding: 16px;
+
+    .controls-row {
+      padding: 10px 12px;
+      gap: 8px;
+
+      mat-form-field {
+        min-width: 100%;
+        max-width: 100%;
+      }
+    }
+  }
+
+  .grouped-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .member-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+
+    .member-name,
+    .member-email {
+      flex: none;
+      width: 100%;
+    }
+
+    .role-chip {
+      align-self: flex-start;
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -58,12 +58,19 @@ interface MemberResponse {
   };
 }
 
+interface GroupedMemberData {
+  label: string;
+  value: string;
+  members: Member[];
+}
+
 @Component({
   selector: 'app-admin-member-management',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -646,6 +653,72 @@ interface MemberResponse {
               </div>
             </div>
           </mat-tab>
+
+          <!-- Member Reports Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon>assessment</mat-icon>
+              Member Reports
+            </ng-template>
+
+            <div class="tab-content reports-tab">
+              <!-- Controls Row -->
+              <div class="controls-row">
+                <!-- Grouping selector -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Group By</mat-label>
+                  <mat-select [(value)]="selectedGrouping" (selectionChange)="onGroupingChange()">
+                    <mat-option value="gender">Gender</mat-option>
+                    <mat-option value="homeowner">Homeowner Status</mat-option>
+                    <mat-option value="membership">Membership Status</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <!-- Membership filter -->
+                <mat-form-field appearance="outline">
+                  <mat-label>2026 Membership</mat-label>
+                  <mat-select [(value)]="membershipFilter" (selectionChange)="onFilterChange()">
+                    <mat-option value="all">All Members</mat-option>
+                    <mat-option value="paid">Paid 2026</mat-option>
+                    <mat-option value="unpaid">Not Paid 2026</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <!-- Homeowner filter -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Homeowner Filter</mat-label>
+                  <mat-select [(value)]="homeownerFilter" (selectionChange)="onFilterChange()">
+                    <mat-option value="all">All Members</mat-option>
+                    <mat-option value="homeowner">Homeowners Only</mat-option>
+                    <mat-option value="non-homeowner">Non-Homeowners Only</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Grouped summary cards -->
+              <div class="grouped-cards">
+                <mat-card *ngFor="let group of groupedData" class="group-card">
+                  <mat-card-header>
+                    <mat-card-title>
+                      {{ group.label }}
+                      <mat-chip class="count-chip">{{ group.members.length }}</mat-chip>
+                    </mat-card-title>
+                  </mat-card-header>
+
+                  <mat-card-content>
+                    <!-- Members list - always visible -->
+                    <div class="members-list">
+                      <div *ngFor="let member of group.members" class="member-item">
+                        <span class="member-name">{{ member.fullName }}</span>
+                        <span class="member-email">{{ member.email }}</span>
+                        <mat-chip class="role-chip">{{ member.role }}</mat-chip>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+          </mat-tab>
         </mat-tab-group>
       </div>
     </div>
@@ -664,6 +737,14 @@ export class AdminMemberManagementComponent implements OnInit {
   loadingAll = false;
   loadingInactive = false;
   updating = '';
+
+  // Reports tab properties
+  selectedGrouping: 'gender' | 'homeowner' | 'membership' = 'gender';
+  groupedData: GroupedMemberData[] = [];
+
+  // Filter properties
+  membershipFilter: 'all' | 'paid' | 'unpaid' = 'all';
+  homeownerFilter: 'all' | 'homeowner' | 'non-homeowner' = 'all';
 
   displayedColumns: string[] = ['name', 'contact', 'role', 'status', 'registered', 'actions'];
   displayedColumnsInactive: string[] = ['name', 'contact', 'role', 'deactivationInfo', 'status', 'registered', 'actions'];
@@ -735,6 +816,9 @@ export class AdminMemberManagementComponent implements OnInit {
           this.allMembers = sorted;
           this.allMembersPagination = response.pagination;
           this.loadingAll = false;
+
+          // Update grouped data for reports tab
+          this.updateGroupedData();
         },
         error: (error) => {
           console.error('Error loading all members:', error);
@@ -1099,6 +1183,94 @@ export class AdminMemberManagementComponent implements OnInit {
   // Getter for non-homeowner members
   get nonHomeownerMembers(): Member[] {
     return this.allMembers.filter(member => !member.isHomeowner);
+  }
+
+  // Reports tab grouping methods
+  onGroupingChange(): void {
+    this.updateGroupedData();
+  }
+
+  onFilterChange(): void {
+    this.updateGroupedData();
+  }
+
+  // Get filtered members based on active filters
+  private getFilteredMembers(): Member[] {
+    let filtered = [...this.allMembers];
+
+    // Apply membership filter (based on 2026 payment)
+    if (this.membershipFilter === 'paid') {
+      filtered = filtered.filter(m => m.membershipYearsPaid?.includes(2026) || false);
+    } else if (this.membershipFilter === 'unpaid') {
+      filtered = filtered.filter(m => !m.membershipYearsPaid?.includes(2026));
+    }
+
+    // Apply homeowner filter
+    if (this.homeownerFilter === 'homeowner') {
+      filtered = filtered.filter(m => m.isHomeowner === true);
+    } else if (this.homeownerFilter === 'non-homeowner') {
+      filtered = filtered.filter(m => !m.isHomeowner);
+    }
+
+    return filtered;
+  }
+
+  updateGroupedData(): void {
+    switch (this.selectedGrouping) {
+      case 'gender':
+        this.groupedData = this.groupByGender();
+        break;
+      case 'homeowner':
+        this.groupedData = this.groupByHomeowner();
+        break;
+      case 'membership':
+        this.groupedData = this.groupByMembership();
+        break;
+    }
+  }
+
+  private groupByGender(): GroupedMemberData[] {
+    const members = this.getFilteredMembers();
+    const male = members.filter(m => m.gender === 'male');
+    const female = members.filter(m => m.gender === 'female');
+    const other = members.filter(m => m.gender === 'other' || !m.gender);
+
+    const groups = [
+      { label: 'Male', value: 'male', members: male },
+      { label: 'Female', value: 'female', members: female },
+      { label: 'Other', value: 'other', members: other }
+    ];
+
+    // Only return groups that have members
+    return groups.filter(group => group.members.length > 0);
+  }
+
+  private groupByHomeowner(): GroupedMemberData[] {
+    const members = this.getFilteredMembers();
+    const homeowners = members.filter(m => m.isHomeowner === true);
+    const nonHomeowners = members.filter(m => !m.isHomeowner);
+
+    const groups = [
+      { label: 'Homeowners', value: 'true', members: homeowners },
+      { label: 'Non-Homeowners', value: 'false', members: nonHomeowners }
+    ];
+
+    // Only return groups that have members
+    return groups.filter(group => group.members.length > 0);
+  }
+
+  private groupByMembership(): GroupedMemberData[] {
+    const members = this.getFilteredMembers();
+    const paid = members.filter(m => m.membershipFeesPaid === true);
+    const unpaid = members.filter(m => !m.membershipFeesPaid);
+
+    const groups = [
+      { label: 'Membership Paid', value: 'paid', members: paid },
+      { label: 'Membership Unpaid', value: 'unpaid', members: unpaid }
+    ];
+
+    // Only return groups that have members
+    return groups.filter(group => group.members.length > 0);
   }
 
   // Pagination objects for sub-tabs (client-side pagination)

@@ -139,9 +139,12 @@ interface CourtUsageData {
               <mat-icon>account_balance</mat-icon>
               Financial Statement
             </ng-template>
-            
-            <!-- Financial Statement Content -->
-            <div class="statement-content">
+
+            <!-- Nested tabs for Current and Archive -->
+            <mat-tab-group class="nested-tabs">
+              <!-- Current Financial Statement -->
+              <mat-tab label="Current">
+                <div class="statement-content">
         <div class="statement-body">
           <!-- Beginning Balance -->
           <div class="statement-section beginning-balance">
@@ -202,8 +205,29 @@ interface CourtUsageData {
               <div class="balance-amount">{{ formatCurrency(financialData.fundBalance) }}</div>
             </div>
           </div>
-            </div>
-          </div>
+        </div>
+                </div>
+              </mat-tab>
+
+              <!-- 2025 Archive Tab -->
+              <mat-tab *ngIf="show2025Archive">
+                <ng-template mat-tab-label>
+                  2025 Archive
+                  <span class="archive-badge">Read-Only</span>
+                </ng-template>
+
+                <div class="archive-container">
+                  <!-- Static HTML content -->
+                  <div class="archive-content" [innerHTML]="archive2025HTML"></div>
+
+                  <!-- Fallback message if no content -->
+                  <div class="no-content-message" *ngIf="!archiveDebugInfo.loaded && !archiveDebugInfo.error">
+                    <mat-icon>hourglass_empty</mat-icon>
+                    <p>Loading archive...</p>
+                  </div>
+                </div>
+              </mat-tab>
+            </mat-tab-group>
           </mat-tab>
 
           <!-- Expense Report Tab -->
@@ -254,6 +278,17 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   private socket: Socket | null = null;
   public socketConnected = false;
 
+  // 2025 Archive properties
+  archive2025HTML: string = ''; // Store as plain string for innerHTML binding
+  show2025Archive: boolean = true;
+  archiveDebugInfo: {
+    loaded: boolean;
+    error: string | null;
+  } = {
+    loaded: false,
+    error: null
+  };
+
   constructor(
     private http: HttpClient,
     private authService: AuthService,
@@ -261,6 +296,23 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Load 2025 archive HTML
+    this.http.get('/2025-financial-archive.html', { responseType: 'text' })
+      .subscribe({
+        next: (html) => {
+          this.archive2025HTML = html;
+          this.archiveDebugInfo.loaded = true;
+          this.archiveDebugInfo.error = null;
+          console.log('✅ 2025 Archive HTML loaded successfully');
+        },
+        error: (err) => {
+          console.error('❌ Failed to load 2025 archive:', err);
+          this.archiveDebugInfo.error = err.message || 'Failed to load archive';
+          this.archiveDebugInfo.loaded = false;
+          this.show2025Archive = false;
+        }
+      });
+
     this.loadFinancialStatement();
     this.initializeWebSocket();
     this.startAutoRefresh();
@@ -279,70 +331,30 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
       'Authorization': `Bearer ${this.authService.token}`
     });
 
-    // Load both financial statement and court usage data
+    // Load financial statement only (2026 uses database-filtered court receipts)
+    // Static court usage is only for 2025 archive
     const financialRequest = this.http.get<FinancialAPIResponse>(
       `${this.apiUrl}/reports/financial-sheet`,
       { headers }
     );
-    
-    const courtUsageRequest = this.http.get<CourtUsageAPIResponse>(
-      `${this.apiUrl}/reports/static-court-usage`,
-      { headers }
-    );
 
-    // Combine both requests with individual error handling
-    Promise.allSettled([
-      financialRequest.toPromise(),
-      courtUsageRequest.toPromise()
-    ]).then(([financialResult, courtUsageResult]) => {
-      let updatedFinancialData: FinancialStatementData | null = null;
-      let hasCourtUsageData = false;
+    financialRequest.toPromise().then((financialResult) => {
+      if (financialResult?.success) {
+        // Use financial data directly without merging static court usage
+        this.financialData = financialResult.data;
+        this.lastUpdated = financialResult.metadata?.lastModified || financialResult.data.lastUpdated;
 
-      // Handle financial data result
-      if (financialResult.status === 'fulfilled' && financialResult.value?.success) {
-        updatedFinancialData = financialResult.value.data;
-        this.lastUpdated = financialResult.value.metadata?.lastModified || financialResult.value.data.lastUpdated;
+        console.log('✅ Financial statement loaded for 2026');
+        console.log('💰 Beginning Balance:', this.financialData?.beginningBalance?.amount);
+        console.log('💵 Total Receipts:', this.financialData?.totalReceipts);
+        console.log('💸 Total Disbursements:', this.financialData?.totalDisbursements);
+        console.log('💰 Fund Balance:', this.financialData?.fundBalance);
+
+        this.loading = false;
       } else {
         this.error = 'Failed to load financial statement';
         this.loading = false;
-        return;
       }
-
-      // Handle court usage data result (optional)
-      if (courtUsageResult.status === 'fulfilled' && courtUsageResult.value?.success) {
-        try {
-          // Update with live court usage data
-          updatedFinancialData = this.updateCourtReceiptsFromUsageData(
-            updatedFinancialData, 
-            courtUsageResult.value.data
-          );
-          hasCourtUsageData = true;
-          console.log('✅ Successfully integrated live court usage data');
-        } catch (error) {
-          console.warn('⚠️ Failed to integrate court usage data, using financial data only:', error);
-        }
-      } else {
-        console.warn('⚠️ Court usage data unavailable, using static financial data');
-        if (courtUsageResult.status === 'rejected') {
-          console.warn('Court usage API error:', courtUsageResult.reason);
-        }
-      }
-
-      const isDataChanged = this.hasDataChanged(updatedFinancialData);
-      this.financialData = updatedFinancialData;
-      
-      if (isDataChanged && this.lastUpdated) {
-        const message = hasCourtUsageData 
-          ? '💰 Financial data updated with live court receipts!'
-          : '💰 Financial data updated (court receipts from cache)!';
-        
-        this.snackBar.open(message, 'Close', {
-          duration: 4000,
-          panelClass: ['success-snack']
-        });
-      }
-      
-      this.loading = false;
     }).catch((error) => {
       console.error('Error loading financial data:', error);
       this.error = error.error?.message || 'Failed to load financial data';
@@ -444,69 +456,34 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
               const headers = new HttpHeaders({
                 'Authorization': `Bearer ${this.authService.token}`
               });
-              
-              // Auto-refresh both financial and court usage data
+
+              // Auto-refresh financial data only (2026 uses database-filtered court receipts)
               const financialRequest = this.http.get<FinancialAPIResponse>(
                 `${this.apiUrl}/reports/financial-sheet`,
                 { headers }
               );
-              
-              const courtUsageRequest = this.http.get<CourtUsageAPIResponse>(
-                `${this.apiUrl}/reports/static-court-usage`,
-                { headers }
-              );
 
-              return Promise.allSettled([
-                financialRequest.toPromise(),
-                courtUsageRequest.toPromise()
-              ]);
+              return financialRequest.toPromise();
             }
-            return [];
+            return Promise.resolve(null);
           })
         )
         .subscribe({
-          next: (results: any) => {
-            if (results && results.length === 2) {
-              const [financialResult, courtUsageResult] = results;
-              let updatedFinancialData: FinancialStatementData | null = null;
-              let hasCourtUsageData = false;
+          next: (financialResult: any) => {
+            if (financialResult?.success) {
+              const isDataChanged = this.hasDataChanged(financialResult.data);
+              this.financialData = financialResult.data;
+              this.lastUpdated = financialResult.metadata?.lastModified || financialResult.data.lastUpdated;
 
-              // Handle financial data result
-              if (financialResult.status === 'fulfilled' && financialResult.value?.success) {
-                updatedFinancialData = financialResult.value.data;
-                this.lastUpdated = financialResult.value.metadata?.lastModified || financialResult.value.data.lastUpdated;
-              } else {
-                console.warn('Auto-refresh: Financial data unavailable');
-                return; // Skip this refresh cycle
-              }
-
-              // Handle court usage data result (optional for auto-refresh)
-              if (courtUsageResult.status === 'fulfilled' && courtUsageResult.value?.success) {
-                try {
-                  updatedFinancialData = this.updateCourtReceiptsFromUsageData(
-                    updatedFinancialData, 
-                    courtUsageResult.value.data
-                  );
-                  hasCourtUsageData = true;
-                } catch (error) {
-                  console.warn('Auto-refresh: Failed to integrate court usage data:', error);
-                }
-              }
-
-              const isDataChanged = this.hasDataChanged(updatedFinancialData);
-              this.financialData = updatedFinancialData;
-              
               if (isDataChanged) {
-                const message = hasCourtUsageData 
-                  ? '📊 Data refreshed with live court receipts'
-                  : '📊 Data refreshed automatically';
-                  
-                console.log(`🔄 ${message}`);
-                this.snackBar.open(message, 'Close', {
+                console.log('🔄 Data refreshed automatically');
+                this.snackBar.open('📊 Data refreshed automatically', 'Close', {
                   duration: 2000,
                   panelClass: ['info-snack']
                 });
               }
+            } else {
+              console.warn('Auto-refresh: Financial data unavailable');
             }
           },
           error: (error) => {
@@ -547,13 +524,14 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get receipts collection without the Men's Tournament Entries
+   * Get receipts collection without the Men's Tournament Entries and zero amounts
    */
   getReceiptsWithoutTournament(): any[] {
     if (!this.financialData?.receiptsCollections) return [];
-    
-    return this.financialData.receiptsCollections.filter(item => 
-      !item.description.toLowerCase().includes('tournament entries')
+
+    return this.financialData.receiptsCollections.filter(item =>
+      !item.description.toLowerCase().includes('tournament entries') &&
+      item.amount > 0 // Hide items with zero amounts
     );
   }
 

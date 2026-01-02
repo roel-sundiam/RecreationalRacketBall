@@ -2,86 +2,27 @@
   "clubName": "RICH TOWN 2 TENNIS CLUB",
   "location": "Rich Town 2 Subdivision, City of San Fernando, Pampanga",
   "statementTitle": "Statement of Accounts and Disbursements",
-  "period": "COVERING January 1, 2025 - December 25, 2025",
   "beginningBalance": {
-    "date": "JANUARY 1, 2025",
-    "amount": 2162.85
+    "date": "JANUARY 1, 2026",
+    "amount": 80562.85
   },
   "receiptsCollections": [
-    {
-      "description": "Annual Membership Fees 2025",
-      "amount": 40000
-    },
     {
       "description": "Credit Balances",
       "amount": 0
     },
     {
       "description": "Tennis Court Usage Receipts",
-      "amount": 84650
-    },
-    {
-      "description": "Men's Tournament Entries",
       "amount": 0
-    },
-    {
-      "description": "Annual Membership Fees 2026",
-      "amount": 12000
     }
   ],
-  "totalReceipts": 136650,
-  "disbursementsExpenses": [
-    {
-      "description": "Purchase - Miscellaneous",
-      "amount": 8080
-    },
-    {
-      "description": "Delivery Fee",
-      "amount": 480
-    },
-    {
-      "description": "Mineral Water",
-      "amount": 570
-    },
-    {
-      "description": "Court Service",
-      "amount": 1800
-    },
-    {
-      "description": "Court Maintenance",
-      "amount": 8575
-    },
-    {
-      "description": "Purchase - Tennis Net",
-      "amount": 6000
-    },
-    {
-      "description": "Tournament Expense",
-      "amount": 820
-    },
-    {
-      "description": "Tennis Score Board",
-      "amount": 1500
-    },
-    {
-      "description": "Purchase - Lights",
-      "amount": 5400
-    },
-    {
-      "description": "Water System Project Expense",
-      "amount": 20504
-    },
-    {
-      "description": "Financial Donation",
-      "amount": 5000
-    },
-    {
-      "description": "App Service Fee",
-      "amount": 1494.5
-    }
-  ],
-  "totalDisbursements": 60223.5,
-  "netIncome": 76426.5,
-  "fundBalance": 78589.35,
-  "lastUpdated": "2025-12-19T01:59:41.043Z"
+  "totalReceipts": 0,
+  "disbursementsExpenses": [],
+  "totalDisbursements": 0,
+  "netIncome": 0,
+  "fundBalance": 80562.85,
+  "lastUpdated": "2026-01-01T00:00:00.000Z",
+  "notes": {
+    "beginningBalance": "Includes ₱30,300 in 2026 membership fees that were collected in 2025"
+  }
 }

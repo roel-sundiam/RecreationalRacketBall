@@ -1863,7 +1863,7 @@ export class CourtReceiptsReportComponent implements OnInit {
   
   // Amount editing
   updatingPayment = false;
-  
+
   private apiUrl = environment.apiUrl;
   
   
@@ -2267,7 +2267,8 @@ export class CourtReceiptsReportComponent implements OnInit {
       amount: payment.amount,
       paymentMethod: payment.paymentMethod,
       reservationDate: this.formatDate(payment.reservationDate),
-      timeSlot: payment.timeSlotDisplay
+      timeSlot: payment.timeSlotDisplay,
+      existingPaymentDate: payment.paymentDate // Pass existing date to remember it
     };
 
     const dialogRef = this.dialog.open(PaymentConfirmationDialogComponent, {
@@ -2280,8 +2281,11 @@ export class CourtReceiptsReportComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.confirmed) {
         this.processingPaymentId = payment._id;
-        
-        this.http.put(`${this.baseUrl}/payments/${payment._id}/record`, {})
+
+        // Include paymentDate if provided
+        const requestBody = result.paymentDate ? { paymentDate: result.paymentDate } : {};
+
+        this.http.put(`${this.baseUrl}/payments/${payment._id}/record`, requestBody)
           .subscribe({
             next: (response: any) => {
               if (response.success) {
@@ -2291,7 +2295,6 @@ export class CourtReceiptsReportComponent implements OnInit {
               this.processingPaymentId = null;
             },
             error: (error) => {
-              console.error('Error recording payment:', error);
               this.showMessage('Failed to record payment', 'error');
               this.processingPaymentId = null;
             }

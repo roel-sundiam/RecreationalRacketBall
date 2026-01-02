@@ -843,3 +843,174 @@
     padding: 1rem;
   }
 }
+
+// 2025 Archive Tab Styling
+.archive-badge {
+  background-color: #6c757d;
+  color: white;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.tab-icon {
+  margin-right: 8px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.readonly-banner {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+
+  mat-icon {
+    color: #ffc107;
+    font-size: 20px;
+  }
+}
+
+.archive-container {
+  padding: 20px;
+}
+
+// Nested tabs styling
+.nested-tabs {
+  margin-top: 16px;
+
+  ::ng-deep .mat-mdc-tab-header {
+    background-color: #f5f5f5;
+  }
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    padding-top: 20px;
+  }
+
+  ::ng-deep .mat-mdc-tab-labels {
+    background-color: #f5f5f5;
+  }
+}
+
+.archive-content {
+  // Archive HTML styling - moved from HTML file to component SCSS
+  // Angular strips <style> tags from innerHTML, so we define styles here
+  // Using ::ng-deep to ensure styles apply to innerHTML content
+  ::ng-deep .archive-statement-container {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  ::ng-deep .archive-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  ::ng-deep .archive-club-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1976d2;
+    margin-bottom: 8px;
+  }
+
+  ::ng-deep .archive-location {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  ::ng-deep .archive-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 16px 0 8px 0;
+  }
+
+  ::ng-deep .archive-period {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  ::ng-deep .archive-badge-inline {
+    display: inline-block;
+    background-color: #6c757d;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  ::ng-deep .archive-section {
+    margin: 30px 0;
+  }
+
+  ::ng-deep .archive-section-title {
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #e3f2fd;
+    padding: 8px 12px;
+    border-left: 4px solid #1976d2;
+    margin-bottom: 12px;
+  }
+
+  ::ng-deep .archive-line-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+
+    &.total {
+      font-weight: bold;
+      background-color: #f5f5f5;
+      border-top: 2px solid #333;
+      border-bottom: 2px solid #333;
+    }
+
+    &.final-total {
+      font-weight: bold;
+      font-size: 18px;
+      background-color: #e3f2fd;
+      border: 2px solid #1976d2;
+      margin-top: 8px;
+    }
+  }
+
+  ::ng-deep .archive-amount {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+  }
+
+  ::ng-deep .archive-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+  }
+}
+
+.no-content-message {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+}

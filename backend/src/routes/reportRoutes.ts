@@ -8,6 +8,7 @@ import {
   getCourtReceiptsReport,
   getCourtUsageFromSheet,
   getFinancialReport,
+  export2025FinancialReportHTML,
   forceRefreshFinancialReport,
   forceRefreshCourtUsageReport,
   triggerSync,
@@ -134,6 +135,18 @@ router.post(
   authenticateToken,
   requireFinancialAccess,
   forceRefreshFinancialReport
+);
+
+/**
+ * @route GET /api/reports/financial-sheet/export-2025-html
+ * @desc Export 2025 financial report as static HTML
+ * @access Private (Treasurer/Admin/SuperAdmin)
+ */
+router.get(
+  '/financial-sheet/export-2025-html',
+  authenticateToken,
+  requireFinancialAccess,
+  export2025FinancialReportHTML
 );
 
 /**

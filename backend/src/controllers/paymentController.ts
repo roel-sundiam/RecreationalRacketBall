@@ -196,8 +196,9 @@ async function subtractFromCourtUsageReport(payment: any): Promise<void> {
       return;
     }
     
-    // Determine the month to update based on court usage date or payment date
-    const usageDate = payment.metadata?.courtUsageDate || payment.paymentDate || new Date();
+    // Determine the month to update based on payment date (for year filtering)
+    // Use paymentDate first so admin-set dates control which year/month it appears in
+    const usageDate = payment.paymentDate || payment.metadata?.courtUsageDate || new Date();
     const month = new Date(usageDate).getMonth(); // 0-11
     const year = new Date(usageDate).getFullYear();
     
@@ -275,8 +276,9 @@ async function updateCourtUsageReport(payment: any): Promise<void> {
       return;
     }
     
-    // Determine the month to update based on court usage date or payment date
-    const usageDate = payment.metadata?.courtUsageDate || payment.paymentDate || new Date();
+    // Determine the month to update based on payment date (for year filtering)
+    // Use paymentDate first so admin-set dates control which year/month it appears in
+    const usageDate = payment.paymentDate || payment.metadata?.courtUsageDate || new Date();
     const month = new Date(usageDate).getMonth(); // 0-11
     const year = new Date(usageDate).getFullYear();
     
@@ -1915,7 +1917,7 @@ export const approvePayment = asyncHandler(async (req: AuthenticatedRequest, res
 // Record payment (mark as recorded after approval)
 export const recordPayment = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const { notes } = req.body;
+  const { notes, paymentDate } = req.body;
 
   console.log('📝 Recording payment:', id, 'by admin:', req.user?.username);
 
@@ -1928,7 +1930,7 @@ export const recordPayment = asyncHandler(async (req: AuthenticatedRequest, res:
   }
 
   const payment = await Payment.findById(id);
-  
+
   if (!payment) {
     return res.status(404).json({
       success: false,
@@ -1948,6 +1950,15 @@ export const recordPayment = asyncHandler(async (req: AuthenticatedRequest, res:
     payment.status = 'record';
     payment.recordedBy = req.user._id.toString();
     payment.recordedAt = new Date();
+
+    // Update payment date if provided (allows admin to choose which year it appears in)
+    if (paymentDate) {
+      payment.paymentDate = new Date(paymentDate);
+      console.log('📅 Custom payment date set:', new Date(paymentDate).toISOString());
+    } else if (!payment.paymentDate) {
+      // If no paymentDate was ever set, default to now
+      payment.paymentDate = new Date();
+    }
     
     if (notes) {
       const recordingNote = `Recorded by ${req.user.username}: ${notes}`;
@@ -1999,13 +2010,13 @@ export const recordPayment = asyncHandler(async (req: AuthenticatedRequest, res:
       // Don't fail the payment recording if WebSocket broadcast fails
     }
 
-    // Update financial report Tennis Court Usage Receipts
-    try {
-      await updateFinancialReportCourtReceipts();
-    } catch (error) {
-      console.error('⚠️ Failed to update financial report:', error);
-      // Don't fail the payment recording if financial report update fails
-    }
+    // DISABLED FOR 2026: Financial report now calculated on-demand with year filtering
+    // The JSON file remains static; calculations come from database queries
+    // try {
+    //   await updateFinancialReportCourtReceipts();
+    // } catch (error) {
+    //   console.error('⚠️ Failed to update financial report:', error);
+    // }
 
     return res.status(200).json({
       success: true,
@@ -2109,13 +2120,13 @@ export const unrecordPayment = asyncHandler(async (req: AuthenticatedRequest, re
       // Don't fail the payment unrecording if WebSocket broadcast fails
     }
 
-    // Update financial report Tennis Court Usage Receipts
-    try {
-      await updateFinancialReportCourtReceipts();
-    } catch (error) {
-      console.error('⚠️ Failed to update financial report:', error);
-      // Don't fail the payment unrecording if financial report update fails
-    }
+    // DISABLED FOR 2026: Financial report now calculated on-demand with year filtering
+    // The JSON file remains static; calculations come from database queries
+    // try {
+    //   await updateFinancialReportCourtReceipts();
+    // } catch (error) {
+    //   console.error('⚠️ Failed to update financial report:', error);
+    // }
 
     return res.status(200).json({
       success: true,

@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatNativeDateModule } from '@angular/material/core';
+import { FormsModule } from '@angular/forms';
 
 export interface PaymentConfirmationData {
   action: 'approve' | 'record' | 'cancel';
@@ -13,10 +18,12 @@ export interface PaymentConfirmationData {
   paymentMethod: string;
   reservationDate: string;
   timeSlot: string;
+  existingPaymentDate?: string; // Remember previous payment date when re-recording
 }
 
 export interface PaymentConfirmationResult {
   confirmed: boolean;
+  paymentDate?: Date;
 }
 
 @Component({
@@ -26,7 +33,12 @@ export interface PaymentConfirmationResult {
     CommonModule,
     MatDialogModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatDatepickerModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatNativeDateModule,
+    FormsModule
   ],
   template: `
     <div class="confirmation-dialog">
@@ -69,10 +81,21 @@ export interface PaymentConfirmationResult {
             <span class="detail-value">{{data.reservationDate}} at {{data.timeSlot}}</span>
           </div>
         </div>
-        
+
+        <!-- Payment Date Selector (only for record action) -->
+        <div class="payment-date-section" *ngIf="data.action === 'record'">
+          <mat-form-field appearance="fill" class="payment-date-field">
+            <mat-label>Payment Date</mat-label>
+            <input matInput [matDatepicker]="picker" [(ngModel)]="selectedPaymentDate" required>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-hint>Choose which year this payment should appear in</mat-hint>
+          </mat-form-field>
+        </div>
+
         <div class="warning-message" *ngIf="data.action === 'record'">
-          <mat-icon>warning</mat-icon>
-          <span>This action cannot be undone. The payment will be marked as fully recorded.</span>
+          <mat-icon>info</mat-icon>
+          <span>The payment will appear in the financial statement for the year of the Payment Date selected above.</span>
         </div>
 
         <div class="warning-message cancel-warning" *ngIf="data.action === 'cancel'">
@@ -202,6 +225,18 @@ export interface PaymentConfirmationResult {
       height: 20px;
     }
 
+    .payment-date-section {
+      margin: 16px 0;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .payment-date-field {
+      width: 100%;
+    }
+
     .cancel-warning {
       background: #ffebee;
       border: 1px solid #ef9a9a;
@@ -255,10 +290,18 @@ export interface PaymentConfirmationResult {
   `]
 })
 export class PaymentConfirmationDialogComponent {
+  selectedPaymentDate: Date;
+
   constructor(
     public dialogRef: MatDialogRef<PaymentConfirmationDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: PaymentConfirmationData
-  ) {}
+  ) {
+    // If this payment was previously recorded, remember the date
+    // Otherwise default to Jan 1, 2026
+    this.selectedPaymentDate = data.existingPaymentDate
+      ? new Date(data.existingPaymentDate)
+      : new Date('2026-01-01');
+  }
 
   getActionTitle(): string {
     if (this.data.action === 'approve') return 'Approve Payment';
@@ -297,6 +340,9 @@ export class PaymentConfirmationDialogComponent {
   }
 
   onConfirm(): void {
-    this.dialogRef.close({ confirmed: true });
+    this.dialogRef.close({
+      confirmed: true,
+      paymentDate: this.data.action === 'record' ? this.selectedPaymentDate : undefined
+    });
   }
 }

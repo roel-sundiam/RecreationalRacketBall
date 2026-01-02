@@ -43,13 +43,14 @@ export const getStaticCourtUsageReport = async (req: Request, res: Response) => 
 
     if (!courtUsageRecords || courtUsageRecords.length === 0) {
       console.log(`⚠️  No court usage data found for year ${year}`);
-      
+
       // Generate dynamic months even for empty data
       const { monthNames } = generateDynamicMonths(year);
       const headers = ['Players/Members', ...monthNames, 'Total'];
-      
-      return res.status(404).json({
-        success: false,
+
+      // Return 200 with empty data instead of 404 so frontend displays empty state gracefully
+      return res.status(200).json({
+        success: true,
         message: `No court usage data found for year ${year}`,
         data: {
           summary: {

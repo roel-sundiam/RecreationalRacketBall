@@ -772,24 +772,35 @@ function formatCurrency(amount: number): string {
 }
 
 // Helper function to calculate App Service Fee liability (accrued vs paid)
-async function calculateServiceFeeLiability() {
+async function calculateServiceFeeLiability(yearStart?: Date, yearEnd?: Date) {
   const serviceFeePercentage = 0.10; // 10% service fee
 
-  // Calculate total accrued from recorded payments (excluding coins and membership fees)
-  const serviceablePayments = await Payment.find({
+  // Build query filter for year range
+  const paymentFilter: any = {
     status: 'record',
     paymentMethod: { $ne: 'coins' },
     paymentType: { $ne: 'membership_fee' }
-  });
+  };
+
+  const expenseFilter: any = {
+    category: 'App Service Fee'
+  };
+
+  // Add date filtering if year range is provided
+  if (yearStart && yearEnd) {
+    paymentFilter.paymentDate = { $gte: yearStart, $lte: yearEnd };
+    expenseFilter.date = { $gte: yearStart, $lte: yearEnd };
+  }
+
+  // Calculate total accrued from recorded payments (excluding coins and membership fees)
+  const serviceablePayments = await Payment.find(paymentFilter);
 
   const totalAccrued = serviceablePayments.reduce((sum: number, payment: any) => {
     return sum + (payment.amount * serviceFeePercentage);
   }, 0);
 
   // Calculate total paid from App Service Fee expenses
-  const developerPayments = await Expense.find({
-    category: 'App Service Fee'
-  });
+  const developerPayments = await Expense.find(expenseFilter);
 
   const totalPaid = developerPayments.reduce((sum: number, expense: any) => {
     return sum + expense.amount;
@@ -1004,16 +1015,34 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
     const financialData = JSON.parse(fileContent);
 
     // Update period to show current date
+    // Extract year from beginning balance date (e.g., "JANUARY 1, 2026" -> 2026)
+    const beginningYear = financialData.beginningBalance.date.match(/\d{4}/)?.[0] || new Date().getFullYear();
+
     const currentDate = new Date();
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                         'July', 'August', 'September', 'October', 'November', 'December'];
     const currentMonth = monthNames[currentDate.getMonth()];
     const currentDay = currentDate.getDate();
     const currentYear = currentDate.getFullYear();
-    financialData.period = `COVERING January 1, ${currentYear} - ${currentMonth} ${currentDay}, ${currentYear}`;
 
-    // Load expenses from database and group by category
-    const databaseExpenses = await Expense.find({}).sort({ date: 1 });
+    // Use beginningYear for the period end date to avoid backwards date ranges
+    // (e.g., when JSON has 2026 but current date is still 2025)
+    const periodEndYear = currentYear >= beginningYear ? currentYear : beginningYear;
+    const periodEndMonth = currentYear >= beginningYear ? currentMonth : 'January';
+    const periodEndDay = currentYear >= beginningYear ? currentDay : 1;
+
+    financialData.period = `COVERING January 1, ${beginningYear} - ${periodEndMonth} ${periodEndDay}, ${periodEndYear}`;
+
+    // Define year date range for filtering
+    const yearStart = new Date(`${beginningYear}-01-01T00:00:00.000Z`);
+    const yearEnd = new Date(`${beginningYear}-12-31T23:59:59.999Z`);
+
+    console.log(`📅 Filtering data for year ${beginningYear}: ${yearStart.toISOString()} to ${yearEnd.toISOString()}`);
+
+    // Load expenses from database and group by category (filtered by year)
+    const databaseExpenses = await Expense.find({
+      date: { $gte: yearStart, $lte: yearEnd }
+    }).sort({ date: 1 });
     
     // Group expenses by category and calculate totals
     const expensesByCategory = databaseExpenses.reduce((acc: any, expense: any) => {
@@ -1042,7 +1071,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
     // Calculate App Service Fee Liability (accrued vs paid model)
     let serviceFeeLiability;
     try {
-      serviceFeeLiability = await calculateServiceFeeLiability();
+      serviceFeeLiability = await calculateServiceFeeLiability(yearStart, yearEnd);
 
       console.log(`💰 Service Fee Liability calculated:`);
       console.log(`   - Total Accrued: ₱${serviceFeeLiability.totalAccrued.toFixed(2)}`);
@@ -1082,11 +1111,12 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
 
     // Calculate recorded payments and add to Tennis Court Usage Receipts
     try {
-      // Get recorded payments from database (excluding membership fees)
+      // Get recorded payments from database (excluding membership fees, filtered by year)
       const recordedPayments = await Payment.find({
         status: 'record',
         paymentMethod: { $ne: 'coins' },
-        paymentType: { $ne: 'membership_fee' }
+        paymentType: { $ne: 'membership_fee' },
+        paymentDate: { $gte: yearStart, $lte: yearEnd }
       });
 
       const totalRecordedAmount = recordedPayments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
@@ -1163,9 +1193,10 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
 
     // Calculate membership fees from database and update Annual Membership Fees line items
     try {
-      // Get all membership payments from database, grouped by year
+      // Get membership payments PAID in the current year (cash-basis accounting)
       const membershipPayments = await Payment.find({
-        paymentType: 'membership_fee'
+        paymentType: 'membership_fee',
+        paymentDate: { $gte: yearStart, $lte: yearEnd }
       });
 
       // Group by membership year and calculate totals
@@ -1180,8 +1211,14 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
 
       console.log(`💳 Membership fees by year from database:`, membershipByYear);
 
-      // Update or add membership fees for each year with database payments
+      // Update or add membership fees ONLY for the current financial statement year
       for (const [year, amount] of Object.entries(membershipByYear)) {
+        // Only include membership fees for the current statement year
+        if (parseInt(year) !== parseInt(beginningYear)) {
+          console.log(`⏭️  Skipping ${year} membership fees (not for year ${beginningYear})`);
+          continue;
+        }
+
         const membershipDescription = `Annual Membership Fees ${year}`;
         const membershipIndex = financialData.receiptsCollections.findIndex((item: any) =>
           item.description === membershipDescription
@@ -1265,6 +1302,233 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
     return res.status(500).json({
       success: false,
       message: 'Failed to load financial report data',
+      error: error.message
+    });
+  }
+});
+
+// Export 2025 Financial Report as Static HTML
+export const export2025FinancialReportHTML = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    console.log('📋 Exporting 2025 Financial Report as static HTML...');
+
+    // Read the current financial data
+    const dataPath = path.join(__dirname, '../../data/financial-report.json');
+    const fileContent = fs.readFileSync(dataPath, 'utf8');
+    const financialData = JSON.parse(fileContent);
+
+    // Generate static HTML
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2025 Financial Statement - Rich Town 2 Tennis Club</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .statement-container {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .club-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1976d2;
+      margin-bottom: 8px;
+    }
+    .location {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 16px 0 8px 0;
+    }
+    .period {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .archive-badge {
+      display: inline-block;
+      background-color: #6c757d;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .section {
+      margin: 30px 0;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #e3f2fd;
+      padding: 8px 12px;
+      border-left: 4px solid #1976d2;
+      margin-bottom: 12px;
+    }
+    .line-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+    }
+    .line-item.total {
+      font-weight: bold;
+      background-color: #f5f5f5;
+      border-top: 2px solid #333;
+      border-bottom: 2px solid #333;
+    }
+    .line-item.final-total {
+      font-weight: bold;
+      font-size: 18px;
+      background-color: #e3f2fd;
+      border: 2px solid #1976d2;
+      margin-top: 8px;
+    }
+    .amount {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+    .liability-note {
+      background-color: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="statement-container">
+    <div class="header">
+      <div class="club-name">${financialData.clubName}</div>
+      <div class="location">${financialData.location}</div>
+      <div class="title">${financialData.statementTitle}</div>
+      <div class="period">${financialData.period}</div>
+      <span class="archive-badge">🗄️ ARCHIVED - READ ONLY</span>
+    </div>
+
+    <!-- Beginning Balance -->
+    <div class="section">
+      <div class="line-item">
+        <span>Beginning Balance (${financialData.beginningBalance.date})</span>
+        <span class="amount">₱${financialData.beginningBalance.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+    </div>
+
+    <!-- Receipts/Collections -->
+    <div class="section">
+      <div class="section-title">RECEIPTS/COLLECTIONS</div>
+      ${financialData.receiptsCollections.map((item: any) => `
+      <div class="line-item">
+        <span>${item.description}</span>
+        <span class="amount">₱${item.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+      `).join('')}
+      <div class="line-item total">
+        <span>TOTAL RECEIPTS</span>
+        <span class="amount">₱${financialData.totalReceipts.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+    </div>
+
+    <!-- Disbursements/Expenses -->
+    <div class="section">
+      <div class="section-title">DISBURSEMENTS/EXPENSES</div>
+      ${financialData.disbursementsExpenses.map((item: any) => `
+      <div class="line-item">
+        <span>${item.description}</span>
+        <span class="amount">₱${item.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+      `).join('')}
+      <div class="line-item total">
+        <span>TOTAL DISBURSEMENTS</span>
+        <span class="amount">₱${financialData.totalDisbursements.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="section">
+      <div class="line-item">
+        <span>Net Income (Receipts - Disbursements)</span>
+        <span class="amount">₱${financialData.netIncome.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+      <div class="line-item final-total">
+        <span>FUND BALANCE</span>
+        <span class="amount">₱${financialData.fundBalance.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+    </div>
+
+    ${financialData.liabilities?.appServiceFee ? `
+    <!-- Liabilities -->
+    <div class="liability-note">
+      <strong>📌 Liabilities:</strong><br>
+      App Service Fee (10% of court receipts):<br>
+      • Total Accrued: ₱${financialData.liabilities.appServiceFee.totalAccrued.toFixed(2)}<br>
+      • Total Paid: ₱${financialData.liabilities.appServiceFee.totalPaid.toFixed(2)}<br>
+      • Remaining Liability: ₱${financialData.liabilities.appServiceFee.remainingLiability.toFixed(2)}
+    </div>
+    ` : ''}
+
+    <div class="footer">
+      Archived on ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
+      This is a static archive of the 2025 financial statement.
+    </div>
+  </div>
+</body>
+</html>`;
+
+    // Save to file
+    const outputPath = path.join(__dirname, '../../exports/2025-financial-archive.html');
+    const exportsDir = path.join(__dirname, '../../exports');
+
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir, { recursive: true });
+    }
+
+    fs.writeFileSync(outputPath, html, 'utf8');
+
+    console.log('✅ 2025 Financial Archive HTML created:', outputPath);
+
+    return res.status(200).json({
+      success: true,
+      message: '2025 Financial Archive HTML created successfully',
+      data: {
+        filePath: outputPath,
+        html: html
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error creating 2025 archive:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create 2025 archive',
       error: error.message
     });
   }
@@ -1557,3 +1821,4 @@ export const reportValidation = [
     .isIn(['today', 'week', 'month', 'year'])
     .withMessage('Invalid period parameter')
 ];
+

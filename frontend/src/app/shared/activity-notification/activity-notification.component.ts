@@ -310,6 +310,9 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
     // Add to beginning of array (newest first)
     this.notifications.unshift(notification);
 
+    // Play notification sound
+    this.playNotificationSound();
+
     // Trigger animation
     setTimeout(() => {
       const notif = this.notifications.find(n => n.id === id);
@@ -317,6 +320,58 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
     }, 100);
 
     // No auto-dismiss - notifications stay until manually removed
+  }
+
+  private playNotificationSound(): void {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      console.log('🔊 Audio context state:', audioContext.state);
+
+      // Resume audio context if suspended (required for browser autoplay policies)
+      if (audioContext.state === 'suspended') {
+        console.log('🔊 Resuming suspended audio context...');
+        audioContext.resume().then(() => {
+          console.log('🔊 Audio context resumed, playing beep');
+          this.playBeep(audioContext);
+        }).catch(err => {
+          console.error('🔊 Failed to resume audio context:', err);
+        });
+      } else {
+        console.log('🔊 Playing beep immediately');
+        this.playBeep(audioContext);
+      }
+    } catch (error) {
+      console.error('🔊 Could not play notification sound:', error);
+    }
+  }
+
+  private playBeep(audioContext: AudioContext): void {
+    // Create a two-tone notification beep for better noticeability
+    const now = audioContext.currentTime;
+
+    // First beep
+    const oscillator1 = audioContext.createOscillator();
+    const gainNode1 = audioContext.createGain();
+    oscillator1.connect(gainNode1);
+    gainNode1.connect(audioContext.destination);
+    oscillator1.frequency.value = 880; // A5 note
+    oscillator1.type = 'sine';
+    gainNode1.gain.setValueAtTime(0.6, now);
+    gainNode1.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    oscillator1.start(now);
+    oscillator1.stop(now + 0.15);
+
+    // Second beep (slightly higher pitch)
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode2 = audioContext.createGain();
+    oscillator2.connect(gainNode2);
+    gainNode2.connect(audioContext.destination);
+    oscillator2.frequency.value = 1046; // C6 note
+    oscillator2.type = 'sine';
+    gainNode2.gain.setValueAtTime(0.6, now + 0.2);
+    gainNode2.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    oscillator2.start(now + 0.2);
+    oscillator2.stop(now + 0.35);
   }
 
   removeNotification(id: number): void {

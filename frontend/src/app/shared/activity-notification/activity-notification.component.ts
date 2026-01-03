@@ -223,7 +223,7 @@ interface Notification {
 
     .show-panel-btn {
       position: fixed;
-      bottom: 20px;
+      bottom: 90px;
       right: 20px;
       z-index: 9998;
       background: #4CAF50 !important;
@@ -236,6 +236,7 @@ interface Notification {
 
     @media (max-width: 600px) {
       .notification-panel {
+        bottom: 10px;
         right: 10px;
         left: 10px;
         max-width: none;
@@ -246,11 +247,11 @@ interface Notification {
       }
 
       .notification-message {
-        font-size: 14px;
+        font-size: 12px;
       }
 
       .show-panel-btn {
-        bottom: 80px;
+        bottom: 90px;
         right: 16px;
       }
     }

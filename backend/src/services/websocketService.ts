@@ -86,6 +86,19 @@ export interface ChatUserStatusEvent {
   timestamp: string;
 }
 
+export interface ActivityMonitorEvent {
+  type: 'page_navigation';
+  data: {
+    userId: string;
+    username: string;
+    fullName: string;
+    role: string;
+    page: string;
+    path: string;
+    timestamp: string;
+  };
+}
+
 export class WebSocketService {
   private io: SocketIOServer | null = null;
   private connectedClients: Set<Socket> = new Set();
@@ -153,21 +166,57 @@ export class WebSocketService {
       });
 
       // Chat-related socket handlers
-      
+
       // Handle user authentication for chat
-      socket.on('chat_authenticate', (userData: { userId: string; username: string; fullName: string }) => {
+      socket.on('chat_authenticate', (userData: { userId: string; username: string; fullName: string; role?: string }) => {
         console.log('💬 Chat authentication for user:', userData.username);
-        
+
         // Store user-socket mapping
         if (!this.userSockets.has(userData.userId)) {
           this.userSockets.set(userData.userId, new Set());
         }
         this.userSockets.get(userData.userId)!.add(socket.id);
-        
+
         // Store user data on socket for later use
         (socket as any).userData = userData;
-        
+
+        // Auto-join admin_monitor room if user is admin/superadmin/treasurer
+        if (userData.role && ['admin', 'superadmin', 'treasurer'].includes(userData.role)) {
+          socket.join('admin_monitor');
+          console.log('👮 Admin user auto-joined admin_monitor room:', userData.username);
+        }
+
         socket.emit('chat_authenticated', { success: true });
+      });
+
+      // Handle admin subscription to activity monitor
+      socket.on('subscribe_activity_monitor', () => {
+        const userData = (socket as any).userData;
+        if (userData && userData.role && ['admin', 'superadmin', 'treasurer'].includes(userData.role)) {
+          socket.join('admin_monitor');
+          console.log('📊 Admin subscribed to activity monitor:', userData.username);
+          socket.emit('subscription_confirmed', { type: 'activity_monitor' });
+        } else {
+          console.warn('⚠️  Non-admin attempted to subscribe to activity monitor');
+        }
+      });
+
+      // Handle page navigation events from all authenticated users
+      socket.on('page_navigation', (navData: ActivityMonitorEvent) => {
+        if (!(socket as any).userData) {
+          console.warn('⚠️  Unauthenticated user attempted page navigation event');
+          return;
+        }
+
+        // Broadcast to all admins in the admin_monitor room (excluding sender)
+        socket.to('admin_monitor').emit('activity_broadcast', {
+          type: 'member_navigation',
+          data: navData.data,
+          timestamp: new Date().toISOString()
+        });
+
+        // Log for debugging (can be removed in production)
+        // console.log(`📍 ${navData.data.fullName} navigated to ${navData.data.page}`);
       });
 
       // Handle joining chat rooms

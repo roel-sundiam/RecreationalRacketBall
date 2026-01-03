@@ -9,6 +9,8 @@ import { UpdateBannerComponent } from '../../components/update-banner/update-ban
 import { ChatWindowComponent } from '../../components/chat-window/chat-window.component';
 import { ResurfacingBannerComponent } from '../../components/resurfacing-banner/resurfacing-banner.component';
 import { ImpersonationBannerComponent } from '../../components/impersonation-banner/impersonation-banner.component';
+import { ActivityDebugPanelComponent } from '../activity-debug-panel/activity-debug-panel.component';
+import { ActivityNotificationComponent } from '../activity-notification/activity-notification.component';
 
 @Component({
   selector: 'app-layout',
@@ -22,7 +24,9 @@ import { ImpersonationBannerComponent } from '../../components/impersonation-ban
     UpdateBannerComponent,
     ChatWindowComponent,
     ResurfacingBannerComponent,
-    ImpersonationBannerComponent
+    ImpersonationBannerComponent,
+    ActivityDebugPanelComponent,
+    ActivityNotificationComponent
   ],
   template: `
     <div class="app-layout" [class.authenticated]="isAuthenticated" [class.loading]="isAuthLoading">
@@ -51,6 +55,9 @@ import { ImpersonationBannerComponent } from '../../components/impersonation-ban
 
       <!-- Chat Window (only on authenticated pages) -->
       <app-chat-window *ngIf="isAuthenticated && !isAuthLoading"></app-chat-window>
+
+      <!-- Activity Notifications (only for admins) -->
+      <app-activity-notification *ngIf="isAuthenticated"></app-activity-notification>
     </div>
   `,
   styleUrl: './layout.component.scss'

@@ -257,6 +257,30 @@ export class WebSocketService implements OnDestroy {
   }
 
   /**
+   * Subscribe to activity monitor (admin only)
+   */
+  subscribeToActivityMonitor(): void {
+    if (this.socket?.connected) {
+      this.socket.emit('subscribe_activity_monitor');
+    }
+  }
+
+  /**
+   * Authenticate user for chat and activity monitoring
+   */
+  authenticateUser(userId: string, username: string, fullName: string, role: string): void {
+    if (this.socket?.connected) {
+      console.log('💬 Authenticating user for WebSocket:', username);
+      this.socket.emit('chat_authenticate', {
+        userId,
+        username,
+        fullName,
+        role
+      });
+    }
+  }
+
+  /**
    * Start heartbeat for production connection stability
    */
   private startHeartbeat(): void {

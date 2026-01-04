@@ -6,18 +6,30 @@ import { connectDatabase } from '../config/database';
 dotenv.config();
 
 const femalePlayers = [
+  'Pat Pineda',
   'Hala Riva',
   'Daen Lim',
   'Cha Manabat',
+  'Pam Asuncion',
+  'Helen Sundiam',
   'Noreen Munoz',
   'Christine Cruz',
+  'Tracy Talo',
+  'Jhen Cunanan',
   'Trina Sevilla',
   'Ruth Barrera',
+  'Andrea Henson',
   'Reianne Chavez',
   'Rose Cortez',
   'Tel Cruz',
+  'Pau Dungo',
+  'Lea Nacu',
+  'Antonnette Tayag',
+  'Elyza Manalac',
   'Keith Angela',
-  'Mishka Alcantara'
+  'CJ Yu',
+  'Mishka Alcantara',
+  'Mika Dianelo'
 ];
 
 async function addFemalePlayers() {

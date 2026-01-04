@@ -82,7 +82,7 @@ import { AnalyticsService } from '../../services/analytics.service';
             </div>
             <div class="feature-content">
               <h3>Easy Payments</h3>
-              <p>Handle membership fees and court bookings seamlessly. Peak hours ₱100, off-peak ₱20 per player.</p>
+              <p>Handle membership fees and court bookings seamlessly. Peak hours: ₱150 base + ₱70 per guest. Non-peak: ₱100 base + ₱70 per guest.</p>
             </div>
           </div>
           

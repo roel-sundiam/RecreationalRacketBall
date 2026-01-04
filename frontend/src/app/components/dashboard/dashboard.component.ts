@@ -13,6 +13,7 @@ import { WebSocketService, OpenPlayNotificationEvent } from '../../services/webs
 import { NotificationService } from '../../services/notification.service';
 import { PWANotificationService } from '../../services/pwa-notification.service';
 import { OpenPlayNotificationModalComponent } from '../open-play-notification-modal/open-play-notification-modal.component';
+import { TennisBallMachineDialogComponent } from '../tennis-ball-machine-dialog/tennis-ball-machine-dialog.component';
 import { ModalManagerService } from '../../services/modal-manager.service';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -114,6 +115,36 @@ import { environment } from '../../../environments/environment';
               <button mat-raised-button class="primary-btn" (click)="navigateTo('/payments')">
                 <mat-icon>payment</mat-icon>
                 Manage Payments
+              </button>
+            </mat-card-actions>
+          </mat-card>
+
+          <!-- Tennis Ball Machine Rental -->
+          <mat-card class="action-card" data-icon="smart_toy" data-title="Ball Machine Rental"
+                   (click)="openTennisBallMachineDialog()"
+                   (touchstart)="handleTouchStart($event)"
+                   (touchend)="handleTouchEnd($event, 'ball-machine')">
+            <!-- Mobile Icon -->
+            <div class="mobile-card-icon ball-machine-img-icon">
+              <img src="ball-machine.png" alt="Ball Machine">
+            </div>
+            <div class="mobile-card-title">Ball Machine Rental</div>
+
+            <!-- Desktop Content -->
+            <mat-card-header>
+              <div mat-card-avatar class="action-icon ball-machine-img-icon">
+                <img src="ball-machine.png" alt="Ball Machine">
+              </div>
+              <mat-card-title>Ball Machine Rental</mat-card-title>
+              <mat-card-subtitle>Pusun PT-9001 Intelligent Trainer</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Rent our advanced ball machine for solo practice. 150+ balls, 26 modes, app-controlled.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button class="info-btn" (click)="openTennisBallMachineDialog(); $event.stopPropagation()">
+                <mat-icon>info</mat-icon>
+                View Details
               </button>
             </mat-card-actions>
           </mat-card>
@@ -983,6 +1014,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.testNavigation();
       } else if (action === 'openTennisAppStore') {
         this.openTennisAppStore();
+      } else if (action === 'ball-machine') {
+        this.openTennisBallMachineDialog();
       } else {
         this.navigateTo(action);
       }
@@ -1035,6 +1068,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
 
     window.open('https://play-squad.netlify.app/', '_blank');
+  }
+
+  /**
+   * Opens the Tennis Ball Machine rental dialog
+   */
+  openTennisBallMachineDialog(): void {
+    this.analyticsService.trackUserActivity('click_button', 'dashboard', {
+      button: 'ball_machine_card',
+      action: 'view_details'
+    });
+
+    this.dialog.open(TennisBallMachineDialogComponent, {
+      width: '500px',
+      maxWidth: '90vw',
+      maxHeight: '85vh',
+      panelClass: 'ball-machine-dialog-container',
+      autoFocus: true
+    });
   }
 
   /**

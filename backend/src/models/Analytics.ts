@@ -140,7 +140,9 @@ const userActivitySchema = new Schema<IUserActivity>({
       'click_button',
       'form_submit',
       'navigation',
-      'partner_click'
+      'partner_click',
+      'ball_machine_card_click',
+      'view_details'
     ]
   },
   component: {

@@ -1,0 +1,75 @@
+<div class="dialog-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <mat-icon class="hero-icon">smart_toy</mat-icon>
+    <h1 mat-dialog-title>Pusun PT-9001 Tennis Ball Machine</h1>
+    <p class="subtitle">Professional Intelligent Training Equipment</p>
+  </div>
+
+  <!-- Specifications Section -->
+  <mat-dialog-content>
+    <!-- Machine Image -->
+    <div class="machine-image-container">
+      <img src="ball-machine.png" alt="Pusun PT-9001 Tennis Ball Machine" class="machine-image">
+    </div>
+
+    <!-- Important Notice -->
+    <div class="notice-box">
+      <mat-icon class="notice-icon">info</mat-icon>
+      <div class="notice-content">
+        <strong>Important:</strong> You must reserve a court first before renting the ball machine.
+      </div>
+    </div>
+
+    <h2 class="section-title">Key Specifications</h2>
+    <mat-list class="specs-list">
+      <mat-list-item>
+        <mat-icon matListItemIcon class="spec-icon">inventory</mat-icon>
+        <div matListItemTitle class="spec-title">150+ Ball Capacity</div>
+        <div matListItemLine class="spec-description">Large hopper for extended practice sessions</div>
+      </mat-list-item>
+
+      <mat-list-item>
+        <mat-icon matListItemIcon class="spec-icon">battery_charging_full</mat-icon>
+        <div matListItemTitle class="spec-title">7-10 Hour Battery Life</div>
+        <div matListItemLine class="spec-description">All-day practice without interruption</div>
+      </mat-list-item>
+
+      <mat-list-item>
+        <mat-icon matListItemIcon class="spec-icon">speed</mat-icon>
+        <div matListItemTitle class="spec-title">20-140 km/h Speed Range</div>
+        <div matListItemLine class="spec-description">Perfect for beginners to advanced players</div>
+      </mat-list-item>
+
+      <mat-list-item>
+        <mat-icon matListItemIcon class="spec-icon">apps</mat-icon>
+        <div matListItemTitle class="spec-title">26 Training Modes</div>
+        <div matListItemLine class="spec-description">Controlled via smartphone app</div>
+      </mat-list-item>
+
+      <mat-list-item>
+        <mat-icon matListItemIcon class="spec-icon">gps_fixed</mat-icon>
+        <div matListItemTitle class="spec-title">35 Precise Landing Points</div>
+        <div matListItemLine class="spec-description">Advanced shot placement accuracy</div>
+      </mat-list-item>
+    </mat-list>
+
+    <!-- Contact Section -->
+    <div class="contact-section">
+      <h2 class="contact-title">Interested in Renting?</h2>
+      <p class="contact-message">Contact for full details like pricing</p>
+      <div class="phone-number">
+        <mat-icon>phone</mat-icon>
+        <span>0917 880 0096</span>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button type="button" mat-raised-button (click)="close(); $event.stopPropagation()" class="close-btn">
+      <mat-icon>close</mat-icon>
+      Close
+    </button>
+  </mat-dialog-actions>
+</div>

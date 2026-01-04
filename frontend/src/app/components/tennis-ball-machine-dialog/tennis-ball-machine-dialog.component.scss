@@ -1,0 +1,307 @@
+.dialog-container {
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  color: white;
+  margin: -24px -24px 1rem -24px;
+  border-radius: 4px 4px 0 0;
+
+  .hero-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 14px;
+    opacity: 0.95;
+    font-weight: 300;
+  }
+}
+
+/* Content Section */
+mat-dialog-content {
+  padding: 1rem 1.5rem;
+  max-height: 50vh;
+  overflow-y: auto;
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0 0 0.75rem 0;
+  }
+}
+
+/* Machine Image */
+.machine-image-container {
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+
+  .machine-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    display: block;
+  }
+}
+
+/* Notice Box */
+.notice-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: none !important;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+
+  .notice-icon {
+    color: #3b82f6;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .notice-content {
+    font-size: 14px;
+    line-height: 1.4;
+    color: #1f2937;
+
+    strong {
+      font-weight: 600;
+      color: #1f2937;
+    }
+  }
+}
+
+/* Specifications List */
+.specs-list {
+  padding: 0;
+
+  mat-list-item {
+    height: auto;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .spec-icon {
+      color: #8b5cf6;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+      margin-right: 0.75rem;
+    }
+
+    .spec-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #1f2937;
+      margin-bottom: 0.15rem;
+    }
+
+    .spec-description {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.3;
+    }
+  }
+}
+
+/* Contact Section */
+.contact-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+  border-radius: 8px;
+  text-align: center;
+
+  .contact-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .contact-message {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .phone-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 20px;
+    font-weight: 600;
+    color: #7c3aed;
+    margin-top: 0.5rem;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+/* Actions */
+mat-dialog-actions {
+  padding: 0.75rem 1.5rem;
+  margin: 0;
+  border-top: 1px solid #e5e7eb;
+
+  .close-btn {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    min-height: 44px;
+    padding: 0 1.5rem;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    transition: all 0.3s ease;
+
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+    }
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 1.5rem;
+
+    .hero-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+
+    h1 {
+      font-size: 20px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+    }
+  }
+
+  mat-dialog-content {
+    padding: 1rem;
+
+    .section-title {
+      font-size: 18px;
+    }
+  }
+
+  .notice-box {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+
+    .notice-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .notice-content {
+      font-size: 14px;
+    }
+  }
+
+  .specs-list {
+    mat-list-item {
+      padding: 0.75rem 0;
+
+      .spec-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .spec-title {
+        font-size: 16px;
+      }
+
+      .spec-description {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .contact-section {
+    padding: 1rem;
+
+    .contact-title {
+      font-size: 18px;
+    }
+
+    .contact-message {
+      font-size: 14px;
+    }
+
+    .phone-number {
+      font-size: 20px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  mat-dialog-actions {
+    .close-btn {
+      width: 100%;
+      font-size: 14px;
+    }
+  }
+}
+
+/* High Contrast for Senior-Friendly Design */
+.spec-title,
+.contact-title {
+  font-weight: 600;
+}
+
+/* Ensure minimum font sizes for readability */
+p,
+span,
+div {
+  min-height: 16px;
+}

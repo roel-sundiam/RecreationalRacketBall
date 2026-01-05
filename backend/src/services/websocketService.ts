@@ -215,10 +215,15 @@ export class WebSocketService {
         }
       });
 
-      // Handle page navigation events from all authenticated users
+      // Handle page navigation events from all users (authenticated and anonymous for public pages)
       socket.on('page_navigation', (navData: ActivityMonitorEvent) => {
-        if (!(socket as any).userData) {
-          console.warn('⚠️  Unauthenticated user attempted page navigation event');
+        // Allow anonymous navigation for public pages (register, login)
+        const publicPages = ['Registration', 'Login'];
+        const isPublicPage = publicPages.includes(navData.data.page || '');
+        const isAnonymous = navData.data.userId === 'anonymous';
+
+        if (!(socket as any).userData && !isAnonymous) {
+          console.warn('⚠️  Unauthenticated user attempted page navigation event for non-public page');
           return;
         }
 
@@ -229,8 +234,10 @@ export class WebSocketService {
           timestamp: new Date().toISOString()
         });
 
-        // Log for debugging (can be removed in production)
-        // console.log(`📍 ${navData.data.fullName} navigated to ${navData.data.page}`);
+        // Log anonymous visits to public pages
+        if (isAnonymous && isPublicPage) {
+          console.log(`👤 Anonymous user visited ${navData.data.page}`);
+        }
       });
 
       // Handle user activity events from all authenticated users

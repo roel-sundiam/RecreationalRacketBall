@@ -414,21 +414,25 @@ export class ActivityMonitorService {
     }
 
     const user = this.authService.currentUser;
-    if (!user) {
+    const pageName = this.getPageName(path);
+
+    // Allow anonymous tracking for specific public pages
+    const publicPages = ['/register', '/login'];
+    const isPublicPage = publicPages.some(p => path.startsWith(p));
+
+    if (!user && !isPublicPage) {
       console.log('📊 ActivityMonitor: No user logged in, skipping page navigation emit');
       return;
     }
 
-    const pageName = this.getPageName(path);
-
-    // Emit page navigation event
+    // Emit page navigation event (with anonymous data if not logged in)
     this.webSocketService.socket?.emit('page_navigation', {
       type: 'page_navigation',
       data: {
-        userId: user._id,
-        username: user.username,
-        fullName: user.fullName,
-        role: user.role,
+        userId: user?._id || 'anonymous',
+        username: user?.username || 'anonymous',
+        fullName: user?.fullName || 'Anonymous User',
+        role: user?.role || 'visitor',
         page: pageName,
         path: path,
         timestamp: new Date().toISOString()

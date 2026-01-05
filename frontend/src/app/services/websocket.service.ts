@@ -46,15 +46,22 @@ export class WebSocketService implements OnDestroy {
 
   constructor(private authService: AuthService) {
     console.log('🔌 WebSocketService constructor called');
-    // Initialize connection when user is authenticated
+
+    // Always connect WebSocket (for both authenticated and anonymous users)
+    this.connect();
+
+    // Handle authentication state changes
     this.authService.currentUser$.subscribe(user => {
       console.log('🔌 WebSocketService: User auth state changed:', !!user);
       if (user) {
-        console.log('🔌 WebSocketService: User authenticated, connecting...');
-        this.connect();
+        console.log('🔌 WebSocketService: User authenticated');
+        // WebSocket already connected, just ensure it's active
+        if (!this.socket?.connected) {
+          this.connect();
+        }
       } else {
-        console.log('🔌 WebSocketService: User not authenticated, disconnecting...');
-        this.disconnect();
+        console.log('🔌 WebSocketService: User logged out, but keeping WebSocket connected for anonymous tracking');
+        // Keep connection active for anonymous tracking
       }
     });
   }

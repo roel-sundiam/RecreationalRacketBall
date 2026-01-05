@@ -292,11 +292,12 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
         // Format message based on activity type
         let message: string;
         if (activity.type === 'member_navigation') {
-          message = `${activity.data.fullName} accessed ${activity.data.page}`;
+          message = `${activity.data.fullName} accessed ${activity.data.page || 'Unknown Page'}`;
         } else if (activity.type === 'member_activity') {
-          message = `${activity.data.fullName} - ${activity.data.action} on ${activity.data.component}`;
+          message = `${activity.data.fullName} - ${activity.data.action || 'Unknown Action'} on ${activity.data.component || 'Unknown Component'}`;
         } else {
           // Fallback for unknown types
+          console.warn('Unknown activity type:', activity.type, activity);
           message = `${activity.data.fullName} performed an action`;
         }
 

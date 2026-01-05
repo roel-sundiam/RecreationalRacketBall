@@ -99,6 +99,20 @@ export interface ActivityMonitorEvent {
   };
 }
 
+export interface UserActivityEvent {
+  type: 'user_activity';
+  data: {
+    userId: string;
+    username: string;
+    fullName: string;
+    role: string;
+    action: string;
+    component: string;
+    details?: any;
+    timestamp: string;
+  };
+}
+
 export class WebSocketService {
   private io: SocketIOServer | null = null;
   private connectedClients: Set<Socket> = new Set();
@@ -217,6 +231,24 @@ export class WebSocketService {
 
         // Log for debugging (can be removed in production)
         // console.log(`📍 ${navData.data.fullName} navigated to ${navData.data.page}`);
+      });
+
+      // Handle user activity events from all authenticated users
+      socket.on('user_activity', (activityData: UserActivityEvent) => {
+        if (!(socket as any).userData) {
+          console.warn('⚠️  Unauthenticated user attempted user activity event');
+          return;
+        }
+
+        // Broadcast to all admins in the admin_monitor room (excluding sender)
+        socket.to('admin_monitor').emit('activity_broadcast', {
+          type: 'member_activity',
+          data: activityData.data,
+          timestamp: new Date().toISOString()
+        });
+
+        // Log for debugging
+        console.log(`🎯 ${activityData.data.fullName} performed ${activityData.data.action} on ${activityData.data.component}`);
       });
 
       // Handle joining chat rooms

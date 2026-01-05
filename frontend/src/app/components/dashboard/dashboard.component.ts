@@ -9,6 +9,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { ActivityMonitorService } from '../../services/activity-monitor.service';
 import { WebSocketService, OpenPlayNotificationEvent } from '../../services/websocket.service';
 import { NotificationService } from '../../services/notification.service';
 import { PWANotificationService } from '../../services/pwa-notification.service';
@@ -33,7 +34,7 @@ import { environment } from '../../../environments/environment';
     <div class="dashboard-container">
       <!-- Action Cards Grid -->
       <div class="dashboard-content">
-        
+
         <div class="action-grid">
           <!-- Reserve Court -->
           <mat-card class="action-card primary-action" data-icon="calendar_today" data-title="Reserve Court" 
@@ -919,6 +920,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     public authService: AuthService,
     private analyticsService: AnalyticsService,
+    private activityMonitorService: ActivityMonitorService,
     public router: Router,
     private dialog: MatDialog,
     private http: HttpClient,
@@ -1078,6 +1080,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       button: 'ball_machine_card',
       action: 'view_details'
     });
+
+    // Emit real-time activity for admin monitoring
+    this.activityMonitorService.emitUserActivity(
+      'View Ball Machine Details',
+      'Dashboard',
+      { cardType: 'ball_machine_rental' }
+    );
 
     this.dialog.open(TennisBallMachineDialogComponent, {
       width: '500px',

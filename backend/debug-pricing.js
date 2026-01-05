@@ -14,7 +14,7 @@ async function debugPricingCalculation() {
   console.log('✅ Connected to MongoDB');
   
   // Get environment variables
-  const peakHours = (process.env.PEAK_HOURS || '5,18,19,21').split(',').map(h => parseInt(h));
+  const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
   const peakHourFee = parseInt(process.env.PEAK_HOUR_FEE || '100');
   const offPeakFeePerMember = parseInt(process.env.OFF_PEAK_FEE_PER_MEMBER || '20');
   const offPeakFeePerNonMember = parseInt(process.env.OFF_PEAK_FEE_PER_NON_MEMBER || '50');

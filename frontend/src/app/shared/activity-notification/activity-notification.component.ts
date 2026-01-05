@@ -278,6 +278,9 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Initialize admin notifications
+    this.activityMonitorService.initializeAdminNotifications();
+
     this.subscription = this.activityMonitorService.activity$.subscribe(
       activity => {
         // Don't show notifications for own activity
@@ -286,7 +289,17 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
           return;
         }
 
-        const message = `${activity.data.fullName} accessed ${activity.data.page}`;
+        // Format message based on activity type
+        let message: string;
+        if (activity.type === 'member_navigation') {
+          message = `${activity.data.fullName} accessed ${activity.data.page}`;
+        } else if (activity.type === 'member_activity') {
+          message = `${activity.data.fullName} - ${activity.data.action} on ${activity.data.component}`;
+        } else {
+          // Fallback for unknown types
+          message = `${activity.data.fullName} performed an action`;
+        }
+
         this.addNotification(message);
       }
     );

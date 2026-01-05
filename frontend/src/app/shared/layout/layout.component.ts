@@ -9,7 +9,6 @@ import { UpdateBannerComponent } from '../../components/update-banner/update-ban
 import { ChatWindowComponent } from '../../components/chat-window/chat-window.component';
 import { ResurfacingBannerComponent } from '../../components/resurfacing-banner/resurfacing-banner.component';
 import { ImpersonationBannerComponent } from '../../components/impersonation-banner/impersonation-banner.component';
-import { ActivityDebugPanelComponent } from '../activity-debug-panel/activity-debug-panel.component';
 import { ActivityNotificationComponent } from '../activity-notification/activity-notification.component';
 
 @Component({
@@ -25,7 +24,6 @@ import { ActivityNotificationComponent } from '../activity-notification/activity
     ChatWindowComponent,
     ResurfacingBannerComponent,
     ImpersonationBannerComponent,
-    ActivityDebugPanelComponent,
     ActivityNotificationComponent
   ],
   template: `

@@ -73,7 +73,7 @@
           </div>
 
           <!-- Available Message -->
-          <div class="available-message" *ngIf="!courtStatus.current.exists && !courtStatus.current.isBlocked">
+          <div class="available-message" *ngIf="isCurrentSlotAvailable()">
             <mat-icon class="available-icon">check_circle</mat-icon>
             <span>Available</span>
           </div>
@@ -113,7 +113,7 @@
           </div>
 
           <!-- No Upcoming Message -->
-          <div class="available-message neutral" *ngIf="!courtStatus.next.exists && !courtStatus.next.isBlocked">
+          <div class="available-message neutral" *ngIf="isNextSlotEmpty()">
             <mat-icon class="neutral-icon">event_available</mat-icon>
             <span>No upcoming</span>
           </div>
@@ -150,7 +150,7 @@
           </div>
 
           <!-- Available Message -->
-          <div class="available-message" *ngIf="!courtStatus.current.exists && !courtStatus.current.isBlocked">
+          <div class="available-message" *ngIf="isCurrentSlotAvailable()">
             <mat-icon class="available-icon">check_circle</mat-icon>
             <span>Available</span>
           </div>
@@ -184,7 +184,7 @@
           </div>
 
           <!-- No Upcoming Message -->
-          <div class="available-message neutral" *ngIf="!courtStatus.next.exists && !courtStatus.next.isBlocked">
+          <div class="available-message neutral" *ngIf="isNextSlotEmpty()">
             <mat-icon class="neutral-icon">event_available</mat-icon>
             <span>No upcoming</span>
           </div>

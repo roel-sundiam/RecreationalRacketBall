@@ -186,4 +186,24 @@ export class CourtStatusWidgetComponent implements OnInit, OnDestroy {
            this.courtStatus.current.exists ||
            this.courtStatus.next.exists;
   }
+
+  /**
+   * Check if "Available" message should show for current slot
+   * Only show when court is OPEN and no reservation exists
+   */
+  isCurrentSlotAvailable(): boolean {
+    if (!this.courtStatus) return false;
+    if (this.courtStatus.courtStatus === 'closed') return false;
+    return !this.courtStatus.current.exists && !this.courtStatus.current.isBlocked;
+  }
+
+  /**
+   * Check if "No upcoming" message should show for next slot
+   * Only show when there's genuinely no next reservation
+   */
+  isNextSlotEmpty(): boolean {
+    if (!this.courtStatus) return false;
+    if (this.courtStatus.courtStatus === 'closed') return false;
+    return !this.courtStatus.next.exists && !this.courtStatus.next.isBlocked;
+  }
 }

@@ -164,9 +164,72 @@ import { AuthService } from '../../services/auth.service';
             <p>Try adjusting your search criteria or filters.</p>
           </div>
 
+          <!-- Mobile Filter Buttons -->
+          <div class="mobile-filters">
+            <!-- Homeowner Filter -->
+            <div class="filter-group">
+              <span class="filter-label">Homeowner Status</span>
+              <button class="filter-btn homeowner"
+                      [class.active]="mobileFilters.homeowner === true"
+                      (click)="toggleMobileFilter('homeowner', true)">
+                <mat-icon>home</mat-icon>
+                Homeowner
+              </button>
+              <button class="filter-btn"
+                      [class.active]="mobileFilters.homeowner === false"
+                      (click)="toggleMobileFilter('homeowner', false)">
+                <mat-icon>home_work</mat-icon>
+                Non-Homeowner
+              </button>
+            </div>
+
+            <!-- Gender Filter -->
+            <div class="filter-group">
+              <span class="filter-label">Gender</span>
+              <button class="filter-btn male"
+                      [class.active]="mobileFilters.gender === 'male'"
+                      (click)="toggleMobileFilter('gender', 'male')">
+                <mat-icon>man</mat-icon>
+                Male
+              </button>
+              <button class="filter-btn female"
+                      [class.active]="mobileFilters.gender === 'female'"
+                      (click)="toggleMobileFilter('gender', 'female')">
+                <mat-icon>woman</mat-icon>
+                Female
+              </button>
+            </div>
+
+            <!-- Payment Status Filter -->
+            <div class="filter-group">
+              <span class="filter-label">Payment Status</span>
+              <button class="filter-btn paid"
+                      [class.active]="mobileFilters.paid === true"
+                      (click)="toggleMobileFilter('paid', true)">
+                <mat-icon>check_circle</mat-icon>
+                Paid
+              </button>
+              <button class="filter-btn unpaid"
+                      [class.active]="mobileFilters.paid === false"
+                      (click)="toggleMobileFilter('paid', false)">
+                <mat-icon>cancel</mat-icon>
+                Unpaid
+              </button>
+            </div>
+          </div>
+
           <!-- Members Grid -->
           <div class="members-grid" *ngIf="memberData?.data && memberData.data.length > 0">
             <div class="member-card" *ngFor="let member of memberData.data">
+              <!-- Gender Badge (Mobile) -->
+              <div class="gender-badge"
+                   *ngIf="member.gender"
+                   [class.male]="member.gender.toLowerCase() === 'male'"
+                   [class.female]="member.gender.toLowerCase() === 'female'"
+                   [matTooltip]="member.gender | titlecase">
+                <mat-icon>{{member.gender.toLowerCase() === 'male' ? 'man' : 'woman'}}</mat-icon>
+              </div>
+
               <div class="card-header">
                 <div class="member-avatar">
                   <mat-icon *ngIf="!member.profilePicture">person</mat-icon>
@@ -274,6 +337,13 @@ export class MembersDirectoryComponent implements OnInit, OnDestroy {
   isAdmin = false;
   currentPageSize = 12;
 
+  // Mobile filter state
+  mobileFilters = {
+    homeowner: null as boolean | null,
+    gender: null as string | null,
+    paid: true as boolean | null  // Default to showing only Paid members
+  };
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -294,7 +364,8 @@ export class MembersDirectoryComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
     this.setupFormSubscriptions();
-    this.loadMembers();
+    // Load all members for filtering since we default to showing only Paid members
+    this.loadAllMembersForFiltering();
   }
 
   ngOnDestroy(): void {
@@ -332,7 +403,13 @@ export class MembersDirectoryComponent implements OnInit, OnDestroy {
       next: (response: MemberDirectory) => {
         console.log('Members API response:', response);
         this.memberData = response;
+        // Store original data for mobile filtering
+        this.originalMemberData = JSON.parse(JSON.stringify(response));
         this.loading = false;
+        // Apply any active mobile filters
+        if (this.mobileFilters.homeowner !== null || this.mobileFilters.gender || this.mobileFilters.paid !== null) {
+          this.loadMembersWithMobileFilters();
+        }
       },
       error: (error) => {
         console.error('Error loading members:', error);
@@ -369,6 +446,122 @@ export class MembersDirectoryComponent implements OnInit, OnDestroy {
       gender: '',
       approved: ''
     });
+  }
+
+  toggleMobileFilter(filterType: string, value: any): void {
+    // Toggle filter - if clicking the same value, clear it; otherwise set it
+    switch (filterType) {
+      case 'homeowner':
+        this.mobileFilters.homeowner = this.mobileFilters.homeowner === value ? null : value;
+        break;
+      case 'gender':
+        this.mobileFilters.gender = this.mobileFilters.gender === value ? null : value;
+        break;
+      case 'paid':
+        this.mobileFilters.paid = this.mobileFilters.paid === value ? null : value;
+        break;
+    }
+
+    // Check if any filter is active
+    const hasActiveFilter = this.mobileFilters.homeowner !== null ||
+                           this.mobileFilters.gender !== null ||
+                           this.mobileFilters.paid !== null;
+
+    if (hasActiveFilter) {
+      // Load ALL members for filtering
+      this.loadAllMembersForFiltering();
+    } else {
+      // No filters active, reload with pagination
+      this.loadMembers();
+    }
+  }
+
+  private originalMemberData: any = null; // Store unfiltered data
+
+  loadAllMembersForFiltering(): void {
+    this.loading = true;
+    this.error = '';
+
+    // Load ALL members (no pagination) for filtering
+    const params: MemberSearchParams = {
+      limit: 100, // Max allowed by backend
+      page: 1
+    };
+
+    this.memberService.getMembers(params).subscribe({
+      next: (response: MemberDirectory) => {
+        console.log('📥 Loaded ALL members for filtering:', response.data.length);
+        // Store as original data
+        this.originalMemberData = JSON.parse(JSON.stringify(response));
+        this.loading = false;
+        // Apply filters
+        this.loadMembersWithMobileFilters();
+      },
+      error: (error) => {
+        console.error('Error loading all members:', error);
+        this.error = error.error?.message || 'Failed to load members for filtering.';
+        this.loading = false;
+      }
+    });
+  }
+
+  loadMembersWithMobileFilters(): void {
+    // Store original data if not already stored
+    if (!this.originalMemberData && this.memberData?.data) {
+      this.originalMemberData = JSON.parse(JSON.stringify(this.memberData));
+    }
+
+    // Debug logging
+    console.log('🔍 Mobile Filters:', this.mobileFilters);
+    console.log('📊 Original Data Count:', this.originalMemberData?.data?.length);
+
+    // If no filters active, restore original data
+    if (this.mobileFilters.homeowner === null && !this.mobileFilters.gender && this.mobileFilters.paid === null) {
+      if (this.originalMemberData) {
+        this.memberData = JSON.parse(JSON.stringify(this.originalMemberData));
+      }
+      return;
+    }
+
+    // Apply filters to original data
+    if (this.originalMemberData?.data) {
+      let filtered = [...this.originalMemberData.data];
+
+      console.log('👥 Members before filter:', filtered.length);
+      console.log('🏠 Sample isHomeowner values:', filtered.slice(0, 5).map((m: any) => ({ name: m.fullName, isHomeowner: m.isHomeowner })));
+
+      // Filter by homeowner status
+      if (this.mobileFilters.homeowner !== null) {
+        console.log('🔎 Filtering by homeowner:', this.mobileFilters.homeowner);
+        filtered = filtered.filter((member: any) => member.isHomeowner === this.mobileFilters.homeowner);
+        console.log('✅ After homeowner filter:', filtered.length);
+      }
+
+      // Filter by gender
+      if (this.mobileFilters.gender) {
+        filtered = filtered.filter((member: any) =>
+          member.gender?.toLowerCase() === this.mobileFilters.gender?.toLowerCase()
+        );
+      }
+
+      // Filter by payment status (2026 membership)
+      if (this.mobileFilters.paid !== null) {
+        filtered = filtered.filter((member: any) => {
+          const hasPaid2026 = member.membershipYearsPaid?.includes(2026) || false;
+          return hasPaid2026 === this.mobileFilters.paid;
+        });
+      }
+
+      // Update memberData with filtered results
+      this.memberData = {
+        ...this.originalMemberData,
+        data: filtered,
+        pagination: {
+          ...this.originalMemberData.pagination,
+          total: filtered.length
+        }
+      };
+    }
   }
 
   canViewContact(member: Member): boolean {

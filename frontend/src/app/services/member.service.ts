@@ -20,6 +20,8 @@ export interface Member {
   isApproved: boolean;
   isActive: boolean;
   membershipFeesPaid: boolean;
+  isHomeowner?: boolean;
+  membershipYearsPaid?: number[];
 }
 
 export interface MemberDirectory {

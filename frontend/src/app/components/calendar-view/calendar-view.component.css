@@ -1678,13 +1678,15 @@
   }
 
   .rain-probability-badge {
-    font-size: 0.5rem;
-    padding: 2px 4px;
+    font-size: 0.4rem;
+    padding: 1px 3px;
     top: 2px;
     left: 2px;
+    gap: 2px;
+    border-radius: 8px;
   }
 
   .rain-probability-badge .rain-icon {
-    font-size: 0.55rem;
+    font-size: 0.45rem;
   }
 }

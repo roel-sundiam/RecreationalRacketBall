@@ -1,0 +1,207 @@
+<div class="court-status-widget">
+  <mat-card class="status-card">
+    <!-- Header -->
+    <div class="widget-header">
+      <div class="title-section">
+        <mat-icon class="title-icon">{{ getStatusIcon() }}</mat-icon>
+        <h2 class="widget-title">Court Status</h2>
+      </div>
+      <button mat-icon-button
+              class="refresh-btn"
+              (click)="onRefresh()"
+              [disabled]="isLoading"
+              aria-label="Refresh status">
+        <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading && !courtStatus">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="loading-text">Loading court status...</p>
+    </div>
+
+    <!-- Empty State (No reservations all day) -->
+    <div class="empty-state" *ngIf="showEmptyState()">
+      <div class="empty-state-content">
+        <mat-icon class="empty-icon">check_circle</mat-icon>
+        <h3 class="empty-title">Court Available All Day!</h3>
+        <p class="empty-message">No reservations scheduled for today.</p>
+        <p class="empty-message">Be the first to book the court!</p>
+        <button mat-raised-button
+                color="primary"
+                class="book-btn-large"
+                (click)="onBookCourt()">
+          <mat-icon>calendar_today</mat-icon>
+          Book Court Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Normal State (Current/Next or Closed) -->
+    <div class="status-content" *ngIf="showNormalState() && courtStatus">
+      <!-- Desktop: Two-column layout -->
+      <div class="desktop-layout" *ngIf="!isMobile">
+        <!-- Current Slot -->
+        <div class="status-column">
+          <div class="time-badge now-badge">
+            <mat-icon>play_arrow</mat-icon>
+            <span>NOW</span>
+          </div>
+          <div class="time-range">{{ courtStatus.current.timeRange }}</div>
+
+          <!-- Blocked State -->
+          <div class="blocked-info" *ngIf="courtStatus.current.isBlocked">
+            <mat-icon class="block-icon">block</mat-icon>
+            <p class="block-reason">{{ courtStatus.current.blockInfo?.reason || 'Blocked' }}</p>
+            <p class="block-notes" *ngIf="courtStatus.current.blockInfo?.notes">
+              {{ courtStatus.current.blockInfo.notes }}
+            </p>
+          </div>
+
+          <!-- Players List -->
+          <div class="players-list" *ngIf="!courtStatus.current.isBlocked && courtStatus.current.players.length > 0">
+            <div class="player-item" *ngFor="let player of courtStatus.current.players">
+              <div class="avatar" [style.background-color]="player.avatarColor">
+                {{ player.initials }}
+              </div>
+              <span class="player-name">
+                {{ player.name }}
+                <span class="guest-badge" *ngIf="player.isGuest">(Guest)</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Available Message -->
+          <div class="available-message" *ngIf="!courtStatus.current.exists && !courtStatus.current.isBlocked">
+            <mat-icon class="available-icon">check_circle</mat-icon>
+            <span>Available</span>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="column-divider"></div>
+
+        <!-- Next Slot -->
+        <div class="status-column">
+          <div class="time-badge next-badge">
+            <mat-icon>skip_next</mat-icon>
+            <span>UP NEXT</span>
+          </div>
+          <div class="time-range">{{ courtStatus.next.timeRange }}</div>
+
+          <!-- Blocked State -->
+          <div class="blocked-info" *ngIf="courtStatus.next.isBlocked">
+            <mat-icon class="block-icon">block</mat-icon>
+            <p class="block-reason">{{ courtStatus.next.blockInfo?.reason || 'Blocked' }}</p>
+            <p class="block-notes" *ngIf="courtStatus.next.blockInfo?.notes">
+              {{ courtStatus.next.blockInfo.notes }}
+            </p>
+          </div>
+
+          <!-- Players List -->
+          <div class="players-list" *ngIf="!courtStatus.next.isBlocked && courtStatus.next.players.length > 0">
+            <div class="player-item" *ngFor="let player of courtStatus.next.players">
+              <div class="avatar" [style.background-color]="player.avatarColor">
+                {{ player.initials }}
+              </div>
+              <span class="player-name">
+                {{ player.name }}
+                <span class="guest-badge" *ngIf="player.isGuest">(Guest)</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- No Upcoming Message -->
+          <div class="available-message neutral" *ngIf="!courtStatus.next.exists && !courtStatus.next.isBlocked">
+            <mat-icon class="neutral-icon">event_available</mat-icon>
+            <span>No upcoming</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile: Stacked layout -->
+      <div class="mobile-layout" *ngIf="isMobile">
+        <!-- Current Slot -->
+        <div class="status-section">
+          <div class="time-badge now-badge">
+            <mat-icon>play_arrow</mat-icon>
+            <span>NOW</span>
+            <span class="time-range-mobile">{{ courtStatus.current.timeRange }}</span>
+          </div>
+
+          <!-- Blocked State -->
+          <div class="blocked-info" *ngIf="courtStatus.current.isBlocked">
+            <mat-icon class="block-icon">block</mat-icon>
+            <p class="block-reason">{{ courtStatus.current.blockInfo?.reason || 'Blocked' }}</p>
+          </div>
+
+          <!-- Players List -->
+          <div class="players-list" *ngIf="!courtStatus.current.isBlocked && courtStatus.current.players.length > 0">
+            <div class="player-item" *ngFor="let player of courtStatus.current.players">
+              <div class="avatar" [style.background-color]="player.avatarColor">
+                {{ player.initials }}
+              </div>
+              <span class="player-name">
+                {{ player.name }}
+                <span class="guest-badge" *ngIf="player.isGuest">(Guest)</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Available Message -->
+          <div class="available-message" *ngIf="!courtStatus.current.exists && !courtStatus.current.isBlocked">
+            <mat-icon class="available-icon">check_circle</mat-icon>
+            <span>Available</span>
+          </div>
+        </div>
+
+        <!-- Next Slot -->
+        <div class="status-section">
+          <div class="time-badge next-badge">
+            <mat-icon>skip_next</mat-icon>
+            <span>NEXT</span>
+            <span class="time-range-mobile">{{ courtStatus.next.timeRange }}</span>
+          </div>
+
+          <!-- Blocked State -->
+          <div class="blocked-info" *ngIf="courtStatus.next.isBlocked">
+            <mat-icon class="block-icon">block</mat-icon>
+            <p class="block-reason">{{ courtStatus.next.blockInfo?.reason || 'Blocked' }}</p>
+          </div>
+
+          <!-- Players List -->
+          <div class="players-list" *ngIf="!courtStatus.next.isBlocked && courtStatus.next.players.length > 0">
+            <div class="player-item" *ngFor="let player of courtStatus.next.players">
+              <div class="avatar" [style.background-color]="player.avatarColor">
+                {{ player.initials }}
+              </div>
+              <span class="player-name">
+                {{ player.name }}
+                <span class="guest-badge" *ngIf="player.isGuest">(Guest)</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- No Upcoming Message -->
+          <div class="available-message neutral" *ngIf="!courtStatus.next.exists && !courtStatus.next.isBlocked">
+            <mat-icon class="neutral-icon">event_available</mat-icon>
+            <span>No upcoming</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="widget-footer" *ngIf="courtStatus">
+      <span class="update-time">Updated {{ timeAgo }}</span>
+      <button mat-raised-button
+              color="primary"
+              class="book-btn"
+              (click)="onBookCourt()">
+        <mat-icon>calendar_today</mat-icon>
+        Book Court
+      </button>
+    </div>
+  </mat-card>
+</div>

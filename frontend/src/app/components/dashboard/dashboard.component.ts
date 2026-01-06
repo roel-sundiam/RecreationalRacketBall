@@ -16,6 +16,7 @@ import { PWANotificationService } from '../../services/pwa-notification.service'
 import { OpenPlayNotificationModalComponent } from '../open-play-notification-modal/open-play-notification-modal.component';
 import { TennisBallMachineDialogComponent } from '../tennis-ball-machine-dialog/tennis-ball-machine-dialog.component';
 import { ModalManagerService } from '../../services/modal-manager.service';
+import { CourtStatusWidgetComponent } from '../court-status-widget/court-status-widget.component';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -28,12 +29,16 @@ import { environment } from '../../../environments/environment';
     MatButtonModule,
     MatIconModule,
     MatGridListModule,
-    MatDialogModule
+    MatDialogModule,
+    CourtStatusWidgetComponent
   ],
   template: `
     <div class="dashboard-container">
       <!-- Action Cards Grid -->
       <div class="dashboard-content">
+
+        <!-- Court Status Widget -->
+        <app-court-status-widget></app-court-status-widget>
 
         <div class="action-grid">
           <!-- Reserve Court -->

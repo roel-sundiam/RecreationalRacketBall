@@ -255,6 +255,14 @@
             </td>
           </ng-container>
 
+          <!-- Reservation Date Column -->
+          <ng-container matColumnDef="reservationDate">
+            <th mat-header-cell *matHeaderCellDef>Reservation Date</th>
+            <td mat-cell *matCellDef="let payment">
+              {{ payment.reservationId?.date ? formatDate(payment.reservationId.date) : 'N/A' }}
+            </td>
+          </ng-container>
+
           <!-- Payment Date Column -->
           <ng-container matColumnDef="paymentDate">
             <th mat-header-cell *matHeaderCellDef>Payment Date</th>

@@ -118,7 +118,7 @@ export class AdminPaymentManagementComponent implements OnInit {
   dateRangeEnd: Date | null = null;
 
   // Table
-  displayedColumns = ['reference', 'user', 'amount', 'method', 'status', 'type', 'paymentDate', 'actions'];
+  displayedColumns = ['reference', 'user', 'amount', 'method', 'status', 'type', 'reservationDate', 'paymentDate', 'actions'];
   overdueDisplayedColumns = ['fullName', 'overdueCount', 'totalOverdueAmount', 'oldestOverdueDays', 'actions'];
 
   // Pagination
@@ -246,10 +246,11 @@ export class AdminPaymentManagementComponent implements OnInit {
         return orderA - orderB;
       }
 
-      // Secondary sort by date (newest first)
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return dateB - dateA;
+      // Secondary sort by reservation date (oldest first)
+      // Payments without reservation date go to the end
+      const dateA = a.reservationId?.date ? new Date(a.reservationId.date).getTime() : Number.MAX_SAFE_INTEGER;
+      const dateB = b.reservationId?.date ? new Date(b.reservationId.date).getTime() : Number.MAX_SAFE_INTEGER;
+      return dateA - dateB;
     });
 
     this.filteredPayments = filtered;

@@ -139,7 +139,7 @@ interface MembershipPayment {
                     Amount is required
                   </mat-error>
                   <mat-error *ngIf="paymentForm.get('amount')?.hasError('min')">
-                    Amount must be greater than 0
+                    Amount cannot be negative
                   </mat-error>
                 </mat-form-field>
               </div>
@@ -245,7 +245,8 @@ interface MembershipPayment {
                 <ng-container matColumnDef="amount">
                   <th mat-header-cell *matHeaderCellDef>Amount</th>
                   <td mat-cell *matCellDef="let payment">
-                    <strong>₱{{ payment.amount.toFixed(2) }}</strong>
+                    <strong *ngIf="payment.amount > 0">₱{{ payment.amount.toFixed(2) }}</strong>
+                    <span *ngIf="payment.amount === 0" class="waived-badge">WAIVED</span>
                   </td>
                 </ng-container>
 
@@ -299,11 +300,19 @@ interface MembershipPayment {
                       <p class="summary-value">{{ summary.count }}</p>
                     </div>
                   </div>
+                  <div class="summary-card" *ngIf="summary.waivedCount > 0">
+                    <mat-icon class="summary-icon">card_giftcard</mat-icon>
+                    <div class="summary-content">
+                      <p class="summary-label">Waived</p>
+                      <p class="summary-value">{{ summary.waivedCount }}</p>
+                    </div>
+                  </div>
                   <div class="summary-card total-amount-card">
                     <mat-icon class="summary-icon">payments</mat-icon>
                     <div class="summary-content">
-                      <p class="summary-label">Total Amount</p>
+                      <p class="summary-label">Total Collected</p>
                       <p class="summary-value amount">₱{{ summary.totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</p>
+                      <p class="summary-sublabel" *ngIf="summary.waivedCount > 0">Excluding {{ summary.waivedCount }} waived</p>
                     </div>
                   </div>
                   <div class="summary-card" *ngIf="summary.years.length > 0">
@@ -656,6 +665,14 @@ interface MembershipPayment {
       font-weight: 600;
     }
 
+    .summary-sublabel {
+      margin: 4px 0 0 0;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 400;
+      font-style: italic;
+    }
+
     /* No Data State */
     .no-data {
       text-align: center;
@@ -681,6 +698,18 @@ interface MembershipPayment {
     .action-btn mat-icon {
       font-size: 18px;
       line-height: 18px;
+    }
+
+    .waived-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e3f2fd;
+      color: #1976d2;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .no-data p {
@@ -754,6 +783,7 @@ export class AdminMembershipPaymentsComponent implements OnInit {
   summary = {
     count: 0,
     totalAmount: 0,
+    waivedCount: 0,
     years: [] as number[]
   };
 
@@ -768,7 +798,7 @@ export class AdminMembershipPaymentsComponent implements OnInit {
     this.paymentForm = this.fb.group({
       userId: ['', Validators.required],
       membershipYear: [2026, Validators.required],
-      amount: [0, [Validators.required, Validators.min(0.01)]],
+      amount: [0, [Validators.required, Validators.min(0)]],
       paymentMethod: ['cash', Validators.required],
       paymentDate: [new Date(), Validators.required],
       notes: ['', Validators.maxLength(500)]

@@ -2538,8 +2538,8 @@ export const payOnBehalfValidation = [
   body('amount')
     .notEmpty()
     .withMessage('Amount is required')
-    .isFloat({ min: 0.01 })
-    .withMessage('Amount must be greater than zero'),
+    .isFloat({ min: 0 })
+    .withMessage('Amount cannot be negative'),
   body('paymentMethod')
     .notEmpty()
     .withMessage('Payment method is required')
@@ -2615,8 +2615,13 @@ export const recordMembershipFeePayment = asyncHandler(async (req: Authenticated
 
   console.log(`✅ Membership fee payment recorded for ${user.fullName} - Year ${membershipYear}`);
 
-  // Update financial report
-  await updateFinancialReportMembershipFees();
+  // Update financial report (don't fail payment if this fails)
+  try {
+    await updateFinancialReportMembershipFees();
+  } catch (error) {
+    console.error('⚠️ Failed to update financial report:', error);
+    // Payment still succeeds even if financial report update fails
+  }
 
   const populatedPayment = await Payment.findById(payment._id)
     .populate('userId', 'username fullName email')
@@ -2652,7 +2657,8 @@ export const getMembershipPayments = asyncHandler(async (req: AuthenticatedReque
     .populate('recordedBy', 'username fullName')
     .sort({ membershipYear: -1, createdAt: -1 });
 
-  const total = payments.reduce((sum, p) => sum + p.amount, 0);
+  const total = payments.reduce((sum, p) => sum + (p.amount > 0 ? p.amount : 0), 0);
+  const waivedCount = payments.filter(p => p.amount === 0).length;
 
   res.json({
     success: true,
@@ -2661,6 +2667,7 @@ export const getMembershipPayments = asyncHandler(async (req: AuthenticatedReque
       summary: {
         count: payments.length,
         totalAmount: total,
+        waivedCount: waivedCount,
         years: [...new Set(payments.map(p => p.membershipYear))].sort((a, b) => (b || 0) - (a || 0))
       }
     }
@@ -2679,8 +2686,15 @@ export const getMembershipPaymentSummary = asyncHandler(async (req: Authenticate
     {
       $group: {
         _id: '$membershipYear',
-        totalAmount: { $sum: '$amount' },
-        count: { $sum: 1 }
+        totalAmount: {
+          $sum: {
+            $cond: [{ $gt: ['$amount', 0] }, '$amount', 0]
+          }
+        },
+        count: { $sum: 1 },
+        waivedCount: {
+          $sum: { $cond: [{ $eq: ['$amount', 0] }, 1, 0] }
+        }
       }
     },
     {
@@ -2693,7 +2707,8 @@ export const getMembershipPaymentSummary = asyncHandler(async (req: Authenticate
     data: summary.map(item => ({
       year: item._id,
       totalAmount: item.totalAmount,
-      memberCount: item.count
+      memberCount: item.count,
+      waivedCount: item.waivedCount
     }))
   });
 });
@@ -2755,6 +2770,14 @@ export const updateMembershipPayment = asyncHandler(async (req: AuthenticatedReq
 
   console.log(`💳 Membership payment updated: ${payment._id} by ${req.user!.username}`);
 
+  // Update financial report to reflect changes (especially if amount changed from/to zero)
+  try {
+    await updateFinancialReportMembershipFees();
+  } catch (error) {
+    console.error('⚠️ Failed to update financial report:', error);
+    // Update still succeeds even if financial report update fails
+  }
+
   res.json({
     success: true,
     message: 'Membership payment updated successfully',
@@ -2801,6 +2824,14 @@ export const deleteMembershipPayment = asyncHandler(async (req: AuthenticatedReq
 
   console.log(`🗑️ Membership payment deleted: ${id} (Year: ${membershipYear}) by ${req.user!.username}`);
 
+  // Update financial report after deletion
+  try {
+    await updateFinancialReportMembershipFees();
+  } catch (error) {
+    console.error('⚠️ Failed to update financial report:', error);
+    // Deletion still succeeds even if financial report update fails
+  }
+
   res.json({
     success: true,
     message: 'Membership payment deleted successfully'
@@ -2824,7 +2855,11 @@ async function updateFinancialReportMembershipFees(): Promise<void> {
       {
         $group: {
           _id: '$membershipYear',
-          totalAmount: { $sum: '$amount' }
+          totalAmount: {
+            $sum: {
+              $cond: [{ $gt: ['$amount', 0] }, '$amount', 0]
+            }
+          }
         }
       },
       {
@@ -2924,8 +2959,8 @@ export const validateMembershipFeePayment = [
   body('amount')
     .notEmpty()
     .withMessage('Amount is required')
-    .isFloat({ min: 0.01 })
-    .withMessage('Amount must be greater than zero'),
+    .isFloat({ min: 0 })
+    .withMessage('Amount cannot be negative'),
   body('paymentMethod')
     .notEmpty()
     .withMessage('Payment method is required')

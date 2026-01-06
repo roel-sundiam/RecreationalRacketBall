@@ -100,9 +100,9 @@ const paymentSchema = new Schema<IPaymentDocument>({
     min: [0, 'Amount cannot be negative'],
     validate: {
       validator: function(v: number) {
-        return v > 0;
+        return v >= 0;
       },
-      message: 'Payment amount must be greater than zero'
+      message: 'Payment amount cannot be negative'
     }
   },
   currency: {

@@ -1019,6 +1019,99 @@
   }
 }
 
+.location-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  mat-card-content {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .location-info-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+
+    mat-icon {
+      font-size: 1.75rem;
+      width: 1.75rem;
+      height: 1.75rem;
+      color: #3b82f6;
+      margin-top: 0.25rem;
+      flex-shrink: 0;
+    }
+
+    .location-details {
+      flex: 1;
+
+      h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0.5rem 0 0 0;
+        color: #666;
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+    }
+  }
+
+  .location-map {
+    width: 100%;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  }
+
+  .location-actions {
+    display: flex;
+    gap: 1rem;
+
+    button {
+      flex: 1;
+      min-height: 48px;
+      font-weight: 600;
+      border-radius: 24px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+
+      mat-icon {
+        font-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.75rem;
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .debug-panel {
     margin: 1.5rem 1rem;
@@ -1031,6 +1124,43 @@
 
     .debug-content {
       font-size: 0.85rem;
+    }
+  }
+
+  .location-card {
+    mat-card-content {
+      padding: 1.5rem;
+      gap: 1rem;
+    }
+
+    .location-info-header {
+      mat-icon {
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+
+      .location-details {
+        h3 {
+          font-size: 1.1rem;
+        }
+
+        p {
+          font-size: 0.95rem;
+        }
+      }
+    }
+
+    .location-map {
+      height: 250px;
+    }
+
+    .location-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
     }
   }
 }

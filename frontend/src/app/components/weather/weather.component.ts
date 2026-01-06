@@ -9,6 +9,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -325,6 +326,36 @@ interface ForecastResponse {
           </mat-card-content>
         </mat-card>
 
+        <!-- Location Card -->
+        <mat-card class="location-card">
+          <mat-card-content>
+            <div class="location-info-header">
+              <mat-icon>location_on</mat-icon>
+              <div class="location-details">
+                <h3>Club Location</h3>
+                <p>{{ clubAddress }}</p>
+              </div>
+            </div>
+
+            <div class="location-map">
+              <iframe
+                [src]="mapEmbedUrl"
+                frameborder="0"
+                allowfullscreen
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            </div>
+
+            <div class="location-actions">
+              <button mat-raised-button color="primary" (click)="openGoogleMaps()">
+                <mat-icon>directions</mat-icon>
+                Get Directions
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
         <!-- Action Cards -->
         <div class="action-cards">
           <mat-card class="action-card">
@@ -464,11 +495,20 @@ export class WeatherComponent implements OnInit, OnDestroy {
   selectedView: 'hourly' | 'daily' = 'hourly';
   showDebugInfo = false; // Debug panel hidden
   apiUrl = environment.apiUrl; // Public for template access
+  clubAddress = 'RT2 Tennis Club, San Fernando, Pampanga';
+  googleMapsPlusCode = '3JRG+9P8';
+  googleMapsUrl = 'https://maps.google.com/?q=3JRG%2B9P8,+San+Fernando,+Pampanga';
+  mapEmbedUrl: SafeResourceUrl;
 
   constructor(
     private http: HttpClient,
-    private router: Router
-  ) {}
+    private router: Router,
+    private sanitizer: DomSanitizer
+  ) {
+    this.mapEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+      'https://maps.google.com/maps?q=3JRG%2B9P8,+San+Fernando,+Pampanga&t=&z=15&ie=UTF8&iwloc=&output=embed'
+    );
+  }
 
   ngOnInit(): void {
     this.loadWeatherData();
@@ -640,5 +680,9 @@ export class WeatherComponent implements OnInit, OnDestroy {
 
   goToReservations(): void {
     this.router.navigate(['/reservations']);
+  }
+
+  openGoogleMaps(): void {
+    window.open(this.googleMapsUrl, '_blank', 'noopener,noreferrer');
   }
 }

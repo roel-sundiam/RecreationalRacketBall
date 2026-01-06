@@ -8,9 +8,10 @@
         <span class="stats-text" *ngIf="stats"> • <span class="stats-highlight">{{ formatCurrency(stats.overall.amount) }}</span> raised of {{ formatCurrency(goalAmount) }}</span>
       </p>
     </div>
-    <button mat-raised-button class="contribute-btn" (click)="navigateToContributions(); $event.stopPropagation()">
-      <mat-icon>volunteer_activism</mat-icon>
-      <span class="btn-text">View Progress</span>
+    <button mat-raised-button class="contribute-btn" (click)="navigateToContributions(); $event.stopPropagation()" aria-label="View resurfacing progress and contributions">
+      <mat-icon aria-hidden="true">volunteer_activism</mat-icon>
+      <span class="btn-text desktop-text">View Progress</span>
+      <span class="btn-text mobile-text">Tap to View</span>
     </button>
   </div>
 </div>

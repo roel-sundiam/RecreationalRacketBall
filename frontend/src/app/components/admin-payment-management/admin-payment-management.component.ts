@@ -167,8 +167,9 @@ export class AdminPaymentManagementComponent implements OnInit {
   loadPayments(): void {
     this.isLoading = true;
 
+    // Fetch all payments without limit (client-side pagination handles display)
     this.http.get<any>(
-      `${this.apiUrl}/payments`,
+      `${this.apiUrl}/payments?limit=999999`,
       { headers: this.getAuthHeaders() }
     ).subscribe({
       next: (response) => {

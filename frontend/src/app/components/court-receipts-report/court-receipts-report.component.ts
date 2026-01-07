@@ -1930,7 +1930,7 @@ export class CourtReceiptsReportComponent implements OnInit {
   loadReport(): void {
     this.loading = true;
     this.loadCreditDeposits();
-    
+
     const params: any = {};
     if (this.dateRangeForm.value.startDate) {
       params.startDate = this.dateRangeForm.value.startDate.toISOString();
@@ -1938,6 +1938,8 @@ export class CourtReceiptsReportComponent implements OnInit {
     if (this.dateRangeForm.value.endDate) {
       params.endDate = this.dateRangeForm.value.endDate.toISOString();
     }
+    // Fetch all payments without limit
+    params.limit = 999999;
 
     this.http.get<{success: boolean, data: PaymentRecord[]}>(`${this.baseUrl}/payments`, { params })
       .subscribe({

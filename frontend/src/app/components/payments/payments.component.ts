@@ -1947,166 +1947,25 @@ export class PaymentsComponent implements OnInit {
   }
 
   /**
-   * Group consecutive payments for the same date/user to display multi-hour reservations as single entries
+   * Process payments for display - each payment shown separately (grouping disabled)
    */
   groupPayments(payments: Payment[]): Payment[] {
-    // Initialize debug info
-    this.groupingDebugInfo = {
-      inputPayments: payments.length,
-      courtPayments: [],
-      groups: [],
-      finalResult: 0
-    };
+    // Disable grouping - return payments as individual entries
+    console.log('🔍 groupPayments: Input payments:', payments.length, '(grouping disabled)');
 
-    // Separate court payments from other payments
-    const courtPayments = payments.filter(p =>
-      p.reservationId &&
-      p.reservationId.timeSlot !== undefined &&
-      p.reservationId.date
-    );
-    const nonCourtPayments = payments.filter(p =>
-      !p.reservationId ||
-      p.reservationId.timeSlot === undefined ||
-      !p.reservationId.date
-    );
-
-    this.groupingDebugInfo.courtPayments = courtPayments.map(p => ({
-      id: p._id,
-      timeSlot: p.reservationId?.timeSlot,
-      date: new Date(p.reservationId!.date).toDateString(),
-      userId: p.userId._id,
-      amount: p.amount
-    }));
-
-    console.log('🔍 groupPayments: Input payments:', payments.length);
-    console.log('🔍 groupPayments: Court payments:', courtPayments.length, this.groupingDebugInfo.courtPayments);
-
-    if (courtPayments.length === 0) {
-      return payments;
-    }
-
-    // Group payments by date and user first
-    const groupsByDateAndUser = new Map<string, Payment[]>();
-
-    courtPayments.forEach(payment => {
-      const dateStr = new Date(payment.reservationId!.date).toDateString();
-      const userId = payment.userId._id;
-      const key = `${dateStr}-${userId}`;
-
-      console.log(`🔍 Grouping payment: timeSlot=${payment.reservationId!.timeSlot}, key=${key}`);
-
-      if (!groupsByDateAndUser.has(key)) {
-        groupsByDateAndUser.set(key, []);
+    // Ensure each payment has timeSlotDisplay for rendering
+    const processedPayments = payments.map(payment => {
+      if (payment.reservationId && !payment.reservationId.timeSlotDisplay) {
+        payment.reservationId.timeSlotDisplay = this.formatTimeRange(
+          payment.reservationId.timeSlot,
+          payment.reservationId.endTimeSlot || (payment.reservationId.timeSlot + (payment.reservationId.duration || 1))
+        );
       }
-      groupsByDateAndUser.get(key)!.push(payment);
+      return payment;
     });
 
-    console.log('🔍 Groups by date/user:', groupsByDateAndUser.size, 'groups');
-
-    const grouped: Payment[] = [];
-
-    // Process each date/user group
-    groupsByDateAndUser.forEach((userPayments, key) => {
-      const groupDebug: any = {
-        key,
-        paymentCount: userPayments.length,
-        timeSlots: [],
-        consecutiveGroups: []
-      };
-
-      console.log(`🔍 Processing group ${key}:`, userPayments.length, 'payments');
-
-      // Sort by timeSlot
-      const sorted = userPayments.sort((a, b) =>
-        a.reservationId!.timeSlot - b.reservationId!.timeSlot
-      );
-
-      groupDebug.timeSlots = sorted.map(p => p.reservationId!.timeSlot);
-      console.log(`🔍 Sorted timeSlots for ${key}:`, groupDebug.timeSlots);
-
-      let i = 0;
-      while (i < sorted.length) {
-        const consecutiveGroup = [sorted[i]];
-        let j = i + 1;
-
-        console.log(`🔍 Starting group at index ${i}, timeSlot=${sorted[i].reservationId!.timeSlot}`);
-
-        // Find consecutive time slots
-        while (j < sorted.length) {
-          const currentLastSlot = consecutiveGroup[consecutiveGroup.length - 1].reservationId!.timeSlot;
-          const nextSlot = sorted[j].reservationId!.timeSlot;
-          console.log(`🔍 Checking if ${nextSlot} is consecutive to ${currentLastSlot}: ${nextSlot === currentLastSlot + 1}`);
-
-          if (nextSlot === currentLastSlot + 1) {
-            consecutiveGroup.push(sorted[j]);
-            j++;
-          } else {
-            break;
-          }
-        }
-
-        const groupSlots = consecutiveGroup.map(p => p.reservationId!.timeSlot);
-        console.log(`🔍 Consecutive group has ${consecutiveGroup.length} payments:`, groupSlots);
-
-        groupDebug.consecutiveGroups.push({
-          slots: groupSlots,
-          count: consecutiveGroup.length,
-          willMerge: consecutiveGroup.length > 1
-        });
-
-        // Create merged payment or single payment
-        if (consecutiveGroup.length > 1) {
-
-          const firstSlot = consecutiveGroup[0];
-          const lastSlot = consecutiveGroup[consecutiveGroup.length - 1];
-          const totalAmount = consecutiveGroup.reduce((sum, p) => sum + p.amount, 0);
-
-          console.log(`🔍 Creating merged payment: ${firstSlot.reservationId!.timeSlot}-${lastSlot.reservationId!.timeSlot + 1}, amount=₱${totalAmount}`);
-
-          const mergedPayment: Payment = {
-            ...firstSlot,
-            amount: totalAmount,
-            formattedAmount: `₱${totalAmount.toFixed(2)}`,
-            description: `Court reservation payment for ${new Date(firstSlot.reservationId!.date).toDateString()} ${this.formatTime(firstSlot.reservationId!.timeSlot)}-${this.formatTime(lastSlot.reservationId!.timeSlot + 1)}`,
-            reservationId: {
-              ...firstSlot.reservationId!,
-              timeSlotDisplay: this.formatTimeRange(firstSlot.reservationId!.timeSlot, lastSlot.reservationId!.timeSlot + 1),
-              totalFee: totalAmount
-            },
-            _groupedPayments: consecutiveGroup
-          };
-
-          grouped.push(mergedPayment);
-        } else {
-          console.log(`🔍 Creating single payment: timeSlot=${consecutiveGroup[0].reservationId!.timeSlot}`);
-
-          // Single payment - ensure it has timeSlotDisplay
-          const singlePayment = {
-            ...consecutiveGroup[0],
-            reservationId: consecutiveGroup[0].reservationId ? {
-              ...consecutiveGroup[0].reservationId
-            } : undefined
-          };
-          if (singlePayment.reservationId && !singlePayment.reservationId.timeSlotDisplay) {
-            singlePayment.reservationId.timeSlotDisplay = this.formatTimeRange(
-              singlePayment.reservationId.timeSlot,
-              singlePayment.reservationId.endTimeSlot || (singlePayment.reservationId.timeSlot + (singlePayment.reservationId.duration || 1))
-            );
-          }
-          grouped.push(singlePayment);
-        }
-
-        i = j; // Move to next unprocessed payment
-      }
-
-      this.groupingDebugInfo.groups.push(groupDebug);
-    });
-
-    this.groupingDebugInfo.finalResult = grouped.length + nonCourtPayments.length;
-    console.log(`🔍 Final grouped array has ${grouped.length} payments`);
-
-    // Combine and sort by creation date (most recent first)
-    return [...grouped, ...nonCourtPayments].sort((a, b) => {
+    // Sort by creation date (most recent first)
+    return processedPayments.sort((a, b) => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }

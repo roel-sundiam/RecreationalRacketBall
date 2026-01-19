@@ -211,6 +211,7 @@ export const getExpenseCategories = asyncHandler(async (req: AuthenticatedReques
     'Purchase - Lights',
     'Purchase - Miscellaneous',
     'Purchase - Tennis Net',
+    'RT Club T-Shirts',
     'Tennis Score Board',
     'Tournament Expense',
     'Water System Project Expense'

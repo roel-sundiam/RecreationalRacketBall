@@ -1185,9 +1185,10 @@ export class PaymentsComponent implements OnInit {
       
       // Combine existing payments with synthetic payments
       this.pendingPayments = [...existingPayments, ...syntheticPayments];
-      
+
       // Group pending payments for multi-hour reservations
-      this.displayedPendingPayments = this.groupPayments([...this.pendingPayments]);
+      // Sort in ascending order (oldest first) for pending payments
+      this.displayedPendingPayments = this.groupPayments([...this.pendingPayments], 'asc');
       
       // Debug: Log payment statuses to ensure proper separation
       console.log('📋 Pending Payments loaded:', this.pendingPayments.length);
@@ -1233,7 +1234,8 @@ export class PaymentsComponent implements OnInit {
         });
 
         // Group payments for multi-hour reservations
-        this.displayedPayments = this.groupPayments([...this.paymentHistory]);
+        // Sort in descending order (most recent first) for payment history
+        this.displayedPayments = this.groupPayments([...this.paymentHistory], 'desc');
         
         // Debug: Log displayed payments after grouping
         console.log('📋 Displayed Payments after grouping:', this.displayedPayments.length, 'payments');
@@ -1953,10 +1955,12 @@ export class PaymentsComponent implements OnInit {
 
   /**
    * Process payments for display - each payment shown separately (grouping disabled)
+   * @param payments - Array of payments to process
+   * @param sortOrder - Sort order: 'asc' for ascending (oldest first), 'desc' for descending (most recent first)
    */
-  groupPayments(payments: Payment[]): Payment[] {
+  groupPayments(payments: Payment[], sortOrder: 'asc' | 'desc' = 'desc'): Payment[] {
     // Disable grouping - return payments as individual entries
-    console.log('🔍 groupPayments: Input payments:', payments.length, '(grouping disabled)');
+    console.log('🔍 groupPayments: Input payments:', payments.length, `(grouping disabled, sort: ${sortOrder})`);
 
     // Ensure each payment has timeSlotDisplay for rendering
     const processedPayments = payments.map(payment => {
@@ -1969,9 +1973,24 @@ export class PaymentsComponent implements OnInit {
       return payment;
     });
 
-    // Sort by creation date (most recent first)
+    // Sort by reservation/payment date
     return processedPayments.sort((a, b) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      // Use reservation date if available, otherwise use paymentDate, fallback to createdAt
+      const dateA = a.reservationId?.date
+        ? new Date(a.reservationId.date)
+        : a.paymentDate
+          ? new Date(a.paymentDate)
+          : new Date(a.createdAt);
+      const dateB = b.reservationId?.date
+        ? new Date(b.reservationId.date)
+        : b.paymentDate
+          ? new Date(b.paymentDate)
+          : new Date(b.createdAt);
+
+      // Apply sort order
+      return sortOrder === 'asc'
+        ? dateA.getTime() - dateB.getTime()  // Ascending (oldest first)
+        : dateB.getTime() - dateA.getTime(); // Descending (most recent first)
     });
   }
 

@@ -1050,13 +1050,14 @@ export class PaymentsComponent implements OnInit {
     this.loadingUnpaid = true;
     
     try {
-      // Add cache busting parameter when needed to ensure fresh data after payment processing
+      // Add cache busting parameter and limit to fetch all payments
       const cacheBuster = bustCache ? `&_t=${Date.now()}` : '';
-      
+
       // Load both existing pending payments and unpaid reservations
+      // Set limit=999999 to remove pagination and get all pending payments/reservations
       const [paymentsResponse, reservationsResponse] = await Promise.all([
-        this.http.get<any>(`${this.apiUrl}/payments/my?status=pending${cacheBuster}`).toPromise(),
-        this.http.get<any>(`${this.apiUrl}/reservations?paymentStatus=pending${cacheBuster}`).toPromise()
+        this.http.get<any>(`${this.apiUrl}/payments/my?status=pending&limit=999999${cacheBuster}`).toPromise(),
+        this.http.get<any>(`${this.apiUrl}/reservations?paymentStatus=pending&limit=999999${cacheBuster}`).toPromise()
       ]);
       const rawExistingPayments = paymentsResponse?.data || [];
       console.log('🔍 Raw API response for /payments/my?status=pending:', rawExistingPayments.map((p: any) => ({
@@ -1079,7 +1080,8 @@ export class PaymentsComponent implements OnInit {
       })));
       
       // Get all payment records to check which reservations the current user has paid for
-      const allPaymentsResponse = await this.http.get<any>(`${this.apiUrl}/payments/my`).toPromise();
+      // Set limit=999999 to remove pagination and get all user payments
+      const allPaymentsResponse = await this.http.get<any>(`${this.apiUrl}/payments/my?limit=999999`).toPromise();
       const allPayments = allPaymentsResponse?.data || [];
 
       this.paymentLoadingDebugInfo = {
@@ -1210,15 +1212,18 @@ export class PaymentsComponent implements OnInit {
 
   loadPaymentHistory(bustCache = false): void {
     this.loadingHistory = true;
-    
-    // Add cache busting parameter when needed to ensure fresh data after payment processing
-    const cacheBuster = bustCache ? `?_t=${Date.now()}` : '';
-    
+
+    // Add cache busting parameter and limit to fetch all payments
+    // Set limit=999999 to remove pagination and get all user payments
+    const cacheBuster = bustCache ? `?_t=${Date.now()}&limit=999999` : '?limit=999999';
+
     this.http.get<any>(`${this.apiUrl}/payments/my${cacheBuster}`).subscribe({
       next: (response) => {
-        // Filter out pending payments from history - they belong in Pending tab only
+        // Show only completed and recorded payments in history - failed/refunded are excluded
         const allPayments = response.data || [];
-        this.paymentHistory = allPayments.filter((payment: Payment) => payment.status !== 'pending');
+        this.paymentHistory = allPayments.filter((payment: Payment) =>
+          payment.status === 'completed' || payment.status === 'record'
+        );
         
         // Sort by payment date (most recent first) to show newly completed payments at the top
         this.paymentHistory.sort((a: Payment, b: Payment) => {

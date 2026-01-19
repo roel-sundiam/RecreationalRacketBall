@@ -32,18 +32,19 @@ const ExpenseSchema = new Schema<IExpenseDocument>({
     required: true,
     trim: true,
     enum: [
-      'Purchase - Miscelleanous',
-      'Delivery Fee',
-      'Mineral Water',
-      'Court Service',
+      'App Service Fee',
       'Court Maintenance',
-      'Purchase - Tennis Net',
-      'Tennis Score Board',
-      'Purchase - Lights',
-      'Water System Project Expense',
-      'Tournament Expense',
+      'Court Service',
+      'Delivery Fee',
       'Financial Donation',
-      'App Service Fee'
+      'Mineral Water',
+      'Purchase - Lights',
+      'Purchase - Miscellaneous',
+      'Purchase - Tennis Net',
+      'RT Club T-Shirts',
+      'Tennis Score Board',
+      'Tournament Expense',
+      'Water System Project Expense'
     ]
   },
   createdBy: {

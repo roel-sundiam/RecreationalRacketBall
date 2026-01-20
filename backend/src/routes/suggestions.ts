@@ -234,6 +234,35 @@ router.get('/', asyncHandler(async (req: AuthenticatedRequest, res: Response) =>
   }
 }));
 
+// Get unread count (admin only)
+router.get('/unread-count', asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required'
+    });
+  }
+
+  try {
+    // Count suggestions/complaints that haven't been reviewed or responded to
+    const unreadCount = await Suggestion.countDocuments({
+      status: { $in: ['open', 'in_review'] },
+      'adminResponse.response': { $exists: false }
+    });
+
+    res.json({
+      success: true,
+      data: { count: unreadCount }
+    });
+  } catch (error) {
+    console.error('Error fetching unread count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch unread count'
+    });
+  }
+}));
+
 // Get statistics (admin only)
 router.get('/stats', asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {

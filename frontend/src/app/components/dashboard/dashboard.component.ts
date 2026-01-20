@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
@@ -29,6 +30,7 @@ import { environment } from '../../../environments/environment';
     MatButtonModule,
     MatIconModule,
     MatGridListModule,
+    MatBadgeModule,
     MatDialogModule,
     CourtStatusWidgetComponent
   ],
@@ -673,13 +675,13 @@ import { environment } from '../../../environments/environment';
             <mat-card class="action-card admin-card" data-icon="feedback" data-title="Feedback Management" (click)="navigateTo('/admin/suggestions')">
               <!-- Mobile Icon -->
               <div class="mobile-card-icon">
-                <mat-icon>feedback</mat-icon>
+                <mat-icon [matBadge]="unreadFeedbackCount" [matBadgeHidden]="unreadFeedbackCount === 0" matBadgeColor="warn" matBadgeSize="small">feedback</mat-icon>
               </div>
               <div class="mobile-card-title">Feedback Management</div>
-              
+
               <!-- Desktop Content -->
               <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">feedback</mat-icon>
+                <mat-icon mat-card-avatar class="action-icon admin-icon" [matBadge]="unreadFeedbackCount" [matBadgeHidden]="unreadFeedbackCount === 0" matBadgeColor="warn">feedback</mat-icon>
                 <mat-card-title>Feedback Management</mat-card-title>
                 <mat-card-subtitle>Manage member feedback</mat-card-subtitle>
               </mat-card-header>
@@ -946,6 +948,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private apiUrl = environment.apiUrl;
   private subscriptions: Subscription[] = [];
   databaseName: string = 'Loading...';
+  unreadFeedbackCount: number = 0;
+  private feedbackCountInterval: any;
 
   constructor(
     public authService: AuthService,
@@ -982,6 +986,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.fetchDatabaseInfo();
     }
 
+    // Fetch unread feedback count for admins
+    if (this.isAdmin) {
+      this.fetchUnreadFeedbackCount();
+      // Refresh count every 30 seconds
+      this.feedbackCountInterval = setInterval(() => {
+        this.fetchUnreadFeedbackCount();
+      }, 30000);
+    }
+
     // Set up WebSocket listeners for real-time open play notifications
     this.setupWebSocketListeners();
 
@@ -1001,6 +1014,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error fetching database info:', error);
         this.databaseName = 'Error';
+      }
+    });
+  }
+
+  private fetchUnreadFeedbackCount(): void {
+    this.http.get<any>(`${this.apiUrl}/suggestions/unread-count`).subscribe({
+      next: (response) => {
+        if (response && response.success && response.data) {
+          this.unreadFeedbackCount = response.data.count || 0;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching unread feedback count:', error);
+        this.unreadFeedbackCount = 0;
       }
     });
   }
@@ -1204,5 +1231,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Clean up all subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions = [];
+
+    // Clear feedback count interval
+    if (this.feedbackCountInterval) {
+      clearInterval(this.feedbackCountInterval);
+    }
   }
 }

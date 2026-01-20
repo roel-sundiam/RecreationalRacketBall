@@ -26,6 +26,7 @@ import creditRoutes from './routes/creditRoutes';
 import memberRoutes from './routes/memberRoutes';
 import reportRoutes, { specialRouter } from './routes/reportRoutes';
 import expenseRoutes from './routes/expenseRoutes';
+import expenseCategoryRoutes from './routes/expenseCategoryRoutes';
 import seedingRoutes from './routes/seedingRoutes';
 import matchRoutes from './routes/matchRoutes';
 import notificationRoutes from './routes/notifications';
@@ -225,6 +226,7 @@ app.use('/api/members', memberRoutes);
 app.use('/api/reports', reportRoutes); // Temporarily removing auth for testing fix endpoint
 app.use('/api/reports', specialRouter); // Special router without auth for fix endpoint
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/expense-categories', expenseCategoryRoutes);
 app.use('/api/seeding', authenticateToken, seedingRoutes);
 app.use('/api/matches', authenticateToken, matchRoutes);
 app.use('/api/notifications', notificationRoutes);

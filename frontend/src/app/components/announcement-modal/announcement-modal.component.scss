@@ -75,8 +75,24 @@
     line-height: 1.6;
     color: #333;
     margin-bottom: 24px;
-    white-space: pre-wrap;
     word-break: break-word;
+
+    a {
+      color: #2196f3;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid transparent;
+
+      &:hover {
+        color: #1976d2;
+        border-bottom-color: #1976d2;
+      }
+
+      &:visited {
+        color: #7b1fa2;
+      }
+    }
   }
 
   .announcement-meta {
@@ -179,6 +195,11 @@
       font-size: 0.9rem;
       line-height: 1.45;
       margin-bottom: 10px;
+
+      a {
+        padding: 2px 0;
+        display: inline-block;
+      }
     }
 
     .announcement-meta {
@@ -353,5 +374,15 @@
 
   .announcement-content {
     color: #000 !important;
+
+    a {
+      color: #0000ff !important;
+      text-decoration: underline !important;
+      font-weight: bold !important;
+
+      &:visited {
+        color: #800080 !important;
+      }
+    }
   }
 }

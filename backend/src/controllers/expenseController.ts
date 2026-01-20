@@ -200,32 +200,20 @@ export const deleteExpense = asyncHandler(async (req: AuthenticatedRequest, res:
 
 // Get expense categories
 export const getExpenseCategories = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  // Predefined categories that should always be available
-  const predefinedCategories = [
-    'App Service Fee',
-    'Court Maintenance',
-    'Court Service',
-    'Delivery Fee',
-    'Financial Donation',
-    'Mineral Water',
-    'Purchase - Lights',
-    'Purchase - Miscellaneous',
-    'Purchase - Tennis Net',
-    'RT Club T-Shirts',
-    'Tennis Score Board',
-    'Tournament Expense',
-    'Water System Project Expense'
-  ];
+  // Import ExpenseCategory model dynamically to avoid circular dependencies
+  const ExpenseCategory = (await import('../models/ExpenseCategory')).default;
 
-  // Get additional categories from database
-  const dbCategories = await Expense.distinct('category');
+  // Fetch active categories from database, sorted by displayOrder
+  const categories = await ExpenseCategory.find({ isActive: true })
+    .sort({ displayOrder: 1, name: 1 })
+    .lean();
 
-  // Combine and deduplicate
-  const allCategories = [...new Set([...predefinedCategories, ...dbCategories])];
+  // Return array of category names for backward compatibility with frontend
+  const categoryNames = categories.map((cat: any) => cat.name);
 
   return res.status(200).json({
     success: true,
-    data: allCategories.sort()
+    data: categoryNames
   });
 });
 
@@ -324,20 +312,16 @@ export const expenseValidationRules = [
   body('category')
     .notEmpty()
     .withMessage('Category is required')
-    .isIn([
-      'App Service Fee',
-      'Court Maintenance',
-      'Court Service',
-      'Delivery Fee',
-      'Financial Donation',
-      'Mineral Water',
-      'Purchase - Lights',
-      'Purchase - Miscellaneous',
-      'Purchase - Tennis Net',
-      'RT Club T-Shirts',
-      'Tennis Score Board',
-      'Tournament Expense',
-      'Water System Project Expense'
-    ])
-    .withMessage('Invalid category')
+    .custom(async (value) => {
+      // Import ExpenseCategory model dynamically to avoid circular dependencies
+      const ExpenseCategory = (await import('../models/ExpenseCategory')).default;
+      const category = await ExpenseCategory.findOne({
+        name: value,
+        isActive: true
+      });
+      if (!category) {
+        throw new Error('Invalid or inactive category');
+      }
+      return true;
+    })
 ];

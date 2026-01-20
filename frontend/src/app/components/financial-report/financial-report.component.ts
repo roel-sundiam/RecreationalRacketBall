@@ -14,6 +14,7 @@ import { AuthService } from '../../services/auth.service';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../environments/environment';
 import { ExpenseReportComponent } from '../expense-report/expense-report.component';
+import { ExpenseCategoryManagementComponent } from '../expense-category-management/expense-category-management.component';
 
 interface FinancialAPIResponse {
   success: boolean;
@@ -94,7 +95,8 @@ interface CourtUsageData {
     MatSnackBarModule,
     MatTabsModule,
     MatTooltipModule,
-    ExpenseReportComponent
+    ExpenseReportComponent,
+    ExpenseCategoryManagementComponent
   ],
   template: `
     <div class="financial-statement-container">
@@ -236,10 +238,23 @@ interface CourtUsageData {
               <mat-icon>receipt_long</mat-icon>
               Expense Report
             </ng-template>
-            
+
             <!-- Expense Report Content -->
             <div class="expense-tab-content">
               <app-expense-report></app-expense-report>
+            </div>
+          </mat-tab>
+
+          <!-- Manage Categories Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon>category</mat-icon>
+              Manage Categories
+            </ng-template>
+
+            <!-- Category Management Content -->
+            <div class="category-tab-content">
+              <app-expense-category-management></app-expense-category-management>
             </div>
           </mat-tab>
         </mat-tab-group>

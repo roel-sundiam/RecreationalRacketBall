@@ -31,21 +31,18 @@ const ExpenseSchema = new Schema<IExpenseDocument>({
     type: String,
     required: true,
     trim: true,
-    enum: [
-      'App Service Fee',
-      'Court Maintenance',
-      'Court Service',
-      'Delivery Fee',
-      'Financial Donation',
-      'Mineral Water',
-      'Purchase - Lights',
-      'Purchase - Miscellaneous',
-      'Purchase - Tennis Net',
-      'RT Club T-Shirts',
-      'Tennis Score Board',
-      'Tournament Expense',
-      'Water System Project Expense'
-    ]
+    validate: {
+      validator: async function(value: string) {
+        // Dynamic validation against ExpenseCategory collection
+        const ExpenseCategory = mongoose.model('ExpenseCategory');
+        const category = await ExpenseCategory.findOne({
+          name: value,
+          isActive: true
+        });
+        return !!category;
+      },
+      message: 'Invalid or inactive expense category'
+    }
   },
   createdBy: {
     type: String,

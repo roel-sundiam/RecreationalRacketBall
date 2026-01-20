@@ -16,6 +16,7 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "create-superadmin": "npx ts-node src/scripts/createSuperAdmin.ts",
     "import-members": "npx ts-node src/scripts/importMembers.ts",
+    "seed-expense-categories": "npx ts-node src/scripts/seedExpenseCategories.ts",
     "setup-chat": "npx ts-node src/scripts/setupChatRooms.ts",
     "create-overdue-test": "npx ts-node src/scripts/createOverduePayment.ts",
     "clean-test-data": "npx ts-node src/scripts/cleanTestData.ts",

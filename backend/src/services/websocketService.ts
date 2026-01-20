@@ -113,6 +113,14 @@ export interface UserActivityEvent {
   };
 }
 
+export interface AnnouncementEvent {
+  _id: string;
+  title: string;
+  content: string;
+  createdBy: any;
+  createdAt: Date;
+}
+
 export class WebSocketService {
   private io: SocketIOServer | null = null;
   private connectedClients: Set<Socket> = new Set();
@@ -177,6 +185,19 @@ export class WebSocketService {
       socket.on('unsubscribe_open_play_notifications', () => {
         console.log('🎾 Client unsubscribed from open play notifications:', socket.id);
         socket.leave('open_play_notifications');
+      });
+
+      // Handle client subscription to announcements
+      socket.on('subscribe_announcements', () => {
+        console.log('📢 Client subscribed to announcements:', socket.id);
+        socket.join('announcements');
+        socket.emit('subscription_confirmed', { type: 'announcements' });
+      });
+
+      // Handle client unsubscription from announcements
+      socket.on('unsubscribe_announcements', () => {
+        console.log('📢 Client unsubscribed from announcements:', socket.id);
+        socket.leave('announcements');
       });
 
       // Chat-related socket handlers
@@ -604,6 +625,29 @@ export class WebSocketService {
   isUserOnline(userId: string): boolean {
     const userSocketIds = this.userSockets.get(userId);
     return userSocketIds !== undefined && userSocketIds.size > 0;
+  }
+
+  /**
+   * Emit announcement to all subscribed clients
+   */
+  emitAnnouncement(announcementData: AnnouncementEvent): void {
+    if (!this.io) {
+      console.warn('⚠️  WebSocket not initialized - cannot emit announcement');
+      return;
+    }
+
+    console.log('📡 Broadcasting announcement to subscribed clients');
+    console.log(`📢 Announcement: ${announcementData.title}`);
+
+    // Emit to all clients subscribed to announcements
+    this.io.to('announcements').emit('announcement_notification', announcementData);
+
+    // Also emit to all connected clients as a fallback
+    this.io.emit('new_announcement', {
+      message: `New announcement: ${announcementData.title}`,
+      timestamp: new Date().toISOString(),
+      announcement: announcementData
+    });
   }
 }
 

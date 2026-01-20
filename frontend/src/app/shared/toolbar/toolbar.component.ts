@@ -24,6 +24,11 @@ import { Subscription } from 'rxjs';
     <!-- Modern Header -->
     <mat-toolbar class="modern-header" [class.mobile-menu-open]="isMobileMenuOpen">
       <div class="header-wrapper">
+        <!-- Mobile Menu Trigger (Hamburger) -->
+        <button mat-icon-button class="mobile-menu-trigger" [class.active]="isMobileMenuOpen" (click)="toggleMobileMenu()" aria-label="Toggle Menu">
+          <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+        </button>
+
         <!-- Logo Section -->
         <div class="logo-section" (click)="handleLogoClick()" role="button" tabindex="0" (keydown.enter)="handleLogoClick()" (keydown.space)="handleLogoClick()">
           <div class="logo-icon">
@@ -33,7 +38,7 @@ import { Subscription } from 'rxjs';
             <h1 class="club-name">Rich Town 2 Tennis Club</h1>
           </div>
         </div>
-        
+
         <!-- Mobile Home Button -->
         <button mat-icon-button class="mobile-home-btn" (click)="navigateTo('/dashboard')" aria-label="Go to Dashboard">
           <mat-icon>home</mat-icon>
@@ -194,6 +199,11 @@ import { Subscription } from 'rxjs';
               <mat-icon>add_photo_alternate</mat-icon>
               <span>Upload Gallery Photo</span>
             </button>
+
+            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/announcements')">
+              <mat-icon>campaign</mat-icon>
+              <span>Announcements</span>
+            </button>
           </div>
           
           <!-- Profile & Logout -->
@@ -275,14 +285,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   handleLogoClick(): void {
-    // Check if we're on mobile (using window width)
-    if (window.innerWidth <= 1024) {
-      // On mobile, toggle the mobile menu
-      this.toggleMobileMenu();
-    } else {
-      // On desktop, navigate to dashboard
-      this.router.navigate(['/dashboard']);
-    }
+    // Always navigate to dashboard when clicking the logo
+    this.router.navigate(['/dashboard']);
   }
 
   viewProfile(): void {

@@ -1,8 +1,9 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, Inject, forwardRef } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
+import { AnnouncementService, Announcement } from './announcement.service';
 
 export interface OpenPlayNotificationEvent {
   type: 'open_play_created' | 'open_play_updated' | 'open_play_closed';
@@ -43,6 +44,8 @@ export class WebSocketService implements OnDestroy {
 
   public isConnected$ = this.connectionSubject.asObservable();
   public openPlayNotifications$ = this.openPlayNotificationSubject.asObservable();
+
+  private announcementService?: AnnouncementService;
 
   constructor(private authService: AuthService) {
     console.log('🔌 WebSocketService constructor called');
@@ -104,7 +107,8 @@ export class WebSocketService implements OnDestroy {
       this.reconnectAttempts = 0; // Reset on successful connection
       this.connectionSubject.next(true);
       this.subscribeToOpenPlayNotifications();
-      
+      this.subscribeToAnnouncements();
+
       // Start heartbeat for production
       if (this.isProduction) {
         this.startHeartbeat();
@@ -127,7 +131,8 @@ export class WebSocketService implements OnDestroy {
       this.reconnectAttempts = 0;
       this.connectionSubject.next(true);
       this.subscribeToOpenPlayNotifications();
-      
+      this.subscribeToAnnouncements();
+
       if (this.isProduction) {
         this.startHeartbeat();
       }
@@ -178,6 +183,22 @@ export class WebSocketService implements OnDestroy {
       this.openPlayNotificationSubject.next(notification);
     });
 
+    // Listen for announcement notifications
+    this.socket.on('announcement_notification', (data: Announcement) => {
+      console.log('📢 Received announcement notification:', data);
+      if (this.announcementService) {
+        this.announcementService.emitNewAnnouncement(data);
+      }
+    });
+
+    // Listen for fallback announcement events
+    this.socket.on('new_announcement', (data: any) => {
+      console.log('📢 Received new announcement (fallback):', data);
+      if (this.announcementService && data.announcement) {
+        this.announcementService.emitNewAnnouncement(data.announcement);
+      }
+    });
+
     this.socket.on('welcome', (data) => {
       console.log('👋 WebSocket welcome message:', data);
     });
@@ -198,6 +219,26 @@ export class WebSocketService implements OnDestroy {
 
     console.log('📡 Subscribing to open play notifications...');
     this.socket.emit('subscribe_open_play_notifications');
+  }
+
+  /**
+   * Subscribe to announcements
+   */
+  private subscribeToAnnouncements(): void {
+    if (!this.socket?.connected) {
+      console.warn('⚠️ Cannot subscribe to announcements - not connected to WebSocket');
+      return;
+    }
+
+    console.log('📡 Subscribing to announcements...');
+    this.socket.emit('subscribe_announcements');
+  }
+
+  /**
+   * Set announcement service (to avoid circular dependency)
+   */
+  setAnnouncementService(service: AnnouncementService): void {
+    this.announcementService = service;
   }
 
   /**

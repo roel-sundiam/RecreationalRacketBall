@@ -39,6 +39,7 @@ import rankingRoutes from './routes/rankingRoutes';
 import resurfacingRoutes from './routes/resurfacingRoutes';
 import impersonationRoutes from './routes/impersonation';
 import galleryRoutes from './routes/galleryRoutes';
+import announcementRoutes from './routes/announcementRoutes';
 
 dotenv.config();
 
@@ -237,6 +238,7 @@ app.use('/api/rankings', rankingRoutes); // New calculated rankings endpoint
 app.use('/api/resurfacing', resurfacingRoutes); // Resurfacing contribution routes
 app.use('/api/impersonation', impersonationRoutes); // Admin impersonation routes
 app.use('/api/gallery', galleryRoutes); // Image gallery routes (public viewing, superadmin upload)
+app.use('/api/announcements', announcementRoutes); // Announcement system routes
 console.log('📥 All routes registered');
 
 // 404 handler

@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { OpenPlayNotificationModalComponent } from '../components/open-play-notification-modal/open-play-notification-modal.component';
+import { AnnouncementModalComponent } from '../components/announcement-modal/announcement-modal.component';
+import { Announcement } from './announcement.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +11,11 @@ export class ModalManagerService {
   private activeOpenPlayModal: MatDialogRef<OpenPlayNotificationModalComponent> | null = null;
   private isOpenPlayModalPending = false;
   private pendingTimeout: any = null;
+
+  // Announcement modal management
+  private activeAnnouncementModal: MatDialogRef<AnnouncementModalComponent> | null = null;
+  private announcementQueue: Announcement[] = [];
+  private isProcessingAnnouncement = false;
 
   constructor(private dialog: MatDialog) {}
 
@@ -93,5 +100,117 @@ export class ModalManagerService {
    */
   getActiveOpenPlayModal(): MatDialogRef<OpenPlayNotificationModalComponent> | null {
     return this.activeOpenPlayModal;
+  }
+
+  /**
+   * Show announcement modal with queue system for multiple announcements
+   */
+  showAnnouncementModal(announcement: Announcement): void {
+    console.log('📢 ModalManager: Received announcement:', announcement.title);
+
+    // Check if this announcement is already in the queue or being displayed
+    const isDuplicate = this.announcementQueue.some(a => a._id === announcement._id) ||
+                       (this.activeAnnouncementModal?.componentInstance.data.announcement._id === announcement._id);
+
+    if (isDuplicate) {
+      console.log('📢 ModalManager: Announcement already queued or displayed, skipping duplicate');
+      return;
+    }
+
+    // Add to queue
+    this.announcementQueue.push(announcement);
+    console.log('📢 ModalManager: Added to queue. Queue length:', this.announcementQueue.length);
+
+    // Process queue if not already processing
+    if (!this.isProcessingAnnouncement) {
+      this.processAnnouncementQueue();
+    }
+  }
+
+  /**
+   * Process announcement queue sequentially
+   */
+  private processAnnouncementQueue(): void {
+    // If already showing an announcement or queue is empty, return
+    if (this.activeAnnouncementModal || this.announcementQueue.length === 0) {
+      this.isProcessingAnnouncement = false;
+      return;
+    }
+
+    this.isProcessingAnnouncement = true;
+
+    // Get the next announcement from the queue
+    const announcement = this.announcementQueue.shift();
+
+    if (!announcement) {
+      this.isProcessingAnnouncement = false;
+      return;
+    }
+
+    console.log('📢 ModalManager: Showing announcement modal:', announcement.title);
+
+    const modalConfig = {
+      width: '90vw',
+      maxWidth: '600px',
+      height: 'auto',
+      maxHeight: '85vh',
+      disableClose: false,
+      hasBackdrop: true,
+      panelClass: ['announcement-modal']
+    };
+
+    this.activeAnnouncementModal = this.dialog.open(AnnouncementModalComponent, {
+      data: { announcement },
+      ...modalConfig
+    });
+
+    // When modal closes, process next announcement after a short delay
+    this.activeAnnouncementModal.afterClosed().subscribe(() => {
+      console.log('📢 ModalManager: Announcement modal closed');
+      this.activeAnnouncementModal = null;
+
+      // Process next announcement in queue after 500ms delay
+      if (this.announcementQueue.length > 0) {
+        setTimeout(() => {
+          this.processAnnouncementQueue();
+        }, 500);
+      } else {
+        this.isProcessingAnnouncement = false;
+      }
+    });
+  }
+
+  /**
+   * Close active announcement modal if one exists
+   */
+  closeAnnouncementModal(result?: any): void {
+    if (this.activeAnnouncementModal) {
+      console.log('📢 ModalManager: Closing active announcement modal');
+      this.activeAnnouncementModal.close(result);
+      this.activeAnnouncementModal = null;
+    }
+  }
+
+  /**
+   * Check if an announcement modal is currently active
+   */
+  isAnnouncementModalActive(): boolean {
+    return this.activeAnnouncementModal !== null;
+  }
+
+  /**
+   * Clear announcement queue
+   */
+  clearAnnouncementQueue(): void {
+    console.log('📢 ModalManager: Clearing announcement queue');
+    this.announcementQueue = [];
+    this.isProcessingAnnouncement = false;
+  }
+
+  /**
+   * Get announcement queue length
+   */
+  getAnnouncementQueueLength(): number {
+    return this.announcementQueue.length;
   }
 }

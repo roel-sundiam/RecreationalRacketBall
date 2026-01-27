@@ -312,6 +312,48 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   openPlayClick(): void {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+    // Get current user data for auto-login
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) {
+      console.error('❌ No user logged in, cannot open Play Squad');
+      return;
+    }
+
+    // Prepare auth data for Play Squad auto-login
+    const authData = {
+      username: currentUser.username,
+      email: currentUser.email,
+      fullName: currentUser.fullName,
+      userId: currentUser._id,
+      role: currentUser.role,
+      gender: currentUser.gender || 'other'  // Include gender, default to 'other' if not set
+    };
+
+    // Encode auth data as base64 for URL parameter
+    const authToken = btoa(JSON.stringify(authData));
+    // PRODUCTION: Use production URL
+    const playSquadUrl = `https://play-squad.netlify.app/?auth=${encodeURIComponent(authToken)}`;
+    // LOCAL TESTING: Use localhost URL for local development
+    // const playSquadUrl = `http://localhost:4201/?auth=${encodeURIComponent(authToken)}`;
+
+    // Track button click with analytics
+    this.analyticsService.trackButtonClick('Open Play (Play Squad)', 'toolbar', {
+      platform: isMobile ? 'mobile' : 'desktop',
+      userId: currentUser._id
+    });
+
+    // Open Play Squad in new tab (desktop) or same window (mobile)
+    if (isMobile) {
+      window.location.href = playSquadUrl;
+    } else {
+      window.open(playSquadUrl, '_blank');
+    }
+
+    /*
+     * ORIGINAL RECLUB IMPLEMENTATION (Keep for rollback if needed)
+     *
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     if (isMobile) {
       // On mobile: Try to open Reclub app
       this.openReclubApp();
@@ -322,6 +364,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       });
       window.open('https://reclub.co/clubs/@rt2-tennis-club?at=TTQSNOQ7', '_blank');
     }
+    */
   }
 
   openPlayAndClose(): void {
@@ -329,6 +372,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.closeMobileMenu();
   }
 
+  // ORIGINAL RECLUB METHOD (Keep for rollback if needed)
+  /*
   private openReclubApp(): void {
     const reclubWebUrl = 'https://reclub.co/clubs/@rt2-tennis-club?at=TTQSNOQ7';
     const reclubDeepLink = 'reclub://clubs/@rt2-tennis-club';
@@ -354,6 +399,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       }
     }, 1000);
   }
+  */
 
   private getButtonNameForPath(path: string): string {
     const pathMap: Record<string, string> = {

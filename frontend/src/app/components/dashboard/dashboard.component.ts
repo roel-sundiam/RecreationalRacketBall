@@ -157,30 +157,30 @@ import { environment } from '../../../environments/environment';
             </mat-card-actions>
           </mat-card>
 
-          <!-- Open Play -->
-          <mat-card class="action-card" data-icon="sports_tennis" data-title="Open Play"
-                   (click)="navigateTo('/polls')"
+          <!-- Open Play - PlaySquad Integration -->
+          <mat-card class="action-card" data-icon="how_to_vote" data-title="Open Play"
+                   (click)="openPlaySquadAutoLogin()"
                    (touchstart)="handleTouchStart($event)"
-                   (touchend)="handleTouchEnd($event, '/polls')" *ngIf="false">
+                   (touchend)="handleTouchEnd($event, 'open-play-squad')">
             <!-- Mobile Icon -->
             <div class="mobile-card-icon">
-              <mat-icon>sports_tennis</mat-icon>
+              <mat-icon>how_to_vote</mat-icon>
             </div>
             <div class="mobile-card-title">Open Play</div>
 
             <!-- Desktop Content -->
             <mat-card-header>
-              <mat-icon mat-card-avatar class="action-icon">sports_tennis</mat-icon>
+              <mat-icon mat-card-avatar class="action-icon">how_to_vote</mat-icon>
               <mat-card-title>Open Play</mat-card-title>
-              <mat-card-subtitle>Join casual tennis sessions</mat-card-subtitle>
+              <mat-card-subtitle>Find teammates for casual games</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <p>Find and join open play sessions with other members.</p>
+              <p>Connect with other players and organize casual tennis sessions.</p>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-raised-button class="info-btn" (click)="navigateTo('/polls')">
-                <mat-icon>sports_tennis</mat-icon>
-                Join Open Play
+              <button mat-raised-button class="success-btn" (click)="openPlaySquadAutoLogin(); $event.stopPropagation()">
+                <mat-icon>open_in_new</mat-icon>
+                Open PlaySquad
               </button>
             </mat-card-actions>
           </mat-card>
@@ -900,7 +900,7 @@ import { environment } from '../../../environments/environment';
             </mat-card>
 
             <!-- PlaySquad Partner -->
-            <mat-card class="partner-card general-partner" (click)="openPlaySquad()">
+            <mat-card class="partner-card general-partner" (click)="openPlaySquadAutoLogin()">
               <mat-card-header>
                 <img src="playsquad-logo.png" alt="PlaySquad Logo" mat-card-avatar class="partner-logo-header playsquad-logo" loading="lazy">
                 <mat-card-title>PlaySquad</mat-card-title>
@@ -926,7 +926,7 @@ import { environment } from '../../../environments/environment';
                 </div>
               </mat-card-content>
               <mat-card-actions>
-                <button mat-raised-button class="partner-btn general-btn" (click)="openPlaySquad()">
+                <button mat-raised-button class="partner-btn general-btn" (click)="openPlaySquadAutoLogin(); $event.stopPropagation()">
                   <mat-icon>open_in_new</mat-icon>
                   Join Now
                 </button>
@@ -1063,18 +1063,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   handleTouchEnd(event: TouchEvent, action: string): void {
     console.log('📱 Touch end detected, action:', action);
     const touchDuration = Date.now() - this.touchStartTime;
-    
+
     // Only trigger if it's a quick tap (less than 200ms for more responsive feel)
     if (touchDuration < 200) {
       event.preventDefault();
       event.stopPropagation();
-      
+
       if (action === 'testNavigation') {
         this.testNavigation();
       } else if (action === 'openTennisAppStore') {
         this.openTennisAppStore();
       } else if (action === 'ball-machine') {
         this.openTennisBallMachineDialog();
+      } else if (action === 'open-play-squad') {
+        this.openPlaySquadAutoLogin();
       } else {
         this.navigateTo(action);
       }
@@ -1127,6 +1129,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
 
     window.open('https://play-squad.netlify.app/', '_blank');
+  }
+
+  /**
+   * Open PlaySquad with auto-login (from action card)
+   */
+  openPlaySquadAutoLogin(): void {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    // Get current user data for auto-login
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) {
+      console.error('❌ No user logged in, cannot open Play Squad');
+      return;
+    }
+
+    // Prepare auth data for Play Squad auto-login
+    const authData = {
+      username: currentUser.username,
+      email: currentUser.email,
+      fullName: currentUser.fullName,
+      userId: currentUser._id,
+      role: currentUser.role,
+      gender: currentUser.gender || 'other'
+    };
+
+    // Encode auth data as base64 for URL parameter
+    const authToken = btoa(JSON.stringify(authData));
+    // PRODUCTION: Use production URL
+    const playSquadUrl = `https://play-squad.netlify.app/?auth=${encodeURIComponent(authToken)}`;
+    // LOCAL TESTING: Use localhost URL for local development
+    // const playSquadUrl = `http://localhost:4201/?auth=${encodeURIComponent(authToken)}`;
+
+    // Track button click with analytics
+    this.analyticsService.trackUserActivity('click_button', 'dashboard', {
+      button: 'open_play_card',
+      action: 'auto_login_playsquad',
+      platform: isMobile ? 'mobile' : 'desktop',
+      userId: currentUser._id
+    });
+
+    // Open Play Squad in new tab (desktop) or same window (mobile)
+    if (isMobile) {
+      window.location.href = playSquadUrl;
+    } else {
+      window.open(playSquadUrl, '_blank');
+    }
   }
 
   /**

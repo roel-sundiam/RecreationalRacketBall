@@ -10,6 +10,7 @@ export interface User {
   fullName: string;
   email: string;
   role: 'member' | 'admin' | 'superadmin' | 'treasurer';
+  gender?: 'male' | 'female' | 'other';
   seedPoints?: number;
   matchesWon?: number;
   matchesPlayed?: number;

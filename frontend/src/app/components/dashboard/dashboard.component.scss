@@ -920,6 +920,48 @@
   }
 }
 
+/* Developer Card Styling */
+.developer-card {
+  background: linear-gradient(135deg, rgba(238, 242, 255, 0.98), rgba(224, 231, 255, 0.95)) !important;
+  border: 2px solid rgba(102, 126, 234, 0.3) !important;
+
+  &::before {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+  }
+
+  &:hover {
+    border-color: rgba(102, 126, 234, 0.5) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(238, 242, 255, 0.95)) !important;
+  }
+}
+
+.developer-icon {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+.developer-features {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+    font-size: 0.95rem;
+
+    mat-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      color: #48bb78;
+    }
+  }
+}
+
 /* Notification Components */
 .header-actions {
   display: flex;
@@ -1211,6 +1253,19 @@ app-coin-balance-alerts {
 
     &[data-icon="store"] .mobile-card-icon {
       background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    &[data-icon="code"] .mobile-card-icon {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    /* Developer card mobile - hide features list */
+    &.developer-card {
+      height: 120px !important;
+
+      .developer-features {
+        display: none !important;
+      }
     }
   }
 

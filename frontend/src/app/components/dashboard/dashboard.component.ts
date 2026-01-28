@@ -16,6 +16,7 @@ import { NotificationService } from '../../services/notification.service';
 import { PWANotificationService } from '../../services/pwa-notification.service';
 import { OpenPlayNotificationModalComponent } from '../open-play-notification-modal/open-play-notification-modal.component';
 import { TennisBallMachineDialogComponent } from '../tennis-ball-machine-dialog/tennis-ball-machine-dialog.component';
+import { DeveloperContactDialogComponent } from '../developer-contact-dialog/developer-contact-dialog.component';
 import { ModalManagerService } from '../../services/modal-manager.service';
 import { CourtStatusWidgetComponent } from '../court-status-widget/court-status-widget.component';
 import { Subscription } from 'rxjs';
@@ -409,6 +410,40 @@ import { environment } from '../../../environments/environment';
               <button mat-raised-button class="info-btn" (click)="navigateTo('/court-usage-report')">
                 <mat-icon>analytics</mat-icon>
                 View Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+
+          <!-- Developer Contact Card -->
+          <mat-card class="action-card developer-card"
+                    (click)="openDeveloperContactDialog()"
+                    (touchstart)="handleTouchStart($event)"
+                    (touchend)="handleTouchEnd($event, 'developer-contact')">
+            <!-- Mobile View -->
+            <div class="mobile-card-icon">
+              <mat-icon>code</mat-icon>
+            </div>
+            <div class="mobile-card-title">Developer</div>
+
+            <!-- Desktop View -->
+            <mat-card-header>
+              <mat-icon mat-card-avatar class="action-icon developer-icon">code</mat-icon>
+              <mat-card-title>App Development</mat-card-title>
+              <mat-card-subtitle>Custom tennis club apps by Roel Sundiam</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Need a custom app for your tennis club or sports organization? Professional development services available!</p>
+              <ul class="developer-features">
+                <li><mat-icon>check_circle</mat-icon> Tennis Club Management</li>
+                <li><mat-icon>check_circle</mat-icon> Court Booking Systems</li>
+                <li><mat-icon>check_circle</mat-icon> Mobile Apps & PWAs</li>
+                <li><mat-icon>check_circle</mat-icon> Custom Features</li>
+              </ul>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button class="info-btn">
+                <mat-icon>contact_mail</mat-icon>
+                Get in Touch
               </button>
             </mat-card-actions>
           </mat-card>
@@ -1077,6 +1112,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.openTennisBallMachineDialog();
       } else if (action === 'open-play-squad') {
         this.openPlaySquadAutoLogin();
+      } else if (action === 'developer-contact') {
+        this.openDeveloperContactDialog();
       } else {
         this.navigateTo(action);
       }
@@ -1198,6 +1235,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
       maxWidth: '90vw',
       maxHeight: '85vh',
       panelClass: 'ball-machine-dialog-container',
+      autoFocus: true
+    });
+  }
+
+  /**
+   * Opens the Developer Contact dialog
+   */
+  openDeveloperContactDialog(): void {
+    // 1. SITE ANALYTICS - Track in historical analytics database
+    this.analyticsService.trackUserActivity('click_button', 'dashboard', {
+      button: 'developer_card',
+      action: 'view_details',
+      cardTitle: 'Developer Resources',
+      cardSection: 'developer_contact'
+    });
+
+    // 2. MEMBER ACTIVITY - Emit real-time event for admin monitoring
+    this.activityMonitorService.emitUserActivity(
+      'View Developer Resources',
+      'Dashboard',
+      {
+        cardType: 'developer_resources',
+        section: 'developer_contact'
+      }
+    );
+
+    // 3. Open the dialog
+    this.dialog.open(DeveloperContactDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '85vh',
+      panelClass: 'developer-contact-dialog-container',
       autoFocus: true
     });
   }

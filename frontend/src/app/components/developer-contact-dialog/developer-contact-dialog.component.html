@@ -1,0 +1,66 @@
+<div class="dialog-container">
+  <!-- Header -->
+  <div class="dialog-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">code</mat-icon>
+      <div class="header-text">
+        <h1 mat-dialog-title>Roel Sundiam</h1>
+        <p class="header-subtitle">Full-Stack Developer</p>
+      </div>
+    </div>
+    <button mat-icon-button class="close-icon-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Content Section -->
+  <mat-dialog-content>
+    <!-- Services -->
+    <div class="services-section">
+      <h3 class="section-heading">Services Offered</h3>
+      <div class="services-grid">
+        <div class="service-item">
+          <mat-icon>sports_tennis</mat-icon>
+          <span>Tennis Club Apps</span>
+        </div>
+        <div class="service-item">
+          <mat-icon>event_available</mat-icon>
+          <span>Court Booking</span>
+        </div>
+        <div class="service-item">
+          <mat-icon>phone_iphone</mat-icon>
+          <span>Mobile Apps</span>
+        </div>
+        <div class="service-item">
+          <mat-icon>extension</mat-icon>
+          <span>Custom Features</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Methods -->
+    <div class="contact-methods-section">
+      <h3 class="section-heading">Contact Information</h3>
+      <div class="contact-methods">
+        <button mat-stroked-button class="contact-btn" (click)="copyEmail()">
+          <mat-icon>email</mat-icon>
+          <span class="contact-text">{{ developerEmail }}</span>
+          <mat-icon class="contact-action">content_copy</mat-icon>
+        </button>
+
+        <button mat-stroked-button class="contact-btn" (click)="callPhone()">
+          <mat-icon>phone</mat-icon>
+          <span class="contact-text">{{ developerPhone }}</span>
+          <mat-icon class="contact-action">call</mat-icon>
+        </button>
+
+        <button mat-stroked-button class="contact-btn" (click)="openPortfolio()">
+          <mat-icon>code</mat-icon>
+          <span class="contact-text">GitHub Portfolio</span>
+          <mat-icon class="contact-action">open_in_new</mat-icon>
+        </button>
+      </div>
+    </div>
+
+  </mat-dialog-content>
+</div>

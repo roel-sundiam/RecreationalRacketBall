@@ -41,7 +41,7 @@ async function checkPaymentTypes() {
     });
     console.log(`\n-------------------------------------`);
     console.log(`Grand Total: ₱${grandTotal.toFixed(2)}`);
-    console.log(`10% of Grand Total: ₱${(grandTotal * 0.10).toFixed(2)}`);
+    console.log(`20% of Grand Total: ₱${(grandTotal * 0.20).toFixed(2)}`);
 
     // Show sample payments for each type
     console.log('\n\n📋 Sample Payments for Each Type:');

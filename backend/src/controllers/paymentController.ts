@@ -122,8 +122,8 @@ async function updateFinancialReportCourtReceipts(): Promise<void> {
       // Recalculate total receipts
       financialData.totalReceipts = financialData.receiptsCollections.reduce((sum: number, item: any) => sum + item.amount, 0);
       
-      // Calculate App Service Fee based on recorded payments only (10% of recorded payments)
-      const appServiceFee = totalCourtReceipts * 0.10;
+      // Calculate App Service Fee based on recorded payments only (20% of recorded payments)
+      const appServiceFee = totalCourtReceipts * 0.20;
       const appServiceFeeIndex = financialData.disbursementsExpenses.findIndex(
         (item: any) => item.description === 'App Service Fee'
       );

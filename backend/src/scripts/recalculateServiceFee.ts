@@ -32,9 +32,9 @@ async function recalculateServiceFee() {
     const totalCourtReceipts = result[0]?.totalAmount || 0;
     console.log(`💰 Total Court Usage Receipts: ₱${totalCourtReceipts.toFixed(2)}`);
 
-    // Calculate 10% App Service Fee
-    const appServiceFee = totalCourtReceipts * 0.10;
-    console.log(`💰 Calculated App Service Fee (10%): ₱${appServiceFee.toFixed(2)}`);
+    // Calculate 20% App Service Fee
+    const appServiceFee = totalCourtReceipts * 0.20;
+    console.log(`💰 Calculated App Service Fee (20%): ₱${appServiceFee.toFixed(2)}`);
 
     // Read current financial report
     const dataPath = path.join(__dirname, '../../data/financial-report.json');

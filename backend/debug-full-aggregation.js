@@ -5,8 +5,8 @@ async function debugFullAggregation() {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/TennisClubRT2');
     console.log('✅ Connected to MongoDB');
-    
-    const serviceFeePercentage = 0.10;
+
+    const serviceFeePercentage = 0.20;
     const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = new Date();
     end.setHours(23, 59, 59, 999);

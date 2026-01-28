@@ -225,7 +225,7 @@ Based on remaining incomplete features:
 
 ### ✅ Court Receipts Report System
 - Full financial reporting dashboard for admins
-- Payment receipts with 10% service fee breakdown
+- Payment receipts with 20% service fee breakdown
 - Date range filtering and export to CSV functionality
 - Payment method breakdown with visual analytics
 - Service fee vs court revenue separation

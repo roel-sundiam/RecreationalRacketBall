@@ -268,7 +268,7 @@ interface PaymentsReportData {
                 </div>
                 <div class="revenue-info">
                   <div class="revenue-title">App Service Fees</div>
-                  <div class="revenue-subtitle">10% commission</div>
+                  <div class="revenue-subtitle">20% commission</div>
                 </div>
               </div>
               <div class="revenue-amount service-fee-amount">
@@ -2013,8 +2013,8 @@ export class CourtReceiptsReportComponent implements OnInit {
                 pendingPayments: response.data.filter((p: any) => p.status === 'pending').length,
                 completedPayments: response.data.filter((p: any) => p.status === 'completed').length,
                 recordedPayments: response.data.filter((p: any) => p.status === 'record').length,
-                totalServiceFees: response.data.filter((p: any) => p.status === 'completed' || p.status === 'record').reduce((sum: number, p: any) => sum + (p.amount * 0.10), 0),
-                totalCourtRevenue: response.data.filter((p: any) => p.status === 'completed' || p.status === 'record').reduce((sum: number, p: any) => sum + (p.amount * 0.90), 0)
+                totalServiceFees: response.data.filter((p: any) => p.status === 'completed' || p.status === 'record').reduce((sum: number, p: any) => sum + (p.amount * 0.20), 0),
+                totalCourtRevenue: response.data.filter((p: any) => p.status === 'completed' || p.status === 'record').reduce((sum: number, p: any) => sum + (p.amount * 0.80), 0)
               },
               paymentMethodBreakdown: this.calculatePaymentMethodBreakdown(response.data),
               period: {

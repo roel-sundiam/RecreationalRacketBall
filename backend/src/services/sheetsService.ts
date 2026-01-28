@@ -396,12 +396,12 @@ export class SheetsService {
     const waterSystem = dataMap.get('waterSystem') || 0;
     const financialDonation = dataMap.get('financialDonation') || 0;
     
-    // Calculate App Service Fee from completed payments (10% of court revenue)
+    // Calculate App Service Fee from completed payments (20% of court revenue)
     // Always calculate this from the database, don't rely on CSV data
     let appServiceFee = 0;
     try {
       const Payment = (await import('../models/Payment')).default;
-      const serviceFeePercentage = 0.10; // 10% service fee
+      const serviceFeePercentage = 0.20; // 20% service fee
       
       // Get all completed and recorded payments (excluding coins)
       const serviceablePayments = await Payment.find({ 

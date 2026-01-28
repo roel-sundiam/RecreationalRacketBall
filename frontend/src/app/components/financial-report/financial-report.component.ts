@@ -194,7 +194,7 @@ interface CourtUsageData {
             </div>
             <div class="section-items">
               <div class="line-item liability-item">
-                <div class="item-description">Accrued App Service Fee (10%)</div>
+                <div class="item-description">Accrued App Service Fee</div>
                 <div class="item-amount">{{ formatCurrency(financialData.liabilities.appServiceFee.remainingLiability) }}</div>
               </div>
             </div>

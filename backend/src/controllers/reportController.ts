@@ -598,8 +598,8 @@ export const getCourtReceiptsReport = asyncHandler(async (req: AuthenticatedRequ
   const end = endDate ? new Date(endDate as string) : new Date();
   end.setHours(23, 59, 59, 999);
 
-  // Service fee percentage (10%)
-  const serviceFeePercentage = 0.10;
+  // Service fee percentage (20%)
+  const serviceFeePercentage = 0.20;
 
   // Get all completed court payments with detailed breakdown
   // Use paymentDate for filtering completed payments instead of createdAt
@@ -773,7 +773,7 @@ function formatCurrency(amount: number): string {
 
 // Helper function to calculate App Service Fee liability (accrued vs paid)
 async function calculateServiceFeeLiability(yearStart?: Date, yearEnd?: Date) {
-  const serviceFeePercentage = 0.10; // 10% service fee
+  const serviceFeePercentage = 0.20; // 20% service fee
 
   // Build query filter for year range
   const paymentFilter: any = {
@@ -1488,7 +1488,7 @@ export const export2025FinancialReportHTML = asyncHandler(async (req: Authentica
     <!-- Liabilities -->
     <div class="liability-note">
       <strong>📌 Liabilities:</strong><br>
-      App Service Fee (10% of court receipts):<br>
+      App Service Fee (20% of court receipts):<br>
       • Total Accrued: ₱${financialData.liabilities.appServiceFee.totalAccrued.toFixed(2)}<br>
       • Total Paid: ₱${financialData.liabilities.appServiceFee.totalPaid.toFixed(2)}<br>
       • Remaining Liability: ₱${financialData.liabilities.appServiceFee.remainingLiability.toFixed(2)}
@@ -1563,7 +1563,7 @@ export const forceRefreshFinancialReport = asyncHandler(async (req: Authenticate
     console.log(`💰 Found ${recordedPayments.length} recorded payments totaling ₱${totalRecordedAmount}`);
     
     // Calculate App Service Fee from only recorded payments - service fee only applies to recorded payments
-    const serviceFeePercentage = 0.10; // 10% service fee
+    const serviceFeePercentage = 0.20; // 20% service fee
     const serviceablePayments = await Payment.find({
       status: 'record',
       paymentMethod: { $ne: 'coins' }

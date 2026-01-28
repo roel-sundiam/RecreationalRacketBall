@@ -832,8 +832,8 @@ export const getCourtReceiptsReport = asyncHandler(async (req: AuthenticatedRequ
   const end = endDate ? new Date(endDate as string) : new Date();
   end.setHours(23, 59, 59, 999);
 
-  // Service fee percentage (10%)
-  const serviceFeePercentage = 0.10;
+  // Service fee percentage (20%)
+  const serviceFeePercentage = 0.20;
 
   // Get all completed court payments with detailed breakdown
   // Use paymentDate for filtering completed payments instead of createdAt
@@ -1141,7 +1141,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
     
     // Calculate App Service Fee from completed payments and add to disbursements if not already present
     try {
-      const serviceFeePercentage = 0.10; // 10% service fee
+      const serviceFeePercentage = 0.20; // 20% service fee
       
       // Get all completed and recorded payments (excluding coins)
       const serviceablePayments = await Payment.find({ 
@@ -1241,7 +1241,7 @@ export const forceRefreshFinancialReport = asyncHandler(async (req: Authenticate
     console.log(`💰 Found ${recordedPayments.length} recorded payments totaling ₱${totalRecordedAmount}`);
     
     // Calculate App Service Fee from all completed and recorded payments
-    const serviceFeePercentage = 0.10; // 10% service fee
+    const serviceFeePercentage = 0.20; // 20% service fee
     const serviceablePayments = await Payment.find({ 
       status: { $in: ['completed', 'record'] },
       paymentMethod: { $ne: 'coins' }

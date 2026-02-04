@@ -1,4 +1,6 @@
 import express from 'express';
+import { authenticateToken } from '../middleware/auth';
+import { extractClubContext } from '../middleware/club';
 import {
   getRankings,
   getPlayerRanking,
@@ -7,6 +9,10 @@ import {
 } from '../controllers/rankingController';
 
 const router = express.Router();
+
+// Apply auth and club context to all routes
+router.use(authenticateToken);
+router.use(extractClubContext);
 
 /**
  * @route   GET /api/rankings

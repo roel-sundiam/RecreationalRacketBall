@@ -7,6 +7,7 @@ export interface IMedal {
 }
 
 export interface IPlayer extends Document {
+  clubId: mongoose.Types.ObjectId;
   fullName: string;
   email?: string;
   phone?: string;

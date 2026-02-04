@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction } from "express";
 import {
   createPayment,
   getPayments,
@@ -24,28 +24,38 @@ import {
   getMembershipPaymentSummary,
   updateMembershipPayment,
   deleteMembershipPayment,
-  validateMembershipFeePayment
-} from '../controllers/paymentController';
-import { authenticateToken, requireRole, requireFinancialAccess, AuthenticatedRequest } from '../middleware/auth';
-import { autoFixPaymentsMiddleware } from '../middleware/autoFixPayments';
-import { validationResult } from 'express-validator';
+  validateMembershipFeePayment,
+} from "../controllers/paymentController";
+import {
+  authenticateToken,
+  requireRole,
+  requireFinancialAccess,
+  AuthenticatedRequest,
+} from "../middleware/auth";
+import { extractClubContext, requireClubRole } from "../middleware/club";
+import { autoFixPaymentsMiddleware } from "../middleware/autoFixPayments";
+import { validationResult } from "express-validator";
 
 const router = Router();
 
 // Validation middleware
-const handleValidationErrors = (req: Request, res: Response, next: NextFunction): void => {
+const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.log('❌ VALIDATION ERRORS:', {
+    console.log("❌ VALIDATION ERRORS:", {
       requestBody: req.body,
       errors: errors.array(),
       endpoint: req.path,
-      method: req.method
+      method: req.method,
     });
     res.status(400).json({
       success: false,
-      error: 'Validation failed',
-      details: errors.array()
+      error: "Validation failed",
+      details: errors.array(),
     });
     return;
   }
@@ -55,40 +65,43 @@ const handleValidationErrors = (req: Request, res: Response, next: NextFunction)
 /**
  * @route POST /api/payments
  * @desc Create a new payment for a reservation
- * @access Private
+ * @access Private (requires club context)
  */
 router.post(
-  '/',
+  "/",
   authenticateToken,
+  extractClubContext,
   createPaymentValidation,
   handleValidationErrors,
   autoFixPaymentsMiddleware,
-  createPayment
+  createPayment,
 );
 
 /**
  * @route POST /api/payments/pay-on-behalf
  * @desc Create payment on behalf of another member (reserver only)
- * @access Private
+ * @access Private (requires club context)
  */
 router.post(
-  '/pay-on-behalf',
+  "/pay-on-behalf",
   authenticateToken,
+  extractClubContext,
   payOnBehalfValidation,
   handleValidationErrors,
-  payOnBehalf
+  payOnBehalf,
 );
 
 /**
  * @route GET /api/payments
  * @desc Get all payments with filtering and pagination
- * @access Private (Admin/SuperAdmin)
+ * @access Private (Club Admin/Treasurer)
  */
 router.get(
-  '/',
+  "/",
   authenticateToken,
-  requireFinancialAccess,
-  getPayments
+  extractClubContext,
+  requireClubRole(["admin", "treasurer"]),
+  getPayments,
 );
 
 /**
@@ -96,68 +109,81 @@ router.get(
  * @desc Get current user's payment history
  * @access Private
  */
-router.get('/my', authenticateToken, (req, res, next) => {
-  // Remove client cache headers to force fresh responses
-  delete req.headers['if-none-match'];
-  delete req.headers['if-modified-since'];
+router.get(
+  "/my",
+  authenticateToken,
+  (req, res, next) => {
+    // Remove client cache headers to force fresh responses
+    delete req.headers["if-none-match"];
+    delete req.headers["if-modified-since"];
 
-  // Set no-cache headers at route level to prevent 304 responses
-  res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
-  });
-  next();
-}, getMyPayments);
+    // Set no-cache headers at route level to prevent 304 responses
+    res.set({
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
+    next();
+  },
+  getMyPayments,
+);
 
 /**
  * @route GET /api/payments/check-overdue
  * @desc Check current user's overdue payments
  * @access Private
  */
-router.get('/check-overdue', authenticateToken, checkMyOverduePayments);
+router.get("/check-overdue", authenticateToken, checkMyOverduePayments);
 
 /**
  * @route GET /api/payments/overdue
  * @desc Get all overdue payments
- * @access Private (Admin/SuperAdmin)
+ * @access Private (Club Admin)
  */
 router.get(
-  '/overdue',
+  "/overdue",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getOverduePayments
+  extractClubContext,
+  requireClubRole(["admin", "treasurer"]),
+  getOverduePayments,
 );
 
 /**
  * @route GET /api/payments/stats
  * @desc Get payment statistics
- * @access Private (Admin/SuperAdmin)
+ * @access Private (Club Admin/Treasurer)
  */
 router.get(
-  '/stats',
+  "/stats",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getPaymentStats
+  extractClubContext,
+  requireClubRole(["admin", "treasurer"]),
+  getPaymentStats,
 );
 
 /**
  * @route GET /api/payments/calculate
  * @desc Calculate payment amount for given parameters
- * @access Private
+ * @access Private (requires club context)
  */
-router.get('/calculate', authenticateToken, calculatePaymentAmount);
+router.get(
+  "/calculate",
+  authenticateToken,
+  extractClubContext,
+  calculatePaymentAmount,
+);
 
 /**
  * @route POST /api/payments/cleanup-duplicates
  * @desc Clean up duplicate payment records (admin utility)
- * @access Private (Admin/SuperAdmin)
+ * @access Private (Club Admin)
  */
 router.post(
-  '/cleanup-duplicates',
+  "/cleanup-duplicates",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  cleanupDuplicatePayments
+  extractClubContext,
+  requireClubRole(["admin"]),
+  cleanupDuplicatePayments,
 );
 
 // ======================
@@ -170,12 +196,13 @@ router.post(
  * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.post(
-  '/membership-fee',
+  "/membership-fee",
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   validateMembershipFeePayment,
   handleValidationErrors,
-  recordMembershipFeePayment
+  recordMembershipFeePayment,
 );
 
 /**
@@ -184,10 +211,11 @@ router.post(
  * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.get(
-  '/membership-fees',
+  "/membership-fees",
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
-  getMembershipPayments
+  getMembershipPayments,
 );
 
 /**
@@ -196,10 +224,11 @@ router.get(
  * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.get(
-  '/membership-fees/summary',
+  "/membership-fees/summary",
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
-  getMembershipPaymentSummary
+  getMembershipPaymentSummary,
 );
 
 /**
@@ -208,10 +237,11 @@ router.get(
  * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.patch(
-  '/membership-fees/:id',
+  "/membership-fees/:id",
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
-  updateMembershipPayment
+  updateMembershipPayment,
 );
 
 /**
@@ -220,10 +250,11 @@ router.patch(
  * @access Private (Treasurer/Admin/SuperAdmin only)
  */
 router.delete(
-  '/membership-fees/:id',
+  "/membership-fees/:id",
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
-  deleteMembershipPayment
+  deleteMembershipPayment,
 );
 
 /**
@@ -231,14 +262,14 @@ router.delete(
  * @desc Get a specific payment
  * @access Private
  */
-router.get('/:id', authenticateToken, getPayment);
+router.get("/:id", authenticateToken, getPayment);
 
 /**
  * @route PUT /api/payments/:id
  * @desc Update payment details (payment method, transaction ID, etc.)
  * @access Private (payment owner or admin)
  */
-router.put('/:id', authenticateToken, updatePayment);
+router.put("/:id", authenticateToken, updatePayment);
 
 /**
  * @route PUT /api/payments/:id/process
@@ -246,33 +277,44 @@ router.put('/:id', authenticateToken, updatePayment);
  * @access Private (Admin/SuperAdmin or payment owner for certain methods)
  */
 router.put(
-  '/:id/process',
+  "/:id/process",
   authenticateToken,
+  extractClubContext,
   processPaymentValidation,
   handleValidationErrors,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       // Allow users to process their own payments
-      if (req.user?.role === 'member') {
-        const Payment = require('../models/Payment').default;
-        const payment = await Payment.findById(req.params.id);
+      if (req.user?.role === "member") {
+        const Payment = require("../models/Payment").default;
+        const payment = await Payment.findOne({
+          _id: req.params.id,
+          clubId: req.clubId,
+        });
 
         if (!payment) {
           res.status(404).json({
             success: false,
-            error: 'Payment not found'
+            error: "Payment not found",
           });
           return;
         }
 
         // Members can process their own payments OR payments they paid for others
-        const isOwnPayment = payment.userId.toString() === req.user._id.toString();
-        const isPaidByUser = payment.paidBy && payment.paidBy.toString() === req.user._id.toString();
+        const isOwnPayment =
+          payment.userId.toString() === req.user._id.toString();
+        const isPaidByUser =
+          payment.paidBy &&
+          payment.paidBy.toString() === req.user._id.toString();
 
         if (!isOwnPayment && !isPaidByUser) {
           res.status(403).json({
             success: false,
-            error: 'Access denied'
+            error: "Access denied",
           });
           return;
         }
@@ -285,49 +327,52 @@ router.put(
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: 'Internal server error'
+        error: "Internal server error",
       });
     }
   },
   autoFixPaymentsMiddleware,
-  processPayment
+  processPayment,
 );
 
 /**
  * @route PUT /api/payments/:id/approve
  * @desc Approve a pending payment (mark as completed)
- * @access Private (Admin/SuperAdmin only)
+ * @access Private (Club Admin/Treasurer only)
  */
 router.put(
-  '/:id/approve',
+  "/:id/approve",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(["admin", "treasurer"]),
   autoFixPaymentsMiddleware,
-  approvePayment
+  approvePayment,
 );
 
 /**
  * @route PUT /api/payments/:id/record
  * @desc Record an approved payment (mark as recorded)
- * @access Private (Admin/SuperAdmin only)
+ * @access Private (Club Admin/Treasurer only)
  */
 router.put(
-  '/:id/record',
+  "/:id/record",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  recordPayment
+  extractClubContext,
+  requireClubRole(["admin", "treasurer"]),
+  recordPayment,
 );
 
 /**
  * @route PUT /api/payments/:id/unrecord
  * @desc Unrecord a recorded payment (reverse recording)
- * @access Private (Admin/SuperAdmin only)
+ * @access Private (Club Admin/Treasurer only)
  */
 router.put(
-  '/:id/unrecord',
+  "/:id/unrecord",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  unrecordPayment
+  extractClubContext,
+  requireClubRole(["admin", "treasurer"]),
+  unrecordPayment,
 );
 
 /**
@@ -335,57 +380,64 @@ router.put(
  * @desc Cancel or refund a payment
  * @access Private (Admin/SuperAdmin or payment owner)
  */
-router.put('/:id/cancel', authenticateToken, cancelPayment);
+router.put("/:id/cancel", authenticateToken, cancelPayment);
 
 /**
  * @route GET /api/payments/debug-user-payments
  * @desc Debug route to check user payments directly
  * @access Private - TEMPORARY DEBUG ROUTE
  */
-router.get('/debug-user-payments', async (req: Request, res: Response) => {
+router.get("/debug-user-payments", async (req: Request, res: Response) => {
   try {
-    const Payment = require('../models/Payment').default;
-    const User = require('../models/User').default;
-    
+    const Payment = require("../models/Payment").default;
+    const User = require("../models/User").default;
+
     // Find superadmin user directly
-    const superadmin = await User.findOne({ username: 'superadmin' });
+    const superadmin = await User.findOne({ username: "superadmin" });
     if (!superadmin) {
-      return res.json({ success: false, error: 'Superadmin user not found' });
+      return res.json({ success: false, error: "Superadmin user not found" });
     }
-    
-    console.log('🔧 DEBUG: User info:', {
+
+    console.log("🔧 DEBUG: User info:", {
       userId: superadmin._id.toString(),
       role: superadmin.role,
-      username: superadmin.username
+      username: superadmin.username,
     });
-    
+
     // Check all payments for superadmin user
-    const allPayments = await Payment.find({ userId: superadmin._id.toString() })
-      .populate('reservationId', 'date timeSlot players')
+    const allPayments = await Payment.find({
+      userId: superadmin._id.toString(),
+    })
+      .populate("reservationId", "date timeSlot players")
       .sort({ createdAt: -1 });
-      
-    console.log('🔧 DEBUG: All payments found:', allPayments.map((p: any) => ({
-      id: p._id.toString(),
-      description: p.description,
-      status: p.status,
-      amount: p.amount,
-      paymentDate: p.paymentDate,
-      createdAt: p.createdAt,
-      userId: p.userId?.toString(),
-      reservationInfo: p.reservationId ? {
-        date: p.reservationId.date,
-        timeSlot: p.reservationId.timeSlot
-      } : null
-    })));
-    
+
+    console.log(
+      "🔧 DEBUG: All payments found:",
+      allPayments.map((p: any) => ({
+        id: p._id.toString(),
+        description: p.description,
+        status: p.status,
+        amount: p.amount,
+        paymentDate: p.paymentDate,
+        createdAt: p.createdAt,
+        userId: p.userId?.toString(),
+        reservationInfo: p.reservationId
+          ? {
+              date: p.reservationId.date,
+              timeSlot: p.reservationId.timeSlot,
+            }
+          : null,
+      })),
+    );
+
     // Check specifically completed payments
-    const completedPayments = await Payment.find({ 
-      userId: superadmin._id.toString(), 
-      status: 'completed' 
+    const completedPayments = await Payment.find({
+      userId: superadmin._id.toString(),
+      status: "completed",
     });
-    
-    console.log('🔧 DEBUG: Completed payments:', completedPayments.length);
-    
+
+    console.log("🔧 DEBUG: Completed payments:", completedPayments.length);
+
     return res.json({
       success: true,
       data: {
@@ -398,13 +450,16 @@ router.get('/debug-user-payments', async (req: Request, res: Response) => {
           status: p.status,
           amount: p.amount,
           paymentDate: p.paymentDate,
-          createdAt: p.createdAt
-        }))
-      }
+          createdAt: p.createdAt,
+        })),
+      },
     });
   } catch (error) {
-    console.error('🔧 DEBUG ERROR:', error);
-    return res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    console.error("🔧 DEBUG ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 

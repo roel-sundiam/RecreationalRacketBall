@@ -4,6 +4,7 @@ export interface IAnnouncement extends Document {
   title: string;
   content: string;
   createdBy: mongoose.Types.ObjectId;
+  clubId: mongoose.Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +31,11 @@ const announcementSchema = new Schema<IAnnouncement>(
       ref: 'User',
       required: [true, 'Creator is required']
     },
+    clubId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Club',
+      required: [true, 'Club ID is required']
+    },
     isActive: {
       type: Boolean,
       default: true
@@ -40,8 +46,8 @@ const announcementSchema = new Schema<IAnnouncement>(
   }
 );
 
-// Index for efficient querying of active announcements
-announcementSchema.index({ isActive: 1, createdAt: -1 });
+// Index for efficient querying of active announcements by club
+announcementSchema.index({ clubId: 1, isActive: 1, createdAt: -1 });
 
 // Static method to get active announcements
 announcementSchema.statics.getActiveAnnouncements = function() {

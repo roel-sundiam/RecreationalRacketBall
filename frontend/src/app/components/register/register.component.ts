@@ -5,7 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -19,8 +18,7 @@ import { environment } from '../../../environments/environment';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatIconModule,
-    MatCheckboxModule
+    MatIconModule
   ],
   template: `
     <div class="page-container">
@@ -57,10 +55,11 @@ import { environment } from '../../../environments/environment';
             <div class="info-section">
               <mat-icon class="info-icon">info</mat-icon>
               <div class="info-content">
-                <h3>Membership Requirements</h3>
+                <h3>How It Works</h3>
                 <ul>
-                  <li>Membership fee payment required before account approval</li>
-                  <li>Your account will be reviewed by an administrator</li>
+                  <li>Create your account and login immediately</li>
+                  <li>Browse available clubs and request membership</li>
+                  <li>Club admins will review and approve your membership requests</li>
                 </ul>
               </div>
             </div>
@@ -257,24 +256,13 @@ import { environment } from '../../../environments/environment';
                   <mat-icon>home</mat-icon>
                   Address
                 </label>
-                <textarea 
+                <textarea
                   id="address"
                   class="form-input form-textarea"
-                  formControlName="address" 
+                  formControlName="address"
                   placeholder="Enter your address"
                   rows="3">
                 </textarea>
-              </div>
-
-              <!-- Homeowner Checkbox -->
-              <div class="form-field checkbox-field">
-                <mat-checkbox formControlName="isHomeowner" class="homeowner-checkbox">
-                  <div class="checkbox-content">
-                    <mat-icon>home</mat-icon>
-                    <span>I am a homeowner in Rich Town 2</span>
-                  </div>
-                </mat-checkbox>
-                <p class="field-hint">Check this box if you own a property in the Rich Town 2 subdivision</p>
               </div>
 
               <!-- Action Buttons -->
@@ -327,8 +315,7 @@ export class RegisterComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
       phone: [''],
-      address: [''],
-      isHomeowner: [false]
+      address: ['']
     }, { validators: this.passwordMatchValidator });
   }
 
@@ -368,8 +355,8 @@ export class RegisterComponent implements OnInit {
       next: (response) => {
         this.loading = false;
         this.snackBar.open(
-          'Registration successful! Please wait for admin approval before logging in.', 
-          'Close', 
+          'Registration successful! You can now login and browse clubs.',
+          'Close',
           {
             duration: 5000,
             panelClass: ['success-snackbar']

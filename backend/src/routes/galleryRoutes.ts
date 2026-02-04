@@ -2,12 +2,17 @@ import express, { Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import sharp from 'sharp';
 import GalleryImage from '../models/GalleryImage';
-import { AuthenticatedRequest, authenticateToken, requireSuperAdmin } from '../middleware/auth';
+import { AuthenticatedRequest, authenticateToken } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 import { upload, handleMulterError } from '../middleware/upload';
 import { supabase, GALLERY_BUCKET, getPublicUrl, deleteFromStorage, isSupabaseConfigured } from '../config/supabase';
 import { UploadGalleryImageRequest, UpdateGalleryImageRequest } from '../types';
 
 const router = express.Router();
+
+// Apply auth and club context to all routes
+router.use(authenticateToken);
+router.use(extractClubContext);
 
 // Validation rules for upload
 const uploadValidation = [
@@ -135,11 +140,10 @@ router.get('/:id', async (req, res: Response) => {
   }
 });
 
-// POST /api/gallery - Superadmin only - Upload new images (single or multiple)
+// POST /api/gallery - Admin only - Upload new images (single or multiple)
 router.post(
   '/',
-  authenticateToken,
-  requireSuperAdmin,
+  requireClubRole(['admin']),
   upload.array('images', 10), // Changed from single to array
   handleMulterError,
   uploadValidation,
@@ -324,11 +328,10 @@ router.post(
   }
 );
 
-// PATCH /api/gallery/:id - Superadmin only - Update image metadata
+// PATCH /api/gallery/:id - Admin only - Update image metadata
 router.patch(
   '/:id',
-  authenticateToken,
-  requireSuperAdmin,
+  requireClubRole(['admin']),
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const updateData: UpdateGalleryImageRequest = req.body;
@@ -366,11 +369,10 @@ router.patch(
   }
 );
 
-// DELETE /api/gallery/:id - Superadmin only - Delete image
+// DELETE /api/gallery/:id - Admin only - Delete image
 router.delete(
   '/:id',
-  authenticateToken,
-  requireSuperAdmin,
+  requireClubRole(['admin']),
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const image = await GalleryImage.findById(req.params.id);

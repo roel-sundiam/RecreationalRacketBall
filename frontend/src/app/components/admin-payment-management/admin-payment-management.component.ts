@@ -21,6 +21,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PaymentEditDialogComponent } from './payment-edit-dialog/payment-edit-dialog.component';
 import { environment } from '../../../environments/environment';
+import { DialogService } from '../../services/dialog.service';
 
 interface Payment {
   _id: string;
@@ -149,7 +150,8 @@ export class AdminPaymentManagementComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -357,7 +359,16 @@ export class AdminPaymentManagementComponent implements OnInit {
       return;
     }
 
-    if (confirm(`Record payment ${payment.referenceNumber} in financial reports?`)) {
+    this.dialogService.confirm({
+      title: 'Record Payment',
+      message: `Record payment ${payment.referenceNumber} in financial reports?`,
+      type: 'info',
+      icon: 'receipt',
+      confirmText: 'Record',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
+      if (!confirmed) return;
+
       this.http.put<any>(
         `${this.apiUrl}/payments/${payment._id}/record`,
         {},
@@ -371,7 +382,7 @@ export class AdminPaymentManagementComponent implements OnInit {
           this.snackBar.open(error.error?.message || 'Failed to record payment', 'Close', { duration: 5000 });
         }
       });
-    }
+    });
   }
 
   unrecordPayment(payment: Payment): void {
@@ -380,7 +391,16 @@ export class AdminPaymentManagementComponent implements OnInit {
       return;
     }
 
-    if (confirm(`Unrecord payment ${payment.referenceNumber}? This will remove it from financial reports.`)) {
+    this.dialogService.confirm({
+      title: 'Unrecord Payment',
+      message: `Unrecord payment ${payment.referenceNumber}? This will remove it from financial reports.`,
+      type: 'warning',
+      icon: 'undo',
+      confirmText: 'Unrecord',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
+      if (!confirmed) return;
+
       this.http.put<any>(
         `${this.apiUrl}/payments/${payment._id}/unrecord`,
         {},
@@ -394,7 +414,7 @@ export class AdminPaymentManagementComponent implements OnInit {
           this.snackBar.open(error.error?.message || 'Failed to unrecord payment', 'Close', { duration: 5000 });
         }
       });
-    }
+    });
   }
 
   getStatusChipClass(status: string): string {

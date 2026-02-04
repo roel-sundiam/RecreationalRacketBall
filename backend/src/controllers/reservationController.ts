@@ -10,6 +10,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 import { CreateReservationRequest, UpdateReservationRequest, CompleteReservationRequest } from '../types';
 import weatherService from '../services/weatherService';
 import SeedingService from '../services/seedingService';
+import { PricingService } from '../services/pricingService';
 
 // Helper function for string similarity calculation (Levenshtein distance)
 function calculateStringSimilarity(str1: string, str2: string): number {
@@ -87,13 +88,15 @@ async function convertPlayersToObjects(playerNames: string[]): Promise<any[]> {
 }
 
 // Get all reservations with filtering and pagination
-export const getReservations = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getReservations = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
 
-  // Build filter query
-  const filter: any = {};
+  // Build filter query - ALWAYS filter by club
+  const filter: any = {
+    clubId: req.clubId
+  };
   
   if (req.query.userId) {
     filter.userId = req.query.userId;
@@ -150,6 +153,7 @@ export const getReservations = asyncHandler(async (req: AuthenticatedRequest, re
   try {
     const updateResult = await Reservation.updateMany(
       {
+        clubId: req.clubId,
         status: 'pending',
         date: { $lt: yesterday }
       },
@@ -188,7 +192,7 @@ export const getReservations = asyncHandler(async (req: AuthenticatedRequest, re
 });
 
 // Get reservations for a specific date
-export const getReservationsForDate = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getReservationsForDate = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { date } = req.params;
   const { excludeId } = req.query; // Get excludeId from query params (for edit mode)
 
@@ -304,14 +308,6 @@ export const getReservationsForDate = asyncHandler(async (req: AuthenticatedRequ
     const openPlayEvent = isBlockedByOpenPlay ?
       openPlayEvents.find(event => event.openPlayEvent?.blockedTimeSlots && Array.isArray(event.openPlayEvent.blockedTimeSlots) && event.openPlayEvent.blockedTimeSlots.includes(hour)) : null;
 
-    // Block Wednesday 6:00-8:00 PM (hours 18 and 19) for Homeowner's Day
-    // START times: Block hours 18 and 19 (can't start at 6 PM or 7 PM)
-    // END times: Block hours 18 and 19 (can end at 8 PM, allowing 8-10 PM bookings)
-    const isWednesday = queryDate.getDay() === 3;
-    const isBlockedWednesdayStartTime = isWednesday && (hour === 18 || hour === 19);
-    const isBlockedWednesdayEndTime = isWednesday && (hour === 18 || hour === 19);
-
-
     // Enhanced debugging for specific hours that might be problematic
     if (hour === 17 || hour === 21 || hour === 22) {
       console.log(`🔍 DETAILED DEBUG for hour ${hour} (NEW LOGIC):`);
@@ -337,10 +333,10 @@ export const getReservationsForDate = asyncHandler(async (req: AuthenticatedRequ
     const slotData = {
       hour,
       timeDisplay: `${hour}:00 - ${hour + 1}:00`,
-      // START time: Block if occupied, Open Play, or Wednesday Homeowner's Day start time
-      available: !occupyingReservation && !isBlockedByOpenPlay && !isBlockedWednesdayStartTime,
-      // END time: Allow hour 18 as end time on Wednesdays (for 5-6 PM bookings)
-      availableAsEndTime: canBeEndTime && !isBlockedByOpenPlay && !isBlockedWednesdayEndTime,
+      // START time: Block if occupied or blocked by Open Play
+      available: !occupyingReservation && !isBlockedByOpenPlay,
+      // END time: Check if can be end time and not blocked by Open Play
+      availableAsEndTime: canBeEndTime && !isBlockedByOpenPlay,
       reservation: occupyingReservation || null,
       blockedByOpenPlay: isBlockedByOpenPlay,
       openPlayEvent: openPlayEvent ? {
@@ -380,12 +376,21 @@ export const getReservationsForDate = asyncHandler(async (req: AuthenticatedRequ
 });
 
 // Get single reservation
-export const getReservation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getReservation = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { id } = req.params;
-  
+
   const reservation = await Reservation.findById(id).populate('userId', 'username fullName email');
-  
+
   if (!reservation) {
+    res.status(404).json({
+      success: false,
+      error: 'Reservation not found'
+    });
+    return;
+  }
+
+  // Verify reservation belongs to current club
+  if (reservation.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Reservation not found'
@@ -412,7 +417,7 @@ export const getReservation = asyncHandler(async (req: AuthenticatedRequest, res
 });
 
 // Create new reservation
-export const createReservation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const createReservation = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { date, timeSlot, players, duration = 1, tournamentTier = '100', totalFee }: CreateReservationRequest = req.body;
 
   console.log('🔍 CREATE RESERVATION REQUEST:', {
@@ -440,6 +445,7 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
 
   // Check 1: Payment collection for pending overdue payments
   const overduePayments = await Payment.find({
+    clubId: req.clubId,
     userId: req.user._id,
     status: 'pending',
     dueDate: { $lt: oneDayAgo }
@@ -447,6 +453,7 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
 
   // Check 2: Reservations with pending payment status where reservation date has passed
   const overdueReservations = await Reservation.find({
+    clubId: req.clubId,
     userId: req.user._id,
     paymentStatus: 'pending',
     date: { $lt: oneDayAgo },
@@ -506,11 +513,16 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
     return;
   }
 
-  // Validate time slot
-  if (timeSlot < 5 || timeSlot > 21) {
+  // Get club-specific operating hours
+  const operatingHours = await PricingService.getClubOperatingHours(req.clubId!);
+  const { start: courtStart, end: courtEnd } = operatingHours;
+
+  // Validate time slot against club operating hours
+  // Note: courtEnd is the closing time (e.g., 22 = 10 PM), so last bookable slot is courtEnd - 1
+  if (timeSlot < courtStart || timeSlot >= courtEnd) {
     res.status(400).json({
       success: false,
-      error: 'Court operates from 5:00 AM to 10:00 PM'
+      error: `Court operates from ${courtStart}:00 to ${courtEnd}:00. Last bookable slot: ${courtEnd - 1}:00`
     });
     return;
   }
@@ -526,10 +538,10 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
 
   // Validate that reservation doesn't extend beyond court hours
   const endTimeSlot = timeSlot + duration;
-  if (endTimeSlot > 23) {
+  if (endTimeSlot > courtEnd + 1) {
     res.status(400).json({
       success: false,
-      error: `Booking extends beyond court hours. Court closes at 10 PM (22:00). Duration: ${duration} hours from ${timeSlot}:00 would end at ${endTimeSlot}:00.`
+      error: `Booking extends beyond court hours. Court closes at ${courtEnd}:00. Duration: ${duration} hours from ${timeSlot}:00 would end at ${endTimeSlot}:00.`
     });
     return;
   }
@@ -712,6 +724,7 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
 
   // Create reservation with new player format
   const reservation = new Reservation({
+    clubId: req.clubId,
     userId: req.user._id,
     date: reservationDate,
     timeSlot,
@@ -732,34 +745,90 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
   const paymentIds: string[] = [];
   const members = playerObjects.filter(p => p.isMember);
   const guests = playerObjects.filter(p => p.isGuest);
-  const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
+
+  // Get club-specific pricing
+  const pricing = await PricingService.getClubPricing(req.clubId!);
+  const peakHours = pricing.peakHours;
 
   if (members.length > 0) {
-    // Calculate payment amounts
-    const PEAK_BASE_FEE = 150;
-    const NON_PEAK_BASE_FEE = 100;
-    const GUEST_FEE = 70;
+    // Calculate payment amounts using club-specific pricing
+    const pricingModel = pricing.pricingModel || 'variable';
+    const PEAK_BASE_FEE = pricing.peakHourFee;
+    const NON_PEAK_BASE_FEE = pricing.offPeakHourFee;
+    const FIXED_HOURLY_FEE = pricing.fixedHourlyFee;
+    const FIXED_DAILY_FEE = pricing.fixedDailyFee;
+    const GUEST_FEE = pricing.guestFee;
 
-    // Calculate base fee for one hour (will multiply by duration later)
     const calculatedEndTimeSlot = reservation.endTimeSlot || (reservation.timeSlot + reservation.duration);
+    const durationHours = calculatedEndTimeSlot - reservation.timeSlot;
+
     let totalBaseFee = 0;
     let totalGuestFee = 0;
+    let memberShare = 0;
 
-    for (let hour = reservation.timeSlot; hour < calculatedEndTimeSlot; hour++) {
-      const isPeakHour = peakHours.includes(hour);
-      totalBaseFee += isPeakHour ? PEAK_BASE_FEE : NON_PEAK_BASE_FEE;
-      totalGuestFee += guests.length * GUEST_FEE;
+    if (pricingModel === 'fixed-daily') {
+      totalBaseFee = FIXED_DAILY_FEE * members.length;
+      totalGuestFee = guests.length * GUEST_FEE;
+      memberShare = FIXED_DAILY_FEE;
+    } else if (pricingModel === 'fixed-hourly') {
+      totalBaseFee = FIXED_HOURLY_FEE * durationHours;
+      totalGuestFee = guests.length * GUEST_FEE * durationHours;
+      memberShare = totalBaseFee / members.length;
+    } else {
+      // Variable pricing (peak/off-peak)
+      for (let hour = reservation.timeSlot; hour < calculatedEndTimeSlot; hour++) {
+        const isPeakHour = peakHours.includes(hour);
+        totalBaseFee += isPeakHour ? PEAK_BASE_FEE : NON_PEAK_BASE_FEE;
+        totalGuestFee += guests.length * GUEST_FEE;
+      }
+      memberShare = totalBaseFee / members.length;
     }
-
-    // Each member pays their share of the base fee
-    const memberShare = totalBaseFee / members.length;
 
     // Reserver pays their share + all guest fees
     const reserverId = req.user._id.toString();
+    const reservationStartOfDay = new Date(reservationDate);
+    reservationStartOfDay.setHours(0, 0, 0, 0);
+    const reservationEndOfDay = new Date(reservationDate);
+    reservationEndOfDay.setHours(23, 59, 59, 999);
+
+    let hasPendingPayment = false;
 
     for (const member of members) {
       const isReserver = member.userId === reserverId;
-      const paymentAmount = isReserver ? (memberShare + totalGuestFee) : memberShare;
+
+      let baseAmount = memberShare;
+      let alreadyPaidDaily = false;
+
+      if (pricingModel === 'fixed-daily') {
+        // Find any pending/completed/record payments for this member where the reservation is on the same calendar day
+        const existingDailyPayment = await Payment.findOne({
+          clubId: req.clubId,
+          userId: member.userId,
+          status: { $in: ['pending', 'completed', 'record'] },
+          reservationId: { $exists: true, $ne: null }
+        })
+        .populate({
+          path: 'reservationId',
+          select: 'date'
+        })
+        .lean();
+
+        // Check if the found payment's reservation date matches today
+        if (existingDailyPayment && existingDailyPayment.reservationId) {
+          const existingResDate = new Date((existingDailyPayment.reservationId as any).date);
+          existingResDate.setHours(0, 0, 0, 0);
+          if (existingResDate.getTime() === reservationStartOfDay.getTime()) {
+            alreadyPaidDaily = true;
+            baseAmount = 0;
+          }
+        }
+      }
+
+      const guestFeeForReserver = (pricingModel === 'fixed-daily' && alreadyPaidDaily)
+        ? 0
+        : totalGuestFee;
+      const paymentAmount = baseAmount + (isReserver ? guestFeeForReserver : 0);
+      const paymentStatus = paymentAmount === 0 ? 'record' : 'pending';
 
       // Set due date to the day after reservation (payment enabled after playing)
       const paymentDueDate = new Date(reservationDate);
@@ -767,14 +836,18 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
       paymentDueDate.setHours(23, 59, 59, 999);
 
       const payment = new Payment({
+        clubId: req.clubId,
         userId: member.userId,
         reservationId: reservation._id,
         amount: Math.round(paymentAmount * 100) / 100, // Round to 2 decimal places
         currency: 'PHP',
         paymentMethod: 'cash', // Default, can be changed when paid
-        status: 'pending',
+        status: paymentStatus,
         dueDate: paymentDueDate,
-        description: `Court reservation ${isReserver ? '(Reserver)' : ''} - ${reservation.date.toDateString()} ${reservation.timeSlot}:00-${calculatedEndTimeSlot}:00`,
+        description: pricingModel === 'fixed-daily' && alreadyPaidDaily
+          ? `Court reservation (Daily fee already covered) - ${reservation.date.toDateString()} ${reservation.timeSlot}:00-${calculatedEndTimeSlot}:00`
+          : `Court reservation ${isReserver ? '(Reserver)' : ''} - ${reservation.date.toDateString()} ${reservation.timeSlot}:00-${calculatedEndTimeSlot}:00`,
+        paymentDate: paymentStatus === 'record' ? new Date() : undefined,
         metadata: {
           timeSlot: reservation.timeSlot,
           date: reservation.date,
@@ -789,10 +862,17 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
 
       await payment.save();
       paymentIds.push((payment._id as any).toString());
+
+      if (paymentStatus === 'pending') {
+        hasPendingPayment = true;
+      }
     }
 
     // Update reservation with payment IDs
     reservation.paymentIds = paymentIds;
+    if (!hasPendingPayment && reservation.paymentStatus !== 'paid') {
+      reservation.paymentStatus = 'paid';
+    }
     await reservation.save({ validateBeforeSave: false });
   }
 
@@ -819,13 +899,22 @@ export const createReservation = asyncHandler(async (req: AuthenticatedRequest, 
 });
 
 // Update reservation (with duration and payment recalculation)
-export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const updateReservation = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { id } = req.params;
   const { date, timeSlot, endTimeSlot, duration, isMultiHour, players }: UpdateReservationRequest = req.body;
 
   const reservation = await Reservation.findById(id);
-  
+
   if (!reservation) {
+    res.status(404).json({
+      success: false,
+      error: 'Reservation not found'
+    });
+    return;
+  }
+
+  // Verify reservation belongs to current club
+  if (reservation.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Reservation not found'
@@ -881,11 +970,15 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
       return;
     }
 
-    // Validate time slot
-    if (newTimeSlot < 5 || newTimeSlot > 21) {
+    // Get club-specific operating hours
+    const operatingHours = await PricingService.getClubOperatingHours(req.clubId!);
+    const { start: courtStart, end: courtEnd } = operatingHours;
+
+    // Validate time slot against club operating hours
+    if (newTimeSlot < courtStart || newTimeSlot >= courtEnd) {
       res.status(400).json({
         success: false,
-        error: 'Court operates from 5:00 AM to 10:00 PM'
+        error: `Court operates from ${courtStart}:00 to ${courtEnd}:00. Last bookable slot: ${courtEnd - 1}:00`
       });
       return;
     }
@@ -929,7 +1022,7 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
     if (reservation.paymentIds && reservation.paymentIds.length > 0) {
       // Cancel all existing pending payments
       await Payment.updateMany(
-        { _id: { $in: reservation.paymentIds }, status: 'pending' },
+        { clubId: req.clubId, _id: { $in: reservation.paymentIds }, status: 'pending' },
         { $set: { status: 'cancelled' } }
       );
       console.log(`📝 Cancelled ${reservation.paymentIds.length} pending payments for reservation ${id}`);
@@ -950,12 +1043,15 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
     const paymentIds: string[] = [];
     const members = playerObjects.filter((p: any) => p.isMember);
     const guests = playerObjects.filter((p: any) => p.isGuest);
-    const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
+
+    // Get club-specific pricing
+    const pricing = await PricingService.getClubPricing(req.clubId!);
+    const peakHours = pricing.peakHours;
 
     if (members.length > 0) {
-      const PEAK_BASE_FEE = 150;
-      const NON_PEAK_BASE_FEE = 100;
-      const GUEST_FEE = 70;
+      const PEAK_BASE_FEE = pricing.peakHourFee;
+      const NON_PEAK_BASE_FEE = pricing.offPeakHourFee;
+      const GUEST_FEE = pricing.guestFee;
 
       const calculatedEndTimeSlot = reservation.endTimeSlot || (reservation.timeSlot + reservation.duration);
       let totalBaseFee = 0;
@@ -979,6 +1075,7 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
         paymentDueDate.setHours(23, 59, 59, 999);
 
         const payment = new Payment({
+          clubId: req.clubId,
           userId: member.userId,
           reservationId: reservation._id,
           amount: Math.round(paymentAmount * 100) / 100,
@@ -1018,7 +1115,7 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
     // Cancel old payments and create new ones
     if (reservation.paymentIds && reservation.paymentIds.length > 0) {
       await Payment.updateMany(
-        { _id: { $in: reservation.paymentIds }, status: 'pending' },
+        { clubId: req.clubId, _id: { $in: reservation.paymentIds }, status: 'pending' },
         { $set: { status: 'cancelled' } }
       );
       console.log(`📝 Cancelled ${reservation.paymentIds.length} pending payments for reservation ${id}`);
@@ -1028,12 +1125,15 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
     const paymentIds: string[] = [];
     const members = reservation.players.filter((p: any) => p.isMember);
     const guests = reservation.players.filter((p: any) => p.isGuest);
-    const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
+
+    // Get club-specific pricing
+    const pricing = await PricingService.getClubPricing(req.clubId!);
+    const peakHours = pricing.peakHours;
 
     if (members.length > 0) {
-      const PEAK_BASE_FEE = 150;
-      const NON_PEAK_BASE_FEE = 100;
-      const GUEST_FEE = 70;
+      const PEAK_BASE_FEE = pricing.peakHourFee;
+      const NON_PEAK_BASE_FEE = pricing.offPeakHourFee;
+      const GUEST_FEE = pricing.guestFee;
 
       const calculatedEndTimeSlot = reservation.endTimeSlot || (reservation.timeSlot + reservation.duration);
       let totalBaseFee = 0;
@@ -1058,6 +1158,7 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
         paymentDueDate.setHours(23, 59, 59, 999);
 
         const payment = new Payment({
+          clubId: req.clubId,
           userId: memberUserId,
           reservationId: reservation._id,
           amount: Math.round(paymentAmount * 100) / 100,
@@ -1101,14 +1202,23 @@ export const updateReservation = asyncHandler(async (req: AuthenticatedRequest, 
 });
 
 // Cancel reservation
-export const cancelReservation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const cancelReservation = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { id } = req.params;
   console.log(`🗑️  Attempting to cancel reservation: ${id}`);
 
   const reservation = await Reservation.findById(id);
-  
+
   if (!reservation) {
     console.log(`❌ Reservation not found: ${id}`);
+    res.status(404).json({
+      success: false,
+      error: 'Reservation not found'
+    });
+    return;
+  }
+
+  // Verify reservation belongs to current club
+  if (reservation.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Reservation not found'
@@ -1181,6 +1291,7 @@ export const cancelReservation = asyncHandler(async (req: AuthenticatedRequest, 
   if (reservation.paymentStatus === 'paid') {
     // Check if there's a related credit transaction for this reservation
     const creditTransaction = await CreditTransaction.findOne({
+      clubId: req.clubId,
       userId: reservation.userId,
       referenceType: 'reservation',
       type: 'deduction',
@@ -1216,11 +1327,60 @@ export const cancelReservation = asyncHandler(async (req: AuthenticatedRequest, 
   // Delete associated pending payments when cancelling a reservation
   try {
     const Payment = require('../models/Payment').default;
+    
+    // Get club pricing to check if it's fixed-daily
+    const pricing = await PricingService.getClubPricing(req.clubId!);
+    const pricingModel = pricing.pricingModel || 'variable';
+
+    // Find the payments being deleted
+    const paymentsToDelete = await Payment.find({
+      clubId: req.clubId,
+      reservationId: reservation._id,
+      status: 'pending'
+    });
+
     const deletedPayments = await Payment.deleteMany({
+      clubId: req.clubId,
       reservationId: reservation._id,
       status: 'pending'
     });
     console.log(`🗑️  Deleted ${deletedPayments.deletedCount} pending payment(s) for cancelled reservation`);
+
+    // For fixed-daily: check if other same-day reservations need their payments converted from 'record' to 'pending'
+    if (pricingModel === 'fixed-daily' && paymentsToDelete.length > 0) {
+      for (const deletedPayment of paymentsToDelete) {
+        if (deletedPayment.amount > 0) {
+          const reservationStartOfDay = new Date(reservation.date);
+          reservationStartOfDay.setHours(0, 0, 0, 0);
+          const reservationEndOfDay = new Date(reservation.date);
+          reservationEndOfDay.setHours(23, 59, 59, 999);
+
+          // Find other same-day reservations for this member with 'record' status payments
+          const sameDayRecordPayment = await Payment.findOne({
+            clubId: req.clubId,
+            userId: deletedPayment.userId,
+            paymentType: 'court_usage',
+            status: 'record',
+            amount: 0,
+            'metadata.date': { $gte: reservationStartOfDay, $lte: reservationEndOfDay },
+            reservationId: { $ne: reservation._id }
+          });
+
+          if (sameDayRecordPayment) {
+            // Convert this 'record' payment to a real 'pending' payment
+            const FIXED_DAILY_FEE = pricing.fixedDailyFee;
+            sameDayRecordPayment.status = 'pending';
+            sameDayRecordPayment.amount = FIXED_DAILY_FEE;
+            sameDayRecordPayment.description = sameDayRecordPayment.description.replace(
+              '(Daily fee already covered)',
+              ''
+            ).trim();
+            await sameDayRecordPayment.save();
+            console.log(`✅ Converted record payment to pending (₱${FIXED_DAILY_FEE}) for same-day reservation after cancellation`);
+          }
+        }
+      }
+    }
   } catch (error) {
     console.error('Failed to delete payments for cancelled reservation:', error);
     // Continue even if payment deletion fails
@@ -1241,7 +1401,7 @@ export const cancelReservation = asyncHandler(async (req: AuthenticatedRequest, 
 });
 
 // Admin: Update reservation status
-export const updateReservationStatus = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const updateReservationStatus = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -1254,8 +1414,17 @@ export const updateReservationStatus = asyncHandler(async (req: AuthenticatedReq
   }
 
   const reservation = await Reservation.findById(id);
-  
+
   if (!reservation) {
+    res.status(404).json({
+      success: false,
+      error: 'Reservation not found'
+    });
+    return;
+  }
+
+  // Verify reservation belongs to current club
+  if (reservation.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Reservation not found'
@@ -1275,13 +1444,22 @@ export const updateReservationStatus = asyncHandler(async (req: AuthenticatedReq
 });
 
 // Admin: Complete reservation with match results and award points
-export const completeReservation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const completeReservation = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { id } = req.params;
   const { matchResults }: CompleteReservationRequest = req.body;
 
   const reservation = await Reservation.findById(id);
-  
+
   if (!reservation) {
+    res.status(404).json({
+      success: false,
+      error: 'Reservation not found'
+    });
+    return;
+  }
+
+  // Verify reservation belongs to current club
+  if (reservation.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Reservation not found'
@@ -1338,7 +1516,7 @@ export const completeReservation = asyncHandler(async (req: AuthenticatedRequest
 });
 
 // Get user's upcoming reservations
-export const getMyUpcomingReservations = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getMyUpcomingReservations = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   if (!req.user) {
     res.status(401).json({
       success: false,
@@ -1348,6 +1526,7 @@ export const getMyUpcomingReservations = asyncHandler(async (req: AuthenticatedR
   }
 
   const reservations = await Reservation.find({
+    clubId: req.clubId,
     userId: req.user._id.toString(),
     status: { $in: ['pending', 'confirmed', 'cancelled', 'completed', 'no-show'] }
   }).sort({ date: 1, timeSlot: 1 });
@@ -1425,7 +1604,7 @@ export const completeReservationValidation = [
 ];
 
 // Admin: Block court (create administrative block)
-export const blockCourt = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const blockCourt = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { date, timeSlot, duration = 1, blockReason = 'maintenance', blockNotes = '' } = req.body;
 
   if (!req.user) {
@@ -1449,10 +1628,14 @@ export const blockCourt = asyncHandler(async (req: AuthenticatedRequest, res: Re
     return;
   }
 
-  if (timeSlot < 5 || timeSlot > 22) {
+  // Get club-specific operating hours
+  const operatingHours = await PricingService.getClubOperatingHours(req.clubId!);
+  const { start: courtStart, end: courtEnd } = operatingHours;
+
+  if (timeSlot < courtStart || timeSlot >= courtEnd) {
     res.status(400).json({
       success: false,
-      error: 'Court operates from 5:00 AM to 10:00 PM'
+      error: `Court operates from ${courtStart}:00 to ${courtEnd}:00. Last bookable slot: ${courtEnd - 1}:00`
     });
     return;
   }
@@ -1467,10 +1650,10 @@ export const blockCourt = asyncHandler(async (req: AuthenticatedRequest, res: Re
   }
 
   const endTimeSlot = timeSlot + duration;
-  if (endTimeSlot > 23) {
+  if (endTimeSlot > courtEnd + 1) {
     res.status(400).json({
       success: false,
-      error: `Block extends beyond court hours. Court closes at 10 PM (22:00).`
+      error: `Block extends beyond court hours. Court closes at ${courtEnd}:00.`
     });
     return;
   }
@@ -1509,6 +1692,7 @@ export const blockCourt = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   // Create blocked reservation
   const blockedReservation = new Reservation({
+    clubId: req.clubId,
     userId: req.user._id,
     date: blockDate,
     timeSlot,
@@ -1536,8 +1720,9 @@ export const blockCourt = asyncHandler(async (req: AuthenticatedRequest, res: Re
 });
 
 // Admin: Get all blocked reservations
-export const getBlockedReservations = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getBlockedReservations = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const blockedReservations = await Reservation.find({
+    clubId: req.clubId,
     status: 'blocked'
   })
     .populate('userId', 'username fullName email')
@@ -1559,13 +1744,22 @@ export const getBlockedReservations = asyncHandler(async (req: AuthenticatedRequ
 });
 
 // Admin: Update blocked reservation
-export const updateBlockedReservation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const updateBlockedReservation = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { id } = req.params;
   const { date, timeSlot, duration, blockReason, blockNotes } = req.body;
 
   const reservation = await Reservation.findById(id);
 
   if (!reservation) {
+    res.status(404).json({
+      success: false,
+      error: 'Blocked reservation not found'
+    });
+    return;
+  }
+
+  // Verify reservation belongs to current club
+  if (reservation.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Blocked reservation not found'
@@ -1599,10 +1793,14 @@ export const updateBlockedReservation = asyncHandler(async (req: AuthenticatedRe
   }
 
   if (timeSlot !== undefined) {
-    if (timeSlot < 5 || timeSlot > 22) {
+    // Get club-specific operating hours
+    const operatingHours = await PricingService.getClubOperatingHours(req.clubId!);
+    const { start: courtStart, end: courtEnd } = operatingHours;
+
+    if (timeSlot < courtStart || timeSlot >= courtEnd) {
       res.status(400).json({
         success: false,
-        error: 'Court operates from 5:00 AM to 10:00 PM'
+        error: `Court operates from ${courtStart}:00 to ${courtEnd}:00. Last bookable slot: ${courtEnd - 1}:00`
       });
       return;
     }
@@ -1647,12 +1845,21 @@ export const updateBlockedReservation = asyncHandler(async (req: AuthenticatedRe
 });
 
 // Admin: Delete blocked reservation
-export const deleteBlockedReservation = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const deleteBlockedReservation = asyncHandler(async (req: AuthenticatedRequest , res: Response) => {
   const { id } = req.params;
 
   const reservation = await Reservation.findById(id);
 
   if (!reservation) {
+    res.status(404).json({
+      success: false,
+      error: 'Blocked reservation not found'
+    });
+    return;
+  }
+
+  // Verify reservation belongs to current club
+  if (reservation.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Blocked reservation not found'

@@ -1,0 +1,234 @@
+.registration-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.registration-content {
+  width: 100%;
+  max-width: 900px;
+}
+
+.registration-card {
+  mat-card-header {
+    margin-bottom: 24px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 28px;
+      font-weight: 600;
+      color: #333;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: #667eea;
+      }
+    }
+
+    mat-card-subtitle {
+      margin-left: 44px;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+
+  mat-card-content {
+    padding-top: 0;
+  }
+}
+
+.form-section {
+  padding: 24px 0;
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+
+    &:not(:first-child) {
+      margin-top: 32px;
+    }
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.color-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.address-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.coordinates-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.hint-text {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.location-button {
+  width: 100%;
+  margin-bottom: 16px;
+
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+
+  button {
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    mat-spinner {
+      display: inline-block;
+      margin-right: 8px;
+    }
+  }
+}
+
+// Material Stepper customization
+::ng-deep {
+  .mat-stepper-horizontal {
+    margin-bottom: 24px;
+  }
+
+  .mat-step-header {
+    .mat-step-icon {
+      background-color: #667eea;
+    }
+
+    .mat-step-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    &.cdk-keyboard-focused,
+    &.cdk-program-focused,
+    &:hover {
+      background-color: rgba(102, 126, 234, 0.05);
+    }
+  }
+
+  .mat-step-header.mat-step-header-active {
+    .mat-step-icon {
+      background-color: #667eea;
+    }
+  }
+}
+
+// Form field customization
+mat-form-field {
+  margin-bottom: 16px;
+
+  mat-icon[matPrefix] {
+    margin-right: 8px;
+    color: #666;
+  }
+}
+
+// Snackbar styles
+::ng-deep {
+  .success-snackbar {
+    background-color: #4caf50 !important;
+    color: white !important;
+
+    .mat-mdc-button {
+      color: white !important;
+    }
+  }
+
+  .error-snackbar {
+    background-color: #f44336 !important;
+    color: white !important;
+
+    .mat-mdc-button {
+      color: white !important;
+    }
+  }
+}
+
+// Mobile responsiveness
+@media (max-width: 600px) {
+  .registration-container {
+    padding: 12px;
+  }
+
+  .registration-card {
+    mat-card-header {
+      mat-card-title {
+        font-size: 24px;
+
+        mat-icon {
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+        }
+      }
+
+      mat-card-subtitle {
+        margin-left: 40px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .color-fields,
+  .address-row,
+  .coordinates-row {
+    grid-template-columns: 1fr;
+  }
+
+  .step-actions {
+    flex-direction: column;
+    gap: 12px;
+
+    button {
+      width: 100%;
+    }
+  }
+}

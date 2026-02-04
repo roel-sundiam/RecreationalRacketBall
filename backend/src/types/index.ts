@@ -1,4 +1,6 @@
 // Local type definitions for backend
+import mongoose from 'mongoose';
+
 export interface User {
   _id: string;
   username: string;
@@ -13,7 +15,8 @@ export interface User {
   isHomeowner?: boolean;
   deletedAt?: Date | null;
   deletedBy?: string | null;
-  role: 'member' | 'admin' | 'superadmin' | 'treasurer';
+  platformRole: 'user' | 'platform_admin'; // Platform-level role
+  role: 'member' | 'admin' | 'superadmin' | 'treasurer'; // Deprecated, kept for backward compatibility
   creditBalance: number;
   registrationDate: Date;
   lastLogin?: Date;
@@ -127,6 +130,7 @@ export interface ReservationPlayer {
 
 export interface CourtReservation {
   _id: string;
+  clubId: mongoose.Types.ObjectId | string;
   userId: string;
   user?: User;
   date: Date;
@@ -347,6 +351,7 @@ export interface Suggestion {
   }>;
   resolutionDate?: Date;
   tags?: string[];
+  clubId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

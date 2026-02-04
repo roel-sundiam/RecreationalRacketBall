@@ -163,29 +163,27 @@ export class CalendarViewComponent implements OnInit {
           }
         });
 
-        // Add Wednesday Homeowner's Day indicator as a regular event (not background)
-        if (dayInfo.isWednesday) {
-          // Create timed event at 6 PM (18:00) for proper ordering
-          const homeownerDateTime = `${dateKey}T18:00:00`;
-
-          events.push({
-            title: 'Homeowner',
-            start: homeownerDateTime,
-            allDay: false,  // Must be false for time-based sorting
-            backgroundColor: '#8b5cf6',
-            borderColor: '#8b5cf6',
-            color: '#8b5cf6', // Also set color property
-            textColor: 'white', // Ensure text is white
-            order: 18, // Explicit ordering for FullCalendar
-            classNames: ['homeowner-event'], // Add custom class for styling
-            extendedProps: {
-              isWednesday: true,
-              timeSlot: 18,  // 6 PM - for sorting purposes
-              bgColor: '#8b5cf6',
-              status: 'wednesday'
-            }
-          });
-        }
+        // Homeowner's Day indicator removed - Wednesdays no longer blocked
+        // if (dayInfo.isWednesday) {
+        //   const homeownerDateTime = `${dateKey}T18:00:00`;
+        //   events.push({
+        //     title: 'Homeowner',
+        //     start: homeownerDateTime,
+        //     allDay: false,
+        //     backgroundColor: '#8b5cf6',
+        //     borderColor: '#8b5cf6',
+        //     color: '#8b5cf6',
+        //     textColor: 'white',
+        //     order: 18,
+        //     classNames: ['homeowner-event'],
+        //     extendedProps: {
+        //       isWednesday: true,
+        //       timeSlot: 18,
+        //       bgColor: '#8b5cf6',
+        //       status: 'wednesday'
+        //     }
+        //   });
+        // }
       });
 
       // Update debug info (kept for potential future debugging)

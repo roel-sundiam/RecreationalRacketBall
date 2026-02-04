@@ -1,0 +1,102 @@
+<div class="club-management-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>business</mat-icon>
+        Club Management
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="actions-bar">
+        <button mat-raised-button color="primary" routerLink="/club-registration">
+          <mat-icon>add</mat-icon>
+          Create New Club
+        </button>
+        <button mat-button (click)="loadClubs()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
+
+      <div *ngIf="loading" class="loading-container">
+        <p>Loading clubs...</p>
+      </div>
+
+      <table mat-table [dataSource]="clubs" class="clubs-table" *ngIf="!loading && clubs.length > 0">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Club Name</th>
+          <td mat-cell *matCellDef="let club">
+            <strong>{{ club.name }}</strong>
+            <br>
+            <small class="slug">{{ club.slug }}</small>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let club">
+            <span class="status-badge" [class]="'status-' + club.status">
+              {{ club.status }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Tier Column -->
+        <ng-container matColumnDef="tier">
+          <th mat-header-cell *matHeaderCellDef>Tier</th>
+          <td mat-cell *matCellDef="let club">
+            {{ club.subscriptionTier }}
+          </td>
+        </ng-container>
+
+        <!-- Contact Column -->
+        <ng-container matColumnDef="contact">
+          <th mat-header-cell *matHeaderCellDef>Contact</th>
+          <td mat-cell *matCellDef="let club">
+            {{ club.contactEmail }}
+            <br>
+            <small>{{ club.contactPhone }}</small>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let club">
+            <button mat-button color="accent" (click)="openPricingDialog(club)">
+              <mat-icon>payments</mat-icon>
+              Court Fees
+            </button>
+            <button mat-button color="primary" (click)="openCreateAdminDialog(club)">
+              <mat-icon>person_add</mat-icon>
+              Create New Admin
+            </button>
+            <button mat-button (click)="openAddAdminDialog(club)">
+              <mat-icon>add_moderator</mat-icon>
+              Assign Existing User
+            </button>
+            <button mat-icon-button (click)="viewClubDetails(club)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <div *ngIf="!loading && clubs.length === 0" class="no-clubs">
+        <mat-icon class="large-icon">business</mat-icon>
+        <h3>No Clubs Yet</h3>
+        <p>Create your first club to get started.</p>
+        <button mat-raised-button color="primary" routerLink="/club-registration">
+          <mat-icon>add</mat-icon>
+          Create Club
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

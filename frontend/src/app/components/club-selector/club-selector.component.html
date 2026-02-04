@@ -1,0 +1,81 @@
+<div class="club-selector-container">
+  <div class="club-selector-content">
+    <mat-card class="selector-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>home_work</mat-icon>
+          Select Your Club
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div *ngIf="loading" class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Loading clubs...</p>
+        </div>
+
+        <div *ngIf="!loading && clubs.length > 0" class="clubs-list">
+          <div class="header-with-button">
+            <p class="instruction-text">
+              Choose which club you'd like to access:
+            </p>
+            <button mat-raised-button color="primary" (click)="navigateToRegistration()" class="create-club-btn">
+              <mat-icon>add</mat-icon>
+              Create New Club
+            </button>
+          </div>
+
+          <!-- Return URL Notice -->
+          <div class="return-notice" *ngIf="returnUrl && returnUrl !== '/dashboard'">
+            <mat-icon>info</mat-icon>
+            <span>After selecting a club, you'll be redirected to continue where you left off.</span>
+          </div>
+
+          <div class="club-card" *ngFor="let club of clubs" (click)="selectClub(club)">
+            <div class="club-logo" *ngIf="club.club?.logo || club.clubLogo">
+              <img [src]="club.club?.logo || club.clubLogo" [alt]="club.club?.name || club.clubName">
+            </div>
+            <div class="club-logo placeholder" *ngIf="!club.club?.logo && !club.clubLogo">
+              <mat-icon>sports_tennis</mat-icon>
+            </div>
+
+            <div class="club-info">
+              <h3>{{ club.club?.name || club.clubName || 'Unknown Club' }}</h3>
+              <p class="club-role">
+                <mat-icon>{{ club.role === 'admin' ? 'admin_panel_settings' : club.role === 'treasurer' ? 'account_balance' : 'person' }}</mat-icon>
+                {{ club.role | titlecase }}
+              </p>
+              <p class="club-stats">
+                <span><mat-icon>emoji_events</mat-icon> {{ club.seedPoints }} points</span>
+                <span><mat-icon>sports</mat-icon> {{ club.matchesPlayed }} matches</span>
+              </p>
+            </div>
+
+            <div class="club-action">
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!loading && clubs.length === 0" class="no-clubs">
+          <mat-icon class="large-icon">sports_tennis</mat-icon>
+          <h3>No Clubs Yet</h3>
+          <p>You haven't joined any clubs yet. Create your own club or browse existing clubs to join!</p>
+
+          <button mat-raised-button color="primary" (click)="navigateToRegistration()">
+            <mat-icon>add</mat-icon>
+            Create New Club
+          </button>
+        </div>
+
+        <!-- Browse More Clubs button -->
+        <div class="browse-more" *ngIf="!loading">
+          <button mat-stroked-button color="primary" routerLink="/browse-clubs">
+            <mat-icon>explore</mat-icon>
+            Browse More Clubs
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

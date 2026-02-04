@@ -14,9 +14,13 @@
     {
       "description": "Tennis Court Usage Receipts",
       "amount": 0
+    },
+    {
+      "description": "Annual Membership Fees 2026",
+      "amount": 1500
     }
   ],
-  "totalReceipts": 0,
+  "totalReceipts": 1500,
   "disbursementsExpenses": [
     {
       "description": "App Service Fee",
@@ -24,10 +28,11 @@
     }
   ],
   "totalDisbursements": 7035.6,
-  "netIncome": -7035.6,
-  "fundBalance": 73527.25,
-  "lastUpdated": "2026-01-28T01:41:53.649Z",
+  "netIncome": -5535.6,
+  "fundBalance": 75027.25,
+  "lastUpdated": "2026-02-03T05:50:58.589Z",
   "notes": {
     "beginningBalance": "Includes ₱30,300 in 2026 membership fees that were collected in 2025"
-  }
+  },
+  "period": "COVERING January 1, 2026 - February 3, 2026"
 }

@@ -48,6 +48,8 @@ export interface AnalyticsStats {
     userId: string;
     username: string;
     fullName: string;
+    clubName?: string;
+    clubId?: string;
     pageViewCount: number;
   }>;
   engagement: {

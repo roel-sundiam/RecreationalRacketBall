@@ -1,0 +1,66 @@
+<div class="club-switcher" *ngIf="selectedClub">
+  <button
+    mat-icon-button
+    [matMenuTriggerFor]="clubMenu"
+    class="club-button"
+    [class.has-multiple]="hasMultipleClubs"
+    [matTooltip]="'Switch Club: ' + displayName"
+  >
+    <mat-icon>{{ hasMultipleClubs ? 'swap_horiz' : 'business' }}</mat-icon>
+  </button>
+
+  <mat-menu #clubMenu="matMenu" class="club-menu">
+    <div class="menu-header">
+      <h3>Your Clubs</h3>
+      <p>{{ clubs.length }} {{ clubs.length === 1 ? 'club' : 'clubs' }}</p>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <button
+      mat-menu-item
+      *ngFor="let club of clubs"
+      (click)="switchClub(club)"
+      [class.selected]="selectedClub?.clubId === club.clubId"
+    >
+      <div class="menu-club-item">
+        <div class="menu-club-logo" *ngIf="club.club?.logo || club.clubLogo">
+          <img [src]="club.club?.logo || club.clubLogo" [alt]="club.club?.name || club.clubName">
+        </div>
+        <div class="menu-club-logo placeholder" *ngIf="!club.club?.logo && !club.clubLogo">
+          <mat-icon>sports_tennis</mat-icon>
+        </div>
+
+        <div class="menu-club-info">
+          <span class="menu-club-name">{{ club.club?.name || club.clubName || 'Unknown Club' }}</span>
+          <span class="menu-club-role" [style.color]="getRoleColor(club.role)">
+            <mat-icon [inline]="true">{{ getRoleIcon(club.role) }}</mat-icon>
+            {{ club.role | titlecase }}
+          </span>
+        </div>
+
+        <mat-icon class="check-icon" *ngIf="selectedClub?.clubId === club.clubId">
+          check_circle
+        </mat-icon>
+      </div>
+    </button>
+
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item (click)="navigateToClubSelector()" class="view-all-button">
+      <mat-icon>apps</mat-icon>
+      <span>View All Clubs</span>
+    </button>
+  </mat-menu>
+</div>
+
+<div class="club-switcher" *ngIf="!selectedClub">
+  <button
+    mat-icon-button
+    (click)="navigateToClubSelector()"
+    class="club-button no-club"
+    matTooltip="Select a Club"
+  >
+    <mat-icon>add_circle</mat-icon>
+  </button>
+</div>

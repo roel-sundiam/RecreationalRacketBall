@@ -138,7 +138,13 @@ const suggestionSchema = new Schema<ISuggestionDocument>({
     trim: true,
     lowercase: true,
     maxlength: [30, 'Tag cannot exceed 30 characters']
-  }]
+  }],
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: false,
+    index: true
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

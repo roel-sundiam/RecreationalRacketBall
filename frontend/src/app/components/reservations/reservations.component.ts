@@ -20,7 +20,7 @@ interface TimeSlot {
   hour: number;
   display: string;
   available: boolean;
-  availableAsEndTime?: boolean;  // NEW: Separate availability for end times
+  availableAsEndTime?: boolean; // NEW: Separate availability for end times
   isPeak: boolean;
   blockedByOpenPlay?: boolean;
   openPlayEvent?: {
@@ -127,14 +127,35 @@ interface Reservation {
               </div>
 
               <!-- Compact Time Controls Row -->
-              <div *ngIf="timeSlotsLoaded" class="stepper-compact-row" [class.has-conflict]="getAvailabilityStatus() === 'conflict'" [class.available]="getAvailabilityStatus() === 'available'">
+              <div
+                *ngIf="timeSlotsLoaded"
+                class="stepper-compact-row"
+                [class.has-conflict]="getAvailabilityStatus() === 'conflict'"
+                [class.available]="getAvailabilityStatus() === 'available'"
+              >
                 <!-- Start Time -->
                 <div class="stepper-compact-item">
                   <span class="stepper-compact-label">Start</span>
                   <div class="stepper-compact-controls">
-                    <button type="button" class="stepper-compact-btn" [disabled]="!canDecrementStart()" (click)="adjustStartTime(-1)">−</button>
-                    <div class="stepper-compact-value">{{ selectedStartTime ? formatTimeAMPM(selectedStartTime) : '--:-- --' }}</div>
-                    <button type="button" class="stepper-compact-btn" [disabled]="!canIncrementStart()" (click)="adjustStartTime(1)">+</button>
+                    <button
+                      type="button"
+                      class="stepper-compact-btn"
+                      [disabled]="!canDecrementStart()"
+                      (click)="adjustStartTime(-1)"
+                    >
+                      −
+                    </button>
+                    <div class="stepper-compact-value">
+                      {{ selectedStartTime ? formatTimeAMPM(selectedStartTime) : '--:-- --' }}
+                    </div>
+                    <button
+                      type="button"
+                      class="stepper-compact-btn"
+                      [disabled]="!canIncrementStart()"
+                      (click)="adjustStartTime(1)"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
 
@@ -142,36 +163,69 @@ interface Reservation {
                 <div class="stepper-compact-item" *ngIf="selectedStartTime">
                   <span class="stepper-compact-label">Duration</span>
                   <div class="stepper-compact-controls">
-                    <button type="button" class="stepper-compact-btn" [disabled]="!canDecrementDuration()" (click)="adjustDuration(-1)">−</button>
+                    <button
+                      type="button"
+                      class="stepper-compact-btn"
+                      [disabled]="!canDecrementDuration()"
+                      (click)="adjustDuration(-1)"
+                    >
+                      −
+                    </button>
                     <div class="stepper-compact-value">{{ getDurationHours() }}h</div>
-                    <button type="button" class="stepper-compact-btn" [disabled]="!canIncrementDuration()" (click)="adjustDuration(1)">+</button>
+                    <button
+                      type="button"
+                      class="stepper-compact-btn"
+                      [disabled]="!canIncrementDuration()"
+                      (click)="adjustDuration(1)"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
 
                 <!-- End Time -->
-                <div class="stepper-compact-item stepper-compact-item-readonly" *ngIf="selectedStartTime && selectedEndTime">
+                <div
+                  class="stepper-compact-item stepper-compact-item-readonly"
+                  *ngIf="selectedStartTime && selectedEndTime"
+                >
                   <span class="stepper-compact-label">End</span>
-                  <div class="stepper-compact-value-only">{{ formatTimeAMPM(selectedEndTime) }}</div>
+                  <div class="stepper-compact-value-only">
+                    {{ formatTimeAMPM(selectedEndTime) }}
+                  </div>
                 </div>
 
                 <!-- Status Badge -->
                 <div class="stepper-compact-status">
-                  <span class="availability-badge-compact" [class]="'availability-badge-compact-' + getAvailabilityStatus()">
+                  <span
+                    class="availability-badge-compact"
+                    [class]="'availability-badge-compact-' + getAvailabilityStatus()"
+                  >
                     {{ getAvailabilityStatus() === 'available' ? '✓ Available' : '✗ Conflict' }}
                   </span>
                 </div>
               </div>
 
               <!-- Find Next Available Button -->
-              <button type="button" class="next-available-btn" *ngIf="timeSlotsLoaded && getAvailabilityStatus() === 'conflict'" (click)="findNextAvailableTime()">
+              <button
+                type="button"
+                class="next-available-btn"
+                *ngIf="timeSlotsLoaded && getAvailabilityStatus() === 'conflict'"
+                (click)="findNextAvailableTime()"
+              >
                 Find Next Available Time →
               </button>
 
               <!-- Time Preview -->
-              <div class="time-preview" *ngIf="selectedStartTime && selectedEndTime" [class]="'time-preview-' + getAvailabilityStatus()">
+              <div
+                class="time-preview"
+                *ngIf="selectedStartTime && selectedEndTime"
+                [class]="'time-preview-' + getAvailabilityStatus()"
+              >
                 <span *ngIf="getAvailabilityStatus() === 'available'">✓</span>
                 <span *ngIf="getAvailabilityStatus() === 'conflict'">✗</span>
-                {{ getTimeRangeDisplay() }} ({{ getDurationHours() }} hour{{ getDurationHours() > 1 ? 's' : '' }})
+                {{ getTimeRangeDisplay() }} ({{ getDurationHours() }} hour{{
+                  getDurationHours() > 1 ? 's' : ''
+                }})
               </div>
             </div>
 
@@ -191,15 +245,25 @@ interface Reservation {
                     [class.peak]="slot.isPeak"
                     [disabled]="!slot.available"
                     (click)="selectStartTime(slot.hour)"
-                    [title]="slot.blockedByOpenPlay ? 'Blocked by Open Play: ' + slot.openPlayEvent?.title : ''"
+                    [title]="
+                      slot.blockedByOpenPlay
+                        ? 'Blocked by Open Play: ' + slot.openPlayEvent?.title
+                        : ''
+                    "
                   >
                     <span class="time">{{ formatTimeAMPM(slot.hour) }}</span>
                     <span class="rate-type">{{
-                      slot.blockedByOpenPlay ? 'Open Play' :
-                      (slot.isPeak ? 'Peak' : 'Regular')
+                      slot.blockedByOpenPlay ? 'Open Play' : slot.isPeak ? 'Peak' : 'Regular'
                     }}</span>
-                    <small *ngIf="slot.blockedByOpenPlay && slot.openPlayEvent" class="open-play-info">
-                      {{ slot.openPlayEvent.status === 'active' ? 'Registration Open' : 'Event Confirmed' }}
+                    <small
+                      *ngIf="slot.blockedByOpenPlay && slot.openPlayEvent"
+                      class="open-play-info"
+                    >
+                      {{
+                        slot.openPlayEvent.status === 'active'
+                          ? 'Registration Open'
+                          : 'Event Confirmed'
+                      }}
                     </small>
                   </button>
                 </div>
@@ -232,9 +296,19 @@ interface Reservation {
                 </div>
 
                 <!-- Message when no end times available -->
-                <div class="no-end-times-message" *ngIf="availableEndTimes.length === 0 && selectedStartTime">
-                  <p><strong>No consecutive time slots available</strong> after {{ formatTimeAMPM(selectedStartTime) }}</p>
-                  <p>Court reservations require consecutive time blocks. The next hour ({{ formatTimeAMPM(selectedStartTime + 1) }}) is unavailable.</p>
+                <div
+                  class="no-end-times-message"
+                  *ngIf="availableEndTimes.length === 0 && selectedStartTime"
+                >
+                  <p>
+                    <strong>No consecutive time slots available</strong> after
+                    {{ formatTimeAMPM(selectedStartTime) }}
+                  </p>
+                  <p>
+                    Court reservations require consecutive time blocks. The next hour ({{
+                      formatTimeAMPM(selectedStartTime + 1)
+                    }}) is unavailable.
+                  </p>
                 </div>
 
                 <small
@@ -277,7 +351,11 @@ interface Reservation {
                   </label>
                   <div class="player-row">
                     <!-- Modern Custom Dropdown -->
-                    <div class="custom-dropdown" [class.open]="dropdownStates[i]" [class.disabled]="i === 0">
+                    <div
+                      class="custom-dropdown"
+                      [class.open]="dropdownStates[i]"
+                      [class.disabled]="i === 0"
+                    >
                       <div class="dropdown-trigger" (click)="i > 0 ? toggleDropdown(i) : null">
                         <div class="selected-value">
                           <span *ngIf="getSelectedMemberDisplay(i)" class="member-info">
@@ -354,18 +432,17 @@ interface Reservation {
               </div>
             </div>
 
-            <button
-              type="button"
-              (click)="addPlayer()"
-              [disabled]="loadingMembers"
-              class="add-btn"
-            >
+            <button type="button" (click)="addPlayer()" [disabled]="loadingMembers" class="add-btn">
               + Add Member Player
             </button>
 
             <!-- Custom Players Section -->
             <div class="custom-players-section" *ngIf="!loadingMembers">
-              <h4>Non-Member Players (₱70 per hour each)</h4>
+              <h4>
+                Non-Member Players
+                <span *ngIf="pricingModel !== 'fixed-daily'">(₱{{ guestFee }} per hour each)</span>
+                <span *ngIf="pricingModel === 'fixed-daily'">(₱{{ guestFee }} per guest)</span>
+              </h4>
 
               <div
                 *ngFor="
@@ -398,11 +475,7 @@ interface Reservation {
                 </div>
               </div>
 
-              <button
-                type="button"
-                (click)="addCustomPlayer()"
-                class="add-btn"
-              >
+              <button type="button" (click)="addCustomPlayer()" class="add-btn">
                 + Add Custom Player
               </button>
             </div>
@@ -411,7 +484,6 @@ interface Reservation {
               No active members found. You can still enter custom names.
             </div>
           </div>
-
 
           <!-- Fee Information -->
           <div class="fee-info" *ngIf="selectedStartTime && selectedEndTime && calculatedFee > 0">
@@ -446,7 +518,14 @@ interface Reservation {
                 </div>
                 <!-- Guest Fee (if any) -->
                 <div class="fee-row" *ngIf="getNonMemberCount() > 0">
-                  <span>Guest Fee ({{ getNonMemberCount() }} {{ getNonMemberCount() === 1 ? 'guest' : 'guests' }} × ₱70):</span>
+                  <span *ngIf="pricingModel !== 'fixed-daily'"
+                    >Guest Fee ({{ getNonMemberCount() }}
+                    {{ getNonMemberCount() === 1 ? 'guest' : 'guests' }} × ₱{{ guestFee }}):</span
+                  >
+                  <span *ngIf="pricingModel === 'fixed-daily'"
+                    >Guest Fee ({{ getNonMemberCount() }}
+                    {{ getNonMemberCount() === 1 ? 'guest' : 'guests' }} × ₱{{ guestFee }} per guest):</span
+                  >
                   <span>₱{{ getGuestFeeTotal() }}</span>
                 </div>
                 <!-- Payment Distribution per Player -->
@@ -454,7 +533,10 @@ interface Reservation {
                   <div class="fee-row player-payment-header">
                     <span><strong>Payment per Player:</strong></span>
                   </div>
-                  <div class="player-payment-item" *ngFor="let player of getPlayerPaymentBreakdown()">
+                  <div
+                    class="player-payment-item"
+                    *ngFor="let player of getPlayerPaymentBreakdown()"
+                  >
                     <div class="fee-row player-detail">
                       <span>
                         {{ player.name }}
@@ -499,14 +581,16 @@ interface Reservation {
 
         <!-- Existing Reservations -->
         <div class="existing-reservations" *ngIf="selectedDate && existingReservations.length > 0">
-          <h3>Existing Reservations for {{ selectedDate | date : 'fullDate' }}</h3>
+          <h3>Existing Reservations for {{ selectedDate | date: 'fullDate' }}</h3>
 
           <div class="reservation-list">
             <div *ngFor="let reservation of existingReservations" class="reservation-item">
               <div class="reservation-time">
                 {{ reservation.timeSlotDisplay }}
               </div>
-              <div class="reservation-players">Players: {{ formatPlayerNames(reservation.players) }}</div>
+              <div class="reservation-players">
+                Players: {{ formatPlayerNames(reservation.players) }}
+              </div>
               <div class="reservation-status status-{{ reservation.status }}">
                 {{ reservation.status | titlecase }}
               </div>
@@ -548,17 +632,17 @@ interface Reservation {
 
           <div class="modal-body">
             <p class="warning-message">
-              You have <strong>{{overduePaymentDetails.length}}</strong> overdue payment(s).
+              You have <strong>{{ overduePaymentDetails.length }}</strong> overdue payment(s).
               Please settle your pending payments before making a new reservation.
             </p>
 
             <div class="overdue-list">
               <div *ngFor="let payment of overduePaymentDetails" class="overdue-item">
                 <div class="payment-info">
-                  <span class="amount">₱{{payment.amount}}</span>
-                  <span class="days-overdue">{{payment.daysOverdue}} day(s) overdue</span>
+                  <span class="amount">₱{{ payment.amount }}</span>
+                  <span class="days-overdue">{{ payment.daysOverdue }} day(s) overdue</span>
                 </div>
-                <div class="payment-description">{{payment.description}}</div>
+                <div class="payment-description">{{ payment.description }}</div>
               </div>
             </div>
           </div>
@@ -613,7 +697,18 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   private feeCalculationTimer: any;
 
   private apiUrl = environment.apiUrl;
-  private peakHours = [5, 18, 19, 20, 21]; // 5AM, 6PM, 7PM, 8PM, 9PM
+
+  // Club-specific settings (loaded dynamically)
+  private clubSettings: any = null;
+  private peakHours: number[] = [5, 18, 19, 20, 21]; // Default, will be overridden by club settings
+  private operatingStart = 5; // Default opening hour
+  private operatingEnd = 22; // Default closing hour
+  private peakHourFee = 150;
+  private offPeakHourFee = 100;
+  pricingModel: 'variable' | 'fixed-hourly' | 'fixed-daily' = 'variable';
+  private fixedHourlyFee = 125;
+  private fixedDailyFee = 500;
+  guestFee = 70; // Public so template can access it
 
   // Stepper UI mode toggle
   useStepperUI = true; // Set to false to use original button UI
@@ -623,7 +718,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {
     this.reservationForm = this.fb.group({
       date: ['', Validators.required],
@@ -632,13 +727,17 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       players: this.fb.array([this.fb.control('', Validators.required)]),
     });
 
-    this.initializeTimeSlots();
+    // DON'T initialize time slots here - wait for club settings to load first
+    // this.initializeTimeSlots(); // REMOVED: Will be called after club settings load
     // Initialize custom names array as empty
     this.customPlayerNames = [];
     console.log('🔍 Constructor - initialized customPlayerNames as:', this.customPlayerNames);
   }
 
   ngOnInit(): void {
+    // Load club-specific settings first
+    this.loadClubSettings();
+
     // Check for overdue payments immediately on page load
     this.checkOverduePayments();
 
@@ -684,6 +783,54 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Load club-specific settings (operating hours and pricing)
+   */
+  loadClubSettings(): void {
+    this.http.get<any>(`${this.apiUrl}/clubs/current/settings`).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.clubSettings = response.data;
+
+          // Update operating hours
+          if (response.data.operatingHours) {
+            this.operatingStart = response.data.operatingHours.start || 5;
+            this.operatingEnd = response.data.operatingHours.end || 22;
+            console.log(`⚙️  Operating hours: ${this.operatingStart}:00 - ${this.operatingEnd}:00`);
+          }
+
+          // Update pricing
+          if (response.data.pricing) {
+            this.peakHours = response.data.pricing.peakHours || [5, 18, 19, 20, 21];
+            this.peakHourFee = response.data.pricing.peakHourFee || 150;
+            this.offPeakHourFee = response.data.pricing.offPeakHourFee || 100;
+            this.pricingModel = response.data.pricing.pricingModel || 'variable';
+            this.fixedHourlyFee = response.data.pricing.fixedHourlyFee || 125;
+            this.fixedDailyFee = response.data.pricing.fixedDailyFee || 500;
+            this.guestFee = response.data.pricing.guestFee || 70;
+            console.log('💰 Pricing loaded:', {
+              peakHourFee: this.peakHourFee,
+              offPeakHourFee: this.offPeakHourFee,
+              pricingModel: this.pricingModel,
+              fixedHourlyFee: this.fixedHourlyFee,
+              fixedDailyFee: this.fixedDailyFee,
+              guestFee: this.guestFee,
+              peakHours: this.peakHours,
+            });
+          }
+
+          // Re-initialize time slots with the newly loaded operating hours
+          this.initializeTimeSlots();
+        }
+      },
+      error: (error) => {
+        console.warn('⚠️  Failed to load club settings, using defaults:', error);
+        // Keep default values and re-initialize with defaults
+        this.initializeTimeSlots();
+      },
+    });
+  }
+
   loadReservationForEdit(reservationId: string): void {
     this.http.get<any>(`${this.apiUrl}/reservations/${reservationId}`).subscribe({
       next: (response) => {
@@ -715,7 +862,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         console.log('🔍 Players data:', players);
 
         // Check if new format (objects with name property)
-        const isNewFormat = players.length > 0 && typeof players[0] === 'object' && 'name' in players[0];
+        const isNewFormat =
+          players.length > 0 && typeof players[0] === 'object' && 'name' in players[0];
 
         if (isNewFormat) {
           // December 2025 format: separate members and guests
@@ -728,7 +876,12 @@ export class ReservationsComponent implements OnInit, OnDestroy {
               this.customPlayerNames.push(player.name);
             }
           });
-          console.log('🔍 Loaded members:', playersArray.length, 'guests:', this.customPlayerNames.length);
+          console.log(
+            '🔍 Loaded members:',
+            playersArray.length,
+            'guests:',
+            this.customPlayerNames.length,
+          );
         } else {
           // Legacy format: all players are strings, treat as members
           players.forEach((playerName: string) => {
@@ -739,7 +892,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
         this.showSuccess(
           'Edit Mode',
-          `Loaded reservation for editing: ${dateString} ${reservation.timeSlot}:00`
+          `Loaded reservation for editing: ${dateString} ${reservation.timeSlot}:00`,
         );
       },
       error: (error) => {
@@ -786,11 +939,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             availableAsEndTime: backendSlot.availableAsEndTime,
             isPeak: this.peakHours.includes(backendSlot.hour),
             blockedByOpenPlay: backendSlot.blockedByOpenPlay || false,
-            openPlayEvent: backendSlot.openPlayEvent || null
+            openPlayEvent: backendSlot.openPlayEvent || null,
           }));
 
-          // For START times: filter out hour 22
-          this.timeSlots = this.allTimeSlots.filter((slot: any) => slot.hour <= 21);
+          // For START times: filter based on club operating hours
+          // Last bookable slot is operatingEnd - 1 (e.g., if closes at 22, last slot is 21)
+          this.timeSlots = this.allTimeSlots.filter(
+            (slot: any) => slot.hour >= this.operatingStart && slot.hour < this.operatingEnd,
+          );
 
           console.log('🔍 All time slots loaded:', this.allTimeSlots.length);
           console.log('🔍 Start time slots:', this.timeSlots.length);
@@ -808,14 +964,18 @@ export class ReservationsComponent implements OnInit, OnDestroy {
           // NOW set the selected times after time slots are loaded
           console.log('🔍 Setting selected times in edit mode');
           const startTime = reservation.timeSlot;
-          const endTime = reservation.endTimeSlot || (reservation.timeSlot + (reservation.duration || 1));
+          const endTime =
+            reservation.endTimeSlot || reservation.timeSlot + (reservation.duration || 1);
 
           this.selectedStartTime = startTime;
           this.selectedEndTime = endTime;
 
           console.log('🔍 Selected start time:', this.selectedStartTime);
           console.log('🔍 Selected end time:', this.selectedEndTime);
-          console.log('🔍 Checking if start time slot exists:', this.timeSlots.find(s => s.hour === startTime));
+          console.log(
+            '🔍 Checking if start time slot exists:',
+            this.timeSlots.find((s) => s.hour === startTime),
+          );
 
           // Update form values
           this.reservationForm.patchValue({
@@ -825,12 +985,15 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
           console.log('🔍 Form values after patch:', {
             startTime: this.reservationForm.get('startTime')?.value,
-            endTime: this.reservationForm.get('endTime')?.value
+            endTime: this.reservationForm.get('endTime')?.value,
           });
 
           // Update available end times
           this.updateAvailableEndTimes();
-          console.log('🔍 Available end times after update:', this.availableEndTimes.map(t => t.hour));
+          console.log(
+            '🔍 Available end times after update:',
+            this.availableEndTimes.map((t) => t.hour),
+          );
 
           // Trigger fee calculation
           this.calculateFee();
@@ -961,8 +1124,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   initializeTimeSlots(): void {
     this.timeSlots = [];
-    // Court hours: 5:00 AM to 10:00 PM (last start time is 9:00 PM)
-    for (let hour = 5; hour <= 21; hour++) {
+    // Court hours based on club settings (last start time is operatingEnd - 1)
+    console.log(`⏰ Initializing time slots with operating hours: ${this.operatingStart}:00 - ${this.operatingEnd}:00`);
+    for (let hour = this.operatingStart; hour < this.operatingEnd; hour++) {
       this.timeSlots.push({
         hour: hour,
         display: `${hour}:00 - ${hour + 1}:00`,
@@ -970,6 +1134,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         isPeak: this.peakHours.includes(hour),
       });
     }
+    console.log(`✅ Initialized ${this.timeSlots.length} time slots (${this.operatingStart} to ${this.operatingEnd - 1})`);
   }
 
   onDateChange(event: any): void {
@@ -1006,7 +1171,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       // Clear form controls for time selection
       this.reservationForm.patchValue({
         startTime: '',
-        endTime: ''
+        endTime: '',
       });
     }
 
@@ -1039,7 +1204,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     if (this.selectedStartTime) {
       const duration = hour - this.selectedStartTime;
       if (duration > 4) {
-        this.showError('Invalid Duration', 'Maximum reservation duration is 4 hours. Please select an end time within 4 hours of your start time.');
+        this.showError(
+          'Invalid Duration',
+          'Maximum reservation duration is 4 hours. Please select an end time within 4 hours of your start time.',
+        );
         return;
       }
     }
@@ -1086,8 +1254,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     // Enhanced logging for debugging specific time slots
     console.log('🔍 Detailed timeSlots data for debugging:');
-    this.timeSlots.forEach(slot => {
-      console.log(`  Hour ${slot.hour}: available=${slot.available}, availableAsEndTime=${slot.availableAsEndTime}, blocked=${slot.blockedByOpenPlay}, isPeak=${slot.isPeak}`);
+    this.timeSlots.forEach((slot) => {
+      console.log(
+        `  Hour ${slot.hour}: available=${slot.available}, availableAsEndTime=${slot.availableAsEndTime}, blocked=${slot.blockedByOpenPlay}, isPeak=${slot.isPeak}`,
+      );
     });
 
     if (!this.selectedStartTime) {
@@ -1100,20 +1270,28 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     // CRITICAL FIX: Restore proper consecutive booking logic
     // Court reservations must be consecutive - no gaps allowed
-    // Maximum duration: 4 hours
-    const maxEndTime = Math.min(this.selectedStartTime + 4, 22);
-    console.log('🔍 Checking consecutive hours starting from', this.selectedStartTime + 1, 'up to', maxEndTime, '(max 4 hours)');
+    // Maximum duration: 4 hours or until operating end time
+    const maxEndTime = Math.min(this.selectedStartTime + 4, this.operatingEnd);
+    console.log(
+      '🔍 Checking consecutive hours starting from',
+      this.selectedStartTime + 1,
+      'up to',
+      maxEndTime,
+      '(max 4 hours)',
+    );
 
     for (let hour = this.selectedStartTime + 1; hour <= maxEndTime; hour++) {
       console.log(`🔍 Checking hour ${hour} for consecutive availability`);
 
-      if (hour <= 21) {
-        // For regular operating hours (5-21), check END TIME availability
+      if (hour < this.operatingEnd) {
+        // For operating hours, check END TIME availability
         const slot = this.allTimeSlots.find((s) => s.hour === hour);
         console.log(`🔍 Hour ${hour} slot:`, slot);
 
         // FIXED: Use availableAsEndTime for end time calculations
-        const canUseAsEndTime = slot && (slot.availableAsEndTime !== undefined ? slot.availableAsEndTime : slot.available);
+        const canUseAsEndTime =
+          slot &&
+          (slot.availableAsEndTime !== undefined ? slot.availableAsEndTime : slot.available);
 
         // Special logging for hour 17
         if (hour === 17) {
@@ -1135,14 +1313,20 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
           // Log why this slot is available as end time
           if (slot.available !== slot.availableAsEndTime) {
-            console.log(`📋 Hour ${hour}: available=${slot.available}, availableAsEndTime=${slot.availableAsEndTime}`);
+            console.log(
+              `📋 Hour ${hour}: available=${slot.available}, availableAsEndTime=${slot.availableAsEndTime}`,
+            );
           }
         } else {
           console.log(`❌ Hour ${hour} is NOT available as END TIME - STOPPING consecutive check`);
           if (slot) {
-            console.log(`   Slot details: available=${slot.available}, availableAsEndTime=${slot.availableAsEndTime}, blocked=${slot.blockedByOpenPlay}`);
+            console.log(
+              `   Slot details: available=${slot.available}, availableAsEndTime=${slot.availableAsEndTime}, blocked=${slot.blockedByOpenPlay}`,
+            );
             if (slot.openPlayEvent) {
-              console.log(`   Open Play event: ${slot.openPlayEvent.title} (${slot.openPlayEvent.status})`);
+              console.log(
+                `   Open Play event: ${slot.openPlayEvent.title} (${slot.openPlayEvent.status})`,
+              );
             }
           } else {
             console.log(`   No slot found for hour ${hour}`);
@@ -1156,7 +1340,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         // Special case: 22:00 (court closing time) - check if it's available as end time
         console.log('🔍 Checking 22:00 as potential court closing end time');
         const slot22 = this.allTimeSlots.find((s) => s.hour === 22);
-        const canUse22AsEndTime = slot22 && (slot22.availableAsEndTime !== undefined ? slot22.availableAsEndTime : slot22.available);
+        const canUse22AsEndTime =
+          slot22 &&
+          (slot22.availableAsEndTime !== undefined ? slot22.availableAsEndTime : slot22.available);
 
         console.log(`🔍 Hour 22 slot data:`, slot22);
         console.log(`🔍 Can use 22 as end time:`, canUse22AsEndTime);
@@ -1178,7 +1364,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     // Enhanced debugging for the final result
     console.log('🔍 FINAL RESULT:');
     console.log(`   Selected start time: ${this.selectedStartTime}:00`);
-    console.log(`   Available end times: [${this.availableEndTimes.map(t => t.hour + ':00').join(', ')}]`);
+    console.log(
+      `   Available end times: [${this.availableEndTimes.map((t) => t.hour + ':00').join(', ')}]`,
+    );
     console.log(`   Total end time options: ${this.availableEndTimes.length}`);
 
     if (this.availableEndTimes.length === 0) {
@@ -1220,7 +1408,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   getTotalPlayerCount(): number {
     const memberCount = this.playersArray.controls.filter(
-      (control) => control.value && control.value.trim()
+      (control) => control.value && control.value.trim(),
     ).length;
     const customCount = this.customPlayerNames.filter((name) => name && name.trim()).length;
     return memberCount + customCount;
@@ -1269,7 +1457,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
           console.log('✅ Backend provided timeSlots data, using it instead of local generation');
           console.log('📊 Backend timeSlots count:', response.data.timeSlots.length);
           console.log('🔍 Backend timeSlots raw data:', response.data.timeSlots);
-          console.log('🚫 Backend blocked slots:', response.data.timeSlots.filter((s: any) => s.blockedByOpenPlay).length);
+          console.log(
+            '🚫 Backend blocked slots:',
+            response.data.timeSlots.filter((s: any) => s.blockedByOpenPlay).length,
+          );
 
           // Store ALL time slots (including hour 22) for end time calculations
           this.allTimeSlots = response.data.timeSlots.map((backendSlot: any) => ({
@@ -1279,23 +1470,37 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             availableAsEndTime: backendSlot.availableAsEndTime,
             isPeak: this.peakHours.includes(backendSlot.hour),
             blockedByOpenPlay: backendSlot.blockedByOpenPlay || false,
-            openPlayEvent: backendSlot.openPlayEvent || null
+            openPlayEvent: backendSlot.openPlayEvent || null,
           }));
 
-          // For START times: filter out hour 22 (court closes at 10 PM, last start is 9 PM)
-          this.timeSlots = this.allTimeSlots.filter((slot: any) => slot.hour <= 21);
+          // For START times: filter based on club operating hours
+          this.timeSlots = this.allTimeSlots.filter(
+            (slot: any) => slot.hour >= this.operatingStart && slot.hour < this.operatingEnd,
+          );
 
           // Log specific slots for debugging
-          const blockedSlots = this.timeSlots.filter(s => s.blockedByOpenPlay);
-          console.log('🚫 Processed blocked slots:', blockedSlots.map(s => s.hour));
-          const unavailableSlots = this.timeSlots.filter(s => !s.available);
-          console.log('❌ All unavailable slots:', unavailableSlots.map(s => ({ hour: s.hour, blocked: s.blockedByOpenPlay, available: s.available })));
+          const blockedSlots = this.timeSlots.filter((s) => s.blockedByOpenPlay);
+          console.log(
+            '🚫 Processed blocked slots:',
+            blockedSlots.map((s) => s.hour),
+          );
+          const unavailableSlots = this.timeSlots.filter((s) => !s.available);
+          console.log(
+            '❌ All unavailable slots:',
+            unavailableSlots.map((s) => ({
+              hour: s.hour,
+              blocked: s.blockedByOpenPlay,
+              available: s.available,
+            })),
+          );
           console.log('🔍 Updated time slots with Open Play blocking:', this.timeSlots);
 
           // Mark slots as loaded and trigger end time update if start time is already selected
           this.timeSlotsLoaded = true;
           if (this.selectedStartTime !== null) {
-            console.log('🔄 Start time already selected, updating available end times now that data is loaded');
+            console.log(
+              '🔄 Start time already selected, updating available end times now that data is loaded',
+            );
             this.updateAvailableEndTimes();
           } else {
             // Initialize stepper with first available time if using stepper UI
@@ -1336,15 +1541,15 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     this.timeSlots.forEach((slot) => {
       // Check if booked by existing reservations (excluding the current reservation being edited)
-      const isBooked = this.existingReservations.some(
-        (res) => {
-          const endTimeSlot = res.endTimeSlot || (res.timeSlot + (res.duration || 1));
-          return slot.hour >= res.timeSlot && 
-                 slot.hour < endTimeSlot &&
-                 (res.status === 'pending' || res.status === 'confirmed') &&
-                 (!this.isEditMode || res._id !== this.editingReservationId);
-        }
-      );
+      const isBooked = this.existingReservations.some((res) => {
+        const endTimeSlot = res.endTimeSlot || res.timeSlot + (res.duration || 1);
+        return (
+          slot.hour >= res.timeSlot &&
+          slot.hour < endTimeSlot &&
+          (res.status === 'pending' || res.status === 'confirmed') &&
+          (!this.isEditMode || res._id !== this.editingReservationId)
+        );
+      });
 
       // Check if time has passed (only for today)
       let hasTimePassed = false;
@@ -1357,7 +1562,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             }:00 is unavailable - time has passed (current time: ${currentPhilippineTime.getHours()}:${currentPhilippineTime
               .getMinutes()
               .toString()
-              .padStart(2, '0')})`
+              .padStart(2, '0')})`,
           );
         }
       }
@@ -1371,7 +1576,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     console.log(
       '🔍 Final time slots availability:',
-      this.timeSlots.map((s) => ({ hour: s.hour, available: s.available }))
+      this.timeSlots.map((s) => ({ hour: s.hour, available: s.available })),
     );
   }
 
@@ -1394,10 +1599,12 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // December 2025 pricing constants
-    const PEAK_BASE_FEE = 150;
-    const NON_PEAK_BASE_FEE = 100;
-    const GUEST_FEE = 70;
+    // Pricing model values
+    const PEAK_BASE_FEE = this.peakHourFee;
+    const NON_PEAK_BASE_FEE = this.offPeakHourFee;
+    const FIXED_HOURLY_FEE = this.fixedHourlyFee;
+    const FIXED_DAILY_FEE = this.fixedDailyFee;
+    const GUEST_FEE = this.guestFee;
 
     // Count member players
     let memberCount = 0;
@@ -1419,15 +1626,32 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     console.log('🔍 Final counts - Members:', memberCount, 'Guests:', guestCount);
 
-    // Calculate total fee for all hours in the range
-    // December 2025: Base rate (₱100 or ₱150) + ₱70 per guest
     let totalFee = 0;
-    for (let hour = this.selectedStartTime!; hour < this.selectedEndTime!; hour++) {
-      const baseFee = this.isPeakHour(hour) ? PEAK_BASE_FEE : NON_PEAK_BASE_FEE;
-      const hourlyFee = baseFee + (guestCount * GUEST_FEE);
-      totalFee += hourlyFee;
+    if (this.pricingModel === 'fixed-daily') {
+      // Flat daily fee per member (not multiplied by hours)
+      totalFee = (FIXED_DAILY_FEE * memberCount) + guestCount * GUEST_FEE;
+      console.log(
+        `🔍 Fixed daily: Base=₱${FIXED_DAILY_FEE}×${memberCount}, Guests=${guestCount}×₱${GUEST_FEE}, Total=₱${totalFee}`,
+      );
+    } else if (this.pricingModel === 'fixed-hourly') {
+      // Same hourly rate all day
+      const baseFee = FIXED_HOURLY_FEE * duration;
+      const guestFeeTotal = guestCount * GUEST_FEE * duration;
+      totalFee = baseFee + guestFeeTotal;
+      console.log(
+        `🔍 Fixed hourly: Base=₱${baseFee}, Guests=${guestCount}×₱${GUEST_FEE}×${duration}, Total=₱${totalFee}`,
+      );
+    } else {
+      // Variable (peak/off-peak) pricing
+      for (let hour = this.selectedStartTime!; hour < this.selectedEndTime!; hour++) {
+        const baseFee = this.isPeakHour(hour) ? PEAK_BASE_FEE : NON_PEAK_BASE_FEE;
+        const hourlyFee = baseFee + guestCount * GUEST_FEE;
+        totalFee += hourlyFee;
 
-      console.log(`🔍 Hour ${hour}: Base=₱${baseFee}, Guests=${guestCount}×₱${GUEST_FEE}, Total=₱${hourlyFee}`);
+        console.log(
+          `🔍 Hour ${hour}: Base=₱${baseFee}, Guests=${guestCount}×₱${GUEST_FEE}, Total=₱${hourlyFee}`,
+        );
+      }
     }
 
     // Round to nearest 10 pesos (e.g., 550 → 550, 183.33 → 190)
@@ -1441,7 +1665,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   getPlayerCount(): number {
     const memberCount = this.playersArray.controls.filter(
-      (control) => control.value && control.value.trim()
+      (control) => control.value && control.value.trim(),
     ).length;
     const customCount = this.customPlayerNames.filter((name) => name && name.trim()).length;
     return memberCount + customCount;
@@ -1480,6 +1704,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   getRateType(): string {
     if (!this.selectedStartTime || !this.selectedEndTime) return '';
 
+    if (this.pricingModel === 'fixed-daily') {
+      return 'Fixed Daily';
+    }
+
+    if (this.pricingModel === 'fixed-hourly') {
+      return 'Fixed Hourly';
+    }
+
     let peakHours = 0;
     let offPeakHours = 0;
 
@@ -1487,7 +1719,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       '🔍 DEBUG getRateType - Start:',
       this.selectedStartTime,
       'End:',
-      this.selectedEndTime
+      this.selectedEndTime,
     );
     console.log('🔍 DEBUG peakHours array:', this.peakHours);
 
@@ -1555,8 +1787,17 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   getBaseFeeTotal(): number {
     if (!this.selectedStartTime || !this.selectedEndTime) return 0;
 
-    const PEAK_BASE_FEE = 150;
-    const NON_PEAK_BASE_FEE = 100;
+    if (this.pricingModel === 'fixed-daily') {
+      return this.fixedDailyFee * this.getMemberCount();
+    }
+
+    if (this.pricingModel === 'fixed-hourly') {
+      return this.fixedHourlyFee * this.getDurationHours();
+    }
+
+    // Use club-specific pricing
+    const PEAK_BASE_FEE = this.peakHourFee;
+    const NON_PEAK_BASE_FEE = this.offPeakHourFee;
 
     let totalBaseFee = 0;
     for (let hour = this.selectedStartTime; hour < this.selectedEndTime; hour++) {
@@ -1567,11 +1808,15 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     return totalBaseFee;
   }
 
-  // December 2025: Calculate guest fee total (guests × ₱70 × hours)
+  // December 2025: Calculate guest fee total (guests × club guest fee × hours)
   getGuestFeeTotal(): number {
     const guestCount = this.getNonMemberCount();
     const hours = this.getDurationHours();
-    const GUEST_FEE = 70;
+    const GUEST_FEE = this.guestFee;
+
+    if (this.pricingModel === 'fixed-daily') {
+      return guestCount * GUEST_FEE;
+    }
 
     return guestCount * GUEST_FEE * hours;
   }
@@ -1610,9 +1855,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       const playerName = control.value?.trim();
       if (playerName) {
         const isReserver = memberIndex === 0;
-        const amount = isReserver
-          ? baseFeePerMember + guestFeeTotal
-          : baseFeePerMember;
+        const amount = isReserver ? baseFeePerMember + guestFeeTotal : baseFeePerMember;
 
         let breakdown = `Base share: ₱${baseFeePerMember.toFixed(2)}`;
         if (isReserver && guestFeeTotal > 0) {
@@ -1743,7 +1986,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.showSuccess(
             'Reservation Updated!',
-            'Your reservation has been updated successfully'
+            'Your reservation has been updated successfully',
           );
           setTimeout(() => {
             this.router.navigate(['/my-reservations']);
@@ -1817,7 +2060,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
         // Create success message
         const successMessage = `Court booked for ${this.getTimeRangeDisplay()} on ${new Date(
-          formValue.date
+          formValue.date,
         ).toLocaleDateString()}\n💰 Payment required: ₱${this.calculatedFee}`;
 
         this.showSuccess('Reservation Confirmed!', successMessage);
@@ -1837,7 +2080,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
           this.overduePaymentDetails = error.error.overduePayments;
           this.showOverduePaymentModal = true;
         } else {
-          const message = error.error?.message || error.error?.error || 'Failed to create reservation. Please try again.';
+          const message =
+            error.error?.message ||
+            error.error?.error ||
+            'Failed to create reservation. Please try again.';
           this.showError('Booking Failed', message);
         }
       });
@@ -1880,14 +2126,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   getFilteredMembers(playerIndex: number): Member[] {
     const searchTerm = this.searchTerms[playerIndex]?.toLowerCase() || '';
-    
+
     // Get currently selected players from other dropdowns (excluding current dropdown)
     const selectedPlayerNames = this.playersArray.controls
-      .map((control, index) => index !== playerIndex ? control.value : null)
-      .filter(value => value && typeof value === 'string' && value.trim() !== '');
+      .map((control, index) => (index !== playerIndex ? control.value : null))
+      .filter((value) => value && typeof value === 'string' && value.trim() !== '');
 
-    let filteredMembers = this.members.filter(member => 
-      !selectedPlayerNames.includes(member.fullName)
+    let filteredMembers = this.members.filter(
+      (member) => !selectedPlayerNames.includes(member.fullName),
     );
 
     if (!searchTerm) {
@@ -1897,7 +2143,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     return filteredMembers.filter(
       (member) =>
         member.fullName.toLowerCase().includes(searchTerm) ||
-        member.username.toLowerCase().includes(searchTerm)
+        member.username.toLowerCase().includes(searchTerm),
     );
   }
 
@@ -1905,7 +2151,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.searchTerms[playerIndex] = event.target.value;
     // Clear form control if search doesn't match any member
     const matchingMember = this.members.find(
-      (m) => m.fullName.toLowerCase() === event.target.value.toLowerCase()
+      (m) => m.fullName.toLowerCase() === event.target.value.toLowerCase(),
     );
     if (!matchingMember && event.target.value) {
       this.playersArray.at(playerIndex).setValue('');
@@ -1926,7 +2172,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     type: 'success' | 'error' | 'warning' | 'info',
     title: string,
     message: string,
-    duration = 5000
+    duration = 5000,
   ): void {
     const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     const notification: Notification = { id, type, title, message, duration };
@@ -1999,7 +2245,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   // Debug method to determine why a specific hour is unavailable
   getUnavailabilityReason(hour: number): string {
-    const slot = this.timeSlots.find(s => s.hour === hour);
+    const slot = this.timeSlots.find((s) => s.hour === hour);
 
     if (!slot) {
       return 'unknown';
@@ -2014,8 +2260,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     // Check if there's an existing reservation for this hour
-    const conflictingReservation = this.existingReservations.find(res => {
-      const endTimeSlot = res.endTimeSlot || (res.timeSlot + (res.duration || 1));
+    const conflictingReservation = this.existingReservations.find((res) => {
+      const endTimeSlot = res.endTimeSlot || res.timeSlot + (res.duration || 1);
       return hour >= res.timeSlot && hour < endTimeSlot && res.status !== 'cancelled';
     });
 
@@ -2043,7 +2289,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('❌ Error checking overdue payments:', error);
         // Don't show error to user - this is a background check
-      }
+      },
     });
   }
 
@@ -2055,7 +2301,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   goToPayments(): void {
     this.showOverduePaymentModal = false;
     this.router.navigate(['/payments'], {
-      queryParams: { tab: 'pending' }
+      queryParams: { tab: 'pending' },
     });
   }
 
@@ -2065,13 +2311,13 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   private initializeStepperDefaults(): void {
     if (this.useStepperUI && !this.selectedStartTime && this.timeSlots.length > 0) {
       // Find first available time slot
-      const firstAvailable = this.timeSlots.find(slot => slot.available);
+      const firstAvailable = this.timeSlots.find((slot) => slot.available);
       if (firstAvailable) {
         this.selectedStartTime = firstAvailable.hour;
         this.selectedEndTime = Math.min(22, firstAvailable.hour + 1);
         this.reservationForm.patchValue({
           startTime: this.selectedStartTime,
-          endTime: this.selectedEndTime
+          endTime: this.selectedEndTime,
         });
         this.calculateFee();
       }
@@ -2081,12 +2327,12 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   adjustStartTime(delta: number): void {
     if (!this.selectedStartTime) {
       // Initialize to first available time or default to 14:00
-      const firstAvailable = this.timeSlots.find(slot => slot.available);
+      const firstAvailable = this.timeSlots.find((slot) => slot.available);
       this.selectedStartTime = firstAvailable ? firstAvailable.hour : 14;
       this.selectedEndTime = Math.min(22, this.selectedStartTime + 1);
       this.reservationForm.patchValue({
         startTime: this.selectedStartTime,
-        endTime: this.selectedEndTime
+        endTime: this.selectedEndTime,
       });
       this.calculateFee();
       return;
@@ -2144,10 +2390,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   }
 
   canIncrementStart(): boolean {
-    if (!this.selectedStartTime || this.selectedStartTime >= 21) return false;
+    if (!this.selectedStartTime || this.selectedStartTime >= this.operatingEnd - 1) return false;
 
     // Check if there's ANY available time after current time
-    for (let hour = this.selectedStartTime + 1; hour <= 21; hour++) {
+    for (let hour = this.selectedStartTime + 1; hour < this.operatingEnd; hour++) {
       if (!this.isTimeBooked(hour)) {
         return true;
       }
@@ -2213,30 +2459,36 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         this.selectedEndTime = h + duration;
         this.reservationForm.patchValue({
           startTime: h,
-          endTime: h + duration
+          endTime: h + duration,
         });
         this.calculateFee();
         return;
       }
     }
 
-    this.showWarning('No Available Time', 'No consecutive time slots available for the selected duration.');
+    this.showWarning(
+      'No Available Time',
+      'No consecutive time slots available for the selected duration.',
+    );
   }
 
   // Helper method to check if a single hour is booked
   private isTimeBooked(hour: number): boolean {
     // First check if the time slot is marked as unavailable (includes Open Play blocking)
-    const timeSlot = this.timeSlots.find(slot => slot.hour === hour);
+    const timeSlot = this.timeSlots.find((slot) => slot.hour === hour);
     if (timeSlot && !timeSlot.available) {
       return true;
     }
 
     // Then check existing reservations
-    return this.existingReservations.some(res => {
-      const endTimeSlot = res.endTimeSlot || (res.timeSlot + (res.duration || 1));
-      return hour >= res.timeSlot && hour < endTimeSlot &&
-             (res.status === 'pending' || res.status === 'confirmed') &&
-             (!this.isEditMode || res._id !== this.editingReservationId);
+    return this.existingReservations.some((res) => {
+      const endTimeSlot = res.endTimeSlot || res.timeSlot + (res.duration || 1);
+      return (
+        hour >= res.timeSlot &&
+        hour < endTimeSlot &&
+        (res.status === 'pending' || res.status === 'confirmed') &&
+        (!this.isEditMode || res._id !== this.editingReservationId)
+      );
     });
   }
 
@@ -2252,4 +2504,3 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.showNotification('warning', title, message, 4000);
   }
 }
-

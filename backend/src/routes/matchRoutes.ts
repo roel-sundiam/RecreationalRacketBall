@@ -1,14 +1,19 @@
 import { Router } from 'express';
-import { 
-  recordMatchResult, 
+import {
+  recordMatchResult,
   getOpenPlayMatches,
   recordMatchResultValidation,
   getOpenPlayMatchesValidation
 } from '../controllers/matchController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 import { validationResult } from 'express-validator';
 
 const router = Router();
+
+// Apply auth and club context to all routes
+router.use(authenticateToken);
+router.use(extractClubContext);
 
 // Validation middleware
 const handleValidationErrors = (req: any, res: any, next: any): void => {

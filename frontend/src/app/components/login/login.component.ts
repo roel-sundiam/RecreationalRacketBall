@@ -191,11 +191,21 @@ import { AnalyticsService } from '../../services/analytics.service';
             <div class="help-text">
               <i class="pi pi-info-circle"></i>
               <span>New to Rich Town 2 Tennis Club?</span>
-              <button 
+              <button
                 type="button"
                 class="register-link"
                 (click)="goToRegister()">
                 Create your account here
+              </button>
+            </div>
+            <div class="help-text" style="margin-top: 12px;">
+              <i class="pi pi-building"></i>
+              <span>Want to register your club?</span>
+              <button
+                type="button"
+                class="register-link club-link"
+                (click)="goToClubRegistration()">
+                Register a Club
               </button>
             </div>
           </div>
@@ -229,6 +239,12 @@ export class LoginComponent implements OnInit {
     // Track navigation to register page
     this.analyticsService.trackButtonClick('Create Account', 'login', { destination: 'register' });
     this.router.navigate(['/register']);
+  }
+
+  goToClubRegistration(): void {
+    // Track navigation to club registration page
+    this.analyticsService.trackButtonClick('Register Club', 'login', { destination: 'register-club' });
+    this.router.navigate(['/register-club']);
   }
 
   clearError(): void {
@@ -284,15 +300,33 @@ export class LoginComponent implements OnInit {
           const username = this.loginForm.value.username;
           this.analyticsService.trackLogin(username);
 
+          // Check if user has any approved clubs (clubs array is in response.data)
+          const clubs = response.data?.clubs || response.clubs || [];
+          const hasApprovedClubs = clubs.some((c: any) => c.status === 'approved');
+          const user = response.data?.user || response.user;
+          const isSuperAdmin = user?.role === 'superadmin' || user?.platformRole === 'platform_admin';
+
+          console.log('Login response - clubs:', clubs);
+          console.log('Login response - hasApprovedClubs:', hasApprovedClubs);
+          console.log('Login response - isSuperAdmin:', isSuperAdmin);
+
           // Check for intended route
           const intendedRoute = this.authService.getIntendedRoute();
           if (intendedRoute) {
             console.log('Redirecting to intended route:', intendedRoute);
             this.authService.clearIntendedRoute();
             this.router.navigate([intendedRoute]);
+          } else if (isSuperAdmin && !hasApprovedClubs) {
+            // Superadmin with no clubs - redirect to platform admin page
+            console.log('Superadmin detected, redirecting to pending clubs...');
+            this.router.navigate(['/admin/pending-clubs']);
+          } else if (!hasApprovedClubs) {
+            // Regular user with no clubs - redirect to browse clubs
+            console.log('No approved clubs found, redirecting to browse clubs...');
+            this.router.navigate(['/browse-clubs']);
           } else {
-            // Success - no toast needed, just navigate to default
-            console.log('Navigating to calendar...');
+            // User has clubs - navigate to calendar
+            console.log('User has approved clubs, navigating to calendar...');
             this.router.navigate(['/calendar']);
           }
         },
@@ -302,9 +336,10 @@ export class LoginComponent implements OnInit {
           
           // Set custom error message for modern error display (no more toast)
           if (error.status === 401) {
-            this.loginError = 'Invalid username or password. Please check your credentials and try again.';
+            this.loginError = error.error?.error || 'Invalid username or password. Please check your credentials and try again.';
           } else if (error.status === 403) {
-            this.loginError = 'Your account is pending approval or missing membership fees payment.';
+            // Use backend's specific error message for better clarity
+            this.loginError = error.error?.error || 'Your account is pending approval. Please wait for administrator review.';
           } else {
             this.loginError = error.error?.error || 'Login failed. Please try again later.';
           }

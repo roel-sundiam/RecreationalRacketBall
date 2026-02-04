@@ -1,0 +1,442 @@
+// Modern, professional club registration styles
+.registration-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow-y: auto;
+}
+
+.registration-card {
+  max-width: 650px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+// Header styling
+mat-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 24px;
+  margin: 0 !important;
+  color: white;
+}
+
+mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px !important;
+  font-weight: 600;
+  color: white !important;
+  margin: 0 !important;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+mat-card-subtitle {
+  margin-top: 8px !important;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+mat-card-content {
+  padding: 24px !important;
+}
+
+// Step titles
+h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+h4 {
+  margin: 20px 0 12px 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+// FORCE SMALL INPUT TEXT - DIRECT TARGETING
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  font-size: 12px !important;
+
+  &::placeholder {
+    font-size: 12px !important;
+  }
+}
+
+// COMPACT MATERIAL FORM FIELDS - AGGRESSIVE OVERRIDES
+::ng-deep {
+  // Force smaller form fields
+  .mat-mdc-form-field,
+  mat-form-field {
+    width: 100% !important;
+    margin-bottom: 8px !important;
+    font-size: 12px !important;
+
+    // Make the wrapper compact
+    .mat-mdc-text-field-wrapper,
+    .mdc-text-field {
+      height: 42px !important;
+      padding-bottom: 0 !important;
+    }
+
+    // Compact the input container
+    .mat-mdc-form-field-infix {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+      min-height: 36px !important;
+      height: 36px !important;
+    }
+
+    // Smaller input text
+    .mat-mdc-input-element,
+    input.mat-mdc-input-element,
+    input[matInput] {
+      font-size: 12px !important;
+      padding: 6px 12px !important;
+      height: 36px !important;
+      line-height: 1.4 !important;
+
+      // Placeholder text
+      &::placeholder {
+        font-size: 12px !important;
+        color: #a0aec0 !important;
+      }
+
+      &::-webkit-input-placeholder {
+        font-size: 12px !important;
+        color: #a0aec0 !important;
+      }
+
+      &::-moz-placeholder {
+        font-size: 12px !important;
+        color: #a0aec0 !important;
+      }
+
+      &:-ms-input-placeholder {
+        font-size: 12px !important;
+        color: #a0aec0 !important;
+      }
+    }
+
+    // Compact label
+    .mat-mdc-floating-label,
+    .mdc-floating-label {
+      font-size: 12px !important;
+      top: 18px !important;
+    }
+
+    // Adjust subscript (errors/hints)
+    .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 2px !important;
+      font-size: 11px !important;
+      min-height: 16px !important;
+    }
+
+    // Outline styling
+    &.mat-form-field-appearance-outline {
+      .mat-mdc-notched-outline,
+      .mdc-notched-outline {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: #cbd5e0 !important;
+          border-width: 1px !important;
+        }
+      }
+
+      &:hover:not(.mat-focused) .mat-mdc-notched-outline,
+      &:hover:not(.mat-focused) .mdc-notched-outline {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: #667eea !important;
+        }
+      }
+
+      &.mat-focused .mat-mdc-notched-outline,
+      &.mat-focused .mdc-notched-outline {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: #667eea !important;
+          border-width: 2px !important;
+        }
+      }
+    }
+  }
+
+  // Compact prefix icons
+  mat-icon[matPrefix],
+  .mat-mdc-form-field-icon-prefix mat-icon {
+    margin-right: 8px !important;
+    color: #718096 !important;
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  // Compact select
+  mat-select,
+  .mat-mdc-select {
+    font-size: 12px !important;
+
+    .mat-mdc-select-trigger {
+      height: 36px !important;
+    }
+
+    .mat-mdc-select-value,
+    .mat-mdc-select-value-text {
+      font-size: 12px !important;
+    }
+
+    .mat-mdc-select-placeholder {
+      font-size: 12px !important;
+      color: #a0aec0 !important;
+    }
+  }
+
+  // Stepper customization
+  .mat-stepper-horizontal {
+    margin-top: 0 !important;
+    background: transparent !important;
+  }
+
+  .mat-step-header {
+    padding: 12px 8px !important;
+    height: auto !important;
+
+    .mat-step-icon,
+    .mat-step-icon-state-number {
+      background-color: #cbd5e0 !important;
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 13px !important;
+
+      &.mat-step-icon-selected {
+        background-color: #667eea !important;
+      }
+
+      &.mat-step-icon-state-done {
+        background-color: #48bb78 !important;
+      }
+    }
+
+    .mat-step-label {
+      font-size: 12px !important;
+      font-weight: 500 !important;
+
+      &.mat-step-label-active {
+        color: #667eea !important;
+      }
+    }
+
+    .mat-step-text-label {
+      font-size: 12px !important;
+    }
+  }
+
+  .mat-horizontal-stepper-header-container {
+    margin-bottom: 20px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mat-horizontal-content-container {
+    padding: 0 !important;
+  }
+
+  .mat-step-content {
+    overflow: visible !important;
+  }
+}
+
+// Grid layouts
+.full-width {
+  width: 100%;
+}
+
+.color-row,
+.address-row,
+.coordinates-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+// Buttons
+.location-button {
+  margin-bottom: 12px;
+  height: 38px;
+  font-size: 12px;
+  border: 2px dashed #cbd5e0;
+  color: #4a5568;
+
+  &:hover {
+    border-color: #667eea;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+  }
+
+  mat-icon {
+    margin-right: 8px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+
+  button {
+    height: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0 20px;
+    border-radius: 6px;
+
+    &[color="primary"] {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+
+      &:hover:not([disabled]) {
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+      }
+
+      &[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    &:not([color]) {
+      color: #4a5568;
+
+      &:hover {
+        background: #f7fafc;
+      }
+    }
+  }
+}
+
+// Loading spinner in button
+::ng-deep .button-row button mat-spinner {
+  display: inline-block !important;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .registration-container {
+    padding: 16px 12px;
+    align-items: flex-start;
+  }
+
+  .registration-card {
+    margin: 10px 0;
+    border-radius: 8px;
+  }
+
+  mat-card-header {
+    padding: 20px 16px;
+  }
+
+  mat-card-title {
+    font-size: 20px !important;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  mat-card-subtitle {
+    font-size: 13px;
+  }
+
+  mat-card-content {
+    padding: 20px 16px !important;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  .color-row,
+  .address-row,
+  .coordinates-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .button-row {
+    flex-direction: column-reverse;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  ::ng-deep {
+    .mat-step-header {
+      padding: 10px 4px !important;
+
+      .mat-step-icon {
+        width: 24px !important;
+        height: 24px !important;
+      }
+
+      .mat-step-label {
+        font-size: 11px !important;
+      }
+    }
+
+    .mat-horizontal-stepper-header-container {
+      margin-bottom: 16px !important;
+    }
+  }
+}
+
+// Extra small devices
+@media (max-width: 480px) {
+  mat-card-header {
+    padding: 16px 12px;
+  }
+
+  mat-card-content {
+    padding: 16px 12px !important;
+  }
+}

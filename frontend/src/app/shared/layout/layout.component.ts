@@ -10,7 +10,6 @@ import { PaymentAlertsComponent } from '../../components/payment-alerts/payment-
 import { PWAInstallPromptComponent } from '../../components/pwa-install-prompt/pwa-install-prompt.component';
 import { UpdateBannerComponent } from '../../components/update-banner/update-banner.component';
 import { ChatWindowComponent } from '../../components/chat-window/chat-window.component';
-import { ResurfacingBannerComponent } from '../../components/resurfacing-banner/resurfacing-banner.component';
 import { ImpersonationBannerComponent } from '../../components/impersonation-banner/impersonation-banner.component';
 import { ActivityNotificationComponent } from '../activity-notification/activity-notification.component';
 
@@ -25,17 +24,13 @@ import { ActivityNotificationComponent } from '../activity-notification/activity
     PWAInstallPromptComponent,
     UpdateBannerComponent,
     ChatWindowComponent,
-    ResurfacingBannerComponent,
     ImpersonationBannerComponent,
     ActivityNotificationComponent
   ],
   template: `
     <div class="app-layout" [class.authenticated]="isAuthenticated" [class.loading]="isAuthLoading">
-      <!-- Global Toolbar (only on authenticated pages) -->
-      <app-toolbar *ngIf="isAuthenticated"></app-toolbar>
-
-      <!-- Resurfacing Banner (only on authenticated pages) -->
-      <app-resurfacing-banner *ngIf="isAuthenticated && !isAuthLoading"></app-resurfacing-banner>
+      <!-- Global Toolbar (only on authenticated pages, hidden on specific pages) -->
+      <app-toolbar *ngIf="isAuthenticated && !hideToolbar"></app-toolbar>
 
       <!-- Impersonation Banner (only on authenticated pages) -->
       <app-impersonation-banner *ngIf="isAuthenticated"></app-impersonation-banner>
@@ -43,8 +38,8 @@ import { ActivityNotificationComponent } from '../activity-notification/activity
       <!-- Update Banner (always available) -->
       <app-update-banner></app-update-banner>
 
-      <!-- Payment Alerts (only on authenticated pages and not loading) -->
-      <app-payment-alerts *ngIf="isAuthenticated && !isAuthLoading"></app-payment-alerts>
+      <!-- Payment Alerts (only when user has selected a club) -->
+      <app-payment-alerts *ngIf="isAuthenticated && !isAuthLoading && hasSelectedClub"></app-payment-alerts>
 
       <!-- Page Content -->
       <div class="page-container" [class.with-toolbar]="isAuthenticated">
@@ -54,8 +49,8 @@ import { ActivityNotificationComponent } from '../activity-notification/activity
       <!-- PWA Install Prompt (always available) -->
       <app-pwa-install-prompt></app-pwa-install-prompt>
 
-      <!-- Chat Window (only on authenticated pages) -->
-      <app-chat-window *ngIf="isAuthenticated && !isAuthLoading"></app-chat-window>
+      <!-- Chat Window (only when user has selected a club) -->
+      <app-chat-window *ngIf="isAuthenticated && !isAuthLoading && hasSelectedClub"></app-chat-window>
 
       <!-- Activity Notifications (only for admins) -->
       <app-activity-notification *ngIf="isAuthenticated"></app-activity-notification>
@@ -66,6 +61,8 @@ import { ActivityNotificationComponent } from '../activity-notification/activity
 export class LayoutComponent implements OnInit {
   isAuthenticated = false;
   isAuthLoading = true;
+  hasSelectedClub = false;
+  hideToolbar = false;
 
   constructor(
     private authService: AuthService,
@@ -79,12 +76,28 @@ export class LayoutComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Monitor route changes to hide/show toolbar on specific pages
+    this.router.events.subscribe(() => {
+      const currentUrl = this.router.url;
+      this.hideToolbar = currentUrl.includes('/resurfacing-contributions');
+    });
+
     // Subscribe to authentication state
     this.authService.currentUser$.subscribe(user => {
       this.isAuthenticated = !!user;
 
-      // Load active announcements when user logs in
-      if (user && !this.isAuthLoading) {
+      // Load active announcements when user logs in AND has a selected club
+      if (user && !this.isAuthLoading && this.hasSelectedClub) {
+        this.loadActiveAnnouncements();
+      }
+    });
+
+    // Subscribe to selected club
+    this.authService.selectedClub$.subscribe(club => {
+      this.hasSelectedClub = !!club;
+
+      // Load announcements when club is selected
+      if (club && this.isAuthenticated && !this.isAuthLoading) {
         this.loadActiveAnnouncements();
       }
     });
@@ -93,15 +106,15 @@ export class LayoutComponent implements OnInit {
     this.authService.isLoading$.subscribe(isLoading => {
       this.isAuthLoading = isLoading;
 
-      // Load announcements when auth loading completes and user is authenticated
-      if (!isLoading && this.isAuthenticated) {
+      // Load announcements when auth loading completes, user is authenticated, AND has selected club
+      if (!isLoading && this.isAuthenticated && this.hasSelectedClub) {
         this.loadActiveAnnouncements();
       }
     });
 
     // Subscribe to new announcements from WebSocket
     this.announcementService.newAnnouncement$.subscribe(announcement => {
-      if (announcement && this.isAuthenticated) {
+      if (announcement && this.isAuthenticated && this.hasSelectedClub) {
         console.log('📢 Layout: Received new announcement:', announcement.title);
         this.modalManager.showAnnouncementModal(announcement);
       }
@@ -111,8 +124,15 @@ export class LayoutComponent implements OnInit {
   /**
    * Load active announcements (not dismissed by current user)
    * This handles the case where user was offline when announcements were created
+   * Only loads if user has a selected club
    */
   private loadActiveAnnouncements(): void {
+    // Don't load if no club is selected
+    if (!this.hasSelectedClub) {
+      console.log('📢 Layout: Skipping announcements - no club selected');
+      return;
+    }
+
     this.announcementService.loadActiveAnnouncements().subscribe({
       next: (response) => {
         if (response.success && response.data && Array.isArray(response.data)) {

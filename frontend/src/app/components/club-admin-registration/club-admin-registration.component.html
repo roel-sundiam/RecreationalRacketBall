@@ -1,0 +1,606 @@
+<div class="page-container">
+  <!-- Modern Header Section -->
+  <div class="modern-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <mat-icon class="club-logo">business</mat-icon>
+        <div class="club-info">
+          <h1 class="club-title">Register Your Club</h1>
+          <p class="club-tagline">Create your admin account and setup your facility</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="page-content">
+    <div class="content-wrapper">
+      <!-- Welcome Section -->
+      <div class="welcome-section">
+        <h2 class="welcome-title">
+          <mat-icon>sports_tennis</mat-icon>
+          Get Started
+        </h2>
+        <p class="welcome-subtitle">
+          Register your facility and start managing your courts and members
+        </p>
+      </div>
+
+      <!-- Registration Card -->
+      <div class="action-card registration-form-card">
+        <!-- Info Section -->
+        <div class="info-section">
+          <mat-icon class="info-icon">info</mat-icon>
+          <div class="info-content">
+            <h3>Three Simple Steps</h3>
+            <ul>
+              <li>Create your admin account securely</li>
+              <li>Configure your club information and details</li>
+              <li>Add your location and contact information</li>
+            </ul>
+          </div>
+        </div>
+
+        <mat-stepper [linear]="true" #stepper class="modern-stepper">
+          <!-- Step 1: User Account -->
+          <mat-step [stepControl]="userForm">
+            <form [formGroup]="userForm">
+              <ng-template matStepLabel>Your Account</ng-template>
+
+              <h3>Create Your Admin Account</h3>
+
+              <!-- Username -->
+              <div class="form-group">
+                <label class="form-label">Username *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">person</mat-icon>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [class.error]="
+                      userForm.get('username')?.invalid && userForm.get('username')?.touched
+                    "
+                    formControlName="username"
+                    placeholder="Enter your username"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('username')?.hasError('required') &&
+                    userForm.get('username')?.touched
+                  "
+                >
+                  Username is required
+                </span>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('username')?.hasError('minlength') &&
+                    userForm.get('username')?.touched
+                  "
+                >
+                  Username must be at least 3 characters
+                </span>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('username')?.hasError('pattern') &&
+                    userForm.get('username')?.touched
+                  "
+                >
+                  Username can only contain letters, numbers, and underscores
+                </span>
+              </div>
+
+              <!-- Full Name -->
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">badge</mat-icon>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [class.error]="
+                      userForm.get('fullName')?.invalid && userForm.get('fullName')?.touched
+                    "
+                    formControlName="fullName"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('fullName')?.hasError('required') &&
+                    userForm.get('fullName')?.touched
+                  "
+                >
+                  Full name is required
+                </span>
+              </div>
+
+              <!-- Email -->
+              <div class="form-group">
+                <label class="form-label">Email *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">email</mat-icon>
+                  <input
+                    type="email"
+                    class="form-input"
+                    [class.error]="userForm.get('email')?.invalid && userForm.get('email')?.touched"
+                    formControlName="email"
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('email')?.hasError('required') && userForm.get('email')?.touched
+                  "
+                >
+                  Email is required
+                </span>
+                <span
+                  class="error-message"
+                  *ngIf="userForm.get('email')?.hasError('email') && userForm.get('email')?.touched"
+                >
+                  Please enter a valid email
+                </span>
+              </div>
+
+              <!-- Contact Phone -->
+              <div class="form-group">
+                <label class="form-label">Contact Phone</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">phone</mat-icon>
+                  <input
+                    type="text"
+                    class="form-input"
+                    formControlName="contactPhone"
+                    placeholder="+63 123 456 7890"
+                  />
+                </div>
+              </div>
+
+              <!-- Gender -->
+              <div class="form-group">
+                <label class="form-label">Gender *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">wc</mat-icon>
+                  <select
+                    class="form-select"
+                    [class.error]="
+                      userForm.get('gender')?.invalid && userForm.get('gender')?.touched
+                    "
+                    formControlName="gender"
+                  >
+                    <option value="">Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('gender')?.hasError('required') && userForm.get('gender')?.touched
+                  "
+                >
+                  Gender is required
+                </span>
+              </div>
+
+              <!-- Password -->
+              <div class="form-group">
+                <label class="form-label">Password *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">lock</mat-icon>
+                  <input
+                    type="password"
+                    class="form-input"
+                    [class.error]="
+                      userForm.get('password')?.invalid && userForm.get('password')?.touched
+                    "
+                    formControlName="password"
+                    placeholder="Enter password"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('password')?.hasError('required') &&
+                    userForm.get('password')?.touched
+                  "
+                >
+                  Password is required
+                </span>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.get('password')?.hasError('minlength') &&
+                    userForm.get('password')?.touched
+                  "
+                >
+                  Password must be at least 6 characters
+                </span>
+              </div>
+
+              <!-- Confirm Password -->
+              <div class="form-group">
+                <label class="form-label">Confirm Password *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">lock_outline</mat-icon>
+                  <input
+                    type="password"
+                    class="form-input"
+                    [class.error]="
+                      userForm.hasError('passwordMismatch') &&
+                      userForm.get('confirmPassword')?.touched
+                    "
+                    formControlName="confirmPassword"
+                    placeholder="Confirm password"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    userForm.hasError('passwordMismatch') &&
+                    userForm.get('confirmPassword')?.touched
+                  "
+                >
+                  Passwords do not match
+                </span>
+              </div>
+
+              <div class="button-row">
+                <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
+                <button type="button" class="btn-primary" matStepperNext>Next</button>
+              </div>
+            </form>
+          </mat-step>
+
+          <!-- Step 2: Club Information -->
+          <mat-step [stepControl]="clubInfoForm">
+            <form [formGroup]="clubInfoForm">
+              <ng-template matStepLabel>Club Info</ng-template>
+
+              <h3>Club Information</h3>
+
+              <!-- Club Name -->
+              <div class="form-group">
+                <label class="form-label">Club Name *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">business</mat-icon>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [class.error]="
+                      clubInfoForm.get('clubName')?.invalid && clubInfoForm.get('clubName')?.touched
+                    "
+                    formControlName="clubName"
+                    placeholder="My Tennis Club"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    clubInfoForm.get('clubName')?.hasError('required') &&
+                    clubInfoForm.get('clubName')?.touched
+                  "
+                >
+                  Club name is required
+                </span>
+              </div>
+
+              <!-- Club Slug -->
+              <div class="form-group">
+                <label class="form-label">Club Slug (URL-friendly name)</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">link</mat-icon>
+                  <input
+                    type="text"
+                    class="form-input"
+                    formControlName="slug"
+                    placeholder="my-tennis-club"
+                  />
+                </div>
+                <small style="font-size: 11px; color: #718096">Auto-generated from club name</small>
+              </div>
+
+              <!-- Sport -->
+              <div class="form-group">
+                <label class="form-label">Sport *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">sports_tennis</mat-icon>
+                  <select
+                    class="form-select"
+                    [class.error]="
+                      clubInfoForm.get('sport')?.invalid && clubInfoForm.get('sport')?.touched
+                    "
+                    formControlName="sport"
+                  >
+                    <option value="">Select sport</option>
+                    <option *ngFor="let sport of sports" [value]="sport">
+                      {{ sport }}
+                    </option>
+                  </select>
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    clubInfoForm.get('sport')?.hasError('required') &&
+                    clubInfoForm.get('sport')?.touched
+                  "
+                >
+                  Sport is required
+                </span>
+              </div>
+
+              <!-- Club Contact Email -->
+              <div class="form-group">
+                <label class="form-label">Club Contact Email *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">email</mat-icon>
+                  <input
+                    type="email"
+                    class="form-input"
+                    [class.error]="
+                      clubInfoForm.get('contactEmail')?.invalid &&
+                      clubInfoForm.get('contactEmail')?.touched
+                    "
+                    formControlName="contactEmail"
+                    placeholder="club@example.com"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    clubInfoForm.get('contactEmail')?.hasError('required') &&
+                    clubInfoForm.get('contactEmail')?.touched
+                  "
+                >
+                  Contact email is required
+                </span>
+              </div>
+
+              <!-- Club Contact Phone -->
+              <div class="form-group">
+                <label class="form-label">Club Contact Phone *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">phone</mat-icon>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [class.error]="
+                      clubInfoForm.get('contactPhone')?.invalid &&
+                      clubInfoForm.get('contactPhone')?.touched
+                    "
+                    formControlName="contactPhone"
+                    placeholder="+63 123 456 7890"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    clubInfoForm.get('contactPhone')?.hasError('required') &&
+                    clubInfoForm.get('contactPhone')?.touched
+                  "
+                >
+                  Contact phone is required
+                </span>
+              </div>
+
+              <!-- Colors -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Primary Color</label>
+                  <input type="color" class="form-input no-icon" formControlName="primaryColor" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Accent Color</label>
+                  <input type="color" class="form-input no-icon" formControlName="accentColor" />
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button type="button" class="btn-secondary" matStepperPrevious>Back</button>
+                <button type="button" class="btn-primary" matStepperNext>Next</button>
+              </div>
+            </form>
+          </mat-step>
+
+          <!-- Step 3: Address -->
+          <mat-step [stepControl]="addressForm">
+            <form [formGroup]="addressForm">
+              <ng-template matStepLabel>Address</ng-template>
+
+              <h3>Club Address</h3>
+
+              <!-- Street Address -->
+              <div class="form-group">
+                <label class="form-label">Street Address *</label>
+                <div class="input-wrapper">
+                  <mat-icon class="input-icon">home</mat-icon>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [class.error]="
+                      addressForm.get('street')?.invalid && addressForm.get('street')?.touched
+                    "
+                    formControlName="street"
+                    placeholder="123 Main Street"
+                  />
+                </div>
+                <span
+                  class="error-message"
+                  *ngIf="
+                    addressForm.get('street')?.hasError('required') &&
+                    addressForm.get('street')?.touched
+                  "
+                >
+                  Street address is required
+                </span>
+              </div>
+
+              <!-- City & Province -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">City *</label>
+                  <input
+                    type="text"
+                    class="form-input no-icon"
+                    [class.error]="
+                      addressForm.get('city')?.invalid && addressForm.get('city')?.touched
+                    "
+                    formControlName="city"
+                    placeholder="Manila"
+                  />
+                  <span
+                    class="error-message"
+                    *ngIf="
+                      addressForm.get('city')?.hasError('required') &&
+                      addressForm.get('city')?.touched
+                    "
+                  >
+                    City is required
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Province *</label>
+                  <input
+                    type="text"
+                    class="form-input no-icon"
+                    [class.error]="
+                      addressForm.get('province')?.invalid && addressForm.get('province')?.touched
+                    "
+                    formControlName="province"
+                    placeholder="Metro Manila"
+                  />
+                  <span
+                    class="error-message"
+                    *ngIf="
+                      addressForm.get('province')?.hasError('required') &&
+                      addressForm.get('province')?.touched
+                    "
+                  >
+                    Province is required
+                  </span>
+                </div>
+              </div>
+
+              <!-- Postal Code & Country -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Postal Code *</label>
+                  <input
+                    type="text"
+                    class="form-input no-icon"
+                    [class.error]="
+                      addressForm.get('postalCode')?.invalid &&
+                      addressForm.get('postalCode')?.touched
+                    "
+                    formControlName="postalCode"
+                    placeholder="1000"
+                  />
+                  <span
+                    class="error-message"
+                    *ngIf="
+                      addressForm.get('postalCode')?.hasError('required') &&
+                      addressForm.get('postalCode')?.touched
+                    "
+                  >
+                    Postal code is required
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Country *</label>
+                  <select class="form-select no-icon" formControlName="country">
+                    <option *ngFor="let country of countries" [value]="country">
+                      {{ country }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <h4>Location Coordinates</h4>
+
+              <button type="button" class="location-button" (click)="getCurrentLocation()">
+                <mat-icon>my_location</mat-icon>
+                <span>Get Current Location</span>
+              </button>
+
+              <!-- Coordinates -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Latitude *</label>
+                  <input
+                    type="number"
+                    class="form-input no-icon"
+                    [class.error]="
+                      addressForm.get('latitude')?.invalid && addressForm.get('latitude')?.touched
+                    "
+                    formControlName="latitude"
+                    placeholder="14.5995"
+                    step="0.000001"
+                  />
+                  <span
+                    class="error-message"
+                    *ngIf="
+                      addressForm.get('latitude')?.hasError('required') &&
+                      addressForm.get('latitude')?.touched
+                    "
+                  >
+                    Latitude is required
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Longitude *</label>
+                  <input
+                    type="number"
+                    class="form-input no-icon"
+                    [class.error]="
+                      addressForm.get('longitude')?.invalid && addressForm.get('longitude')?.touched
+                    "
+                    formControlName="longitude"
+                    placeholder="120.9842"
+                    step="0.000001"
+                  />
+                  <span
+                    class="error-message"
+                    *ngIf="
+                      addressForm.get('longitude')?.hasError('required') &&
+                      addressForm.get('longitude')?.touched
+                    "
+                  >
+                    Longitude is required
+                  </span>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button type="button" class="btn-secondary" matStepperPrevious>
+                  <mat-icon>arrow_back</mat-icon>
+                  Back
+                </button>
+                <button type="button" class="btn-primary" (click)="register()" [disabled]="loading">
+                  <mat-spinner
+                    *ngIf="loading"
+                    diameter="16"
+                    style="display: inline-block; margin-right: 8px; vertical-align: middle"
+                  ></mat-spinner>
+                  <mat-icon *ngIf="!loading">business</mat-icon>
+                  <span *ngIf="!loading">Register Club</span>
+                  <span *ngIf="loading">Registering...</span>
+                </button>
+              </div>
+            </form>
+          </mat-step>
+        </mat-stepper>
+      </div>
+    </div>
+  </div>
+</div>

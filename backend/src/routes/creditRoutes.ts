@@ -11,13 +11,15 @@ import {
   recordCreditDeposit
 } from '../controllers/creditController';
 import { authenticateToken, requireApprovedUser, requireAdmin, requireFinancialAccess } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 import { validateRequest } from '../middleware/validation';
 import { body, query } from 'express-validator';
 
 const router = express.Router();
 
-// Apply auth middleware to all routes
+// Apply auth and club context middleware to all routes
 router.use(authenticateToken);
+router.use(extractClubContext);
 
 // Get current user's credit balance
 router.get('/balance', 
@@ -66,8 +68,8 @@ router.get('/stats',
   getCreditStats
 );
 
-// Admin routes - Allow financial access (treasurer, admin, superadmin)
-router.use(requireFinancialAccess);
+// Admin routes - Require club admin or treasurer role
+router.use(requireClubRole(['admin', 'treasurer']));
 
 // Get all users' credit balances (admin only)
 router.get('/admin/all-balances',

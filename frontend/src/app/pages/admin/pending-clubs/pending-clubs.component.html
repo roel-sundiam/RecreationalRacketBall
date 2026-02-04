@@ -1,0 +1,97 @@
+<div class="pending-clubs-page">
+  <div class="modern-header">
+    <div class="header-content">
+      <div class="title-section">
+        <div class="icon-wrapper">
+          <mat-icon>pending_actions</mat-icon>
+        </div>
+        <div class="title-group">
+          <h1>Pending Club Registrations</h1>
+          <p>Review and approve new club registrations from owners</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-badge">
+          <span class="stat-value">{{ pendingClubs.length }}</span>
+          <span class="stat-label">Pending</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <mat-icon>assignment</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number">{{ pendingClubs.length }}</span>
+          <span class="stat-text">Total Pending</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon warning">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number">{{ pendingClubs.length }}</span>
+          <span class="stat-text">Awaiting Review</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading pending clubs...</p>
+      </div>
+
+      <div *ngIf="!loading && pendingClubs.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <h3>No pending registrations</h3>
+        <p>All club registration requests have been reviewed.</p>
+      </div>
+
+      <div *ngIf="!loading && pendingClubs.length > 0" class="club-list">
+        <div class="club-card" *ngFor="let club of pendingClubs">
+          <div class="club-header">
+            <div class="club-info">
+              <h3>{{ club.name }}</h3>
+              <span class="sport-badge">{{ club.sport || 'N/A' }}</span>
+            </div>
+            <span class="request-date">{{ club.createdAt | date:'mediumDate' }}</span>
+          </div>
+
+          <div class="club-details">
+            <div class="detail-item">
+              <mat-icon>person</mat-icon>
+              <span>{{ club.ownerId?.fullName || club.ownerId?.username }}</span>
+            </div>
+            <div class="detail-item">
+              <mat-icon>email</mat-icon>
+              <span>{{ club.contactEmail }}</span>
+            </div>
+            <div class="detail-item" *ngIf="club.contactPhone">
+              <mat-icon>phone</mat-icon>
+              <span>{{ club.contactPhone }}</span>
+            </div>
+          </div>
+
+          <div class="club-actions">
+            <button class="btn approve" (click)="approveClub(club)">
+              <mat-icon>check</mat-icon>
+              Approve
+            </button>
+            <button class="btn reject" (click)="rejectClub(club)">
+              <mat-icon>close</mat-icon>
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

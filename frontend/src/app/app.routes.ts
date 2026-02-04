@@ -36,168 +36,207 @@ import { ResurfacingContributionsComponent } from './components/resurfacing-cont
 import { GalleryComponent } from './components/gallery/gallery.component';
 import { AdminGalleryUploadComponent } from './components/admin-gallery-upload/admin-gallery-upload.component';
 import { AnnouncementManagementComponent } from './pages/admin/announcement-management/announcement-management.component';
-import { authGuard, loginGuard, adminGuard, superadminGuard, treasurerGuard } from './guards/auth.guard';
+import { ClubManagementComponent } from './pages/admin/club-management/club-management.component';
+import { ClubSettingsComponent } from './pages/admin/club-settings/club-settings.component';
+import { PlatformOverviewComponent } from './pages/admin/platform-overview/platform-overview';
+import { PendingClubsComponent } from './pages/admin/pending-clubs/pending-clubs.component';
+import { ClubSelectorComponent } from './components/club-selector/club-selector.component';
+import { ClubRegistrationComponent } from './components/club-registration/club-registration.component';
+import { ClubAdminRegistrationComponent } from './components/club-admin-registration/club-admin-registration.component';
+import { BrowseClubsComponent } from './components/browse-clubs/browse-clubs.component';
+import { MyMembershipRequestsComponent } from './components/my-membership-requests/my-membership-requests.component';
+import { authGuard, loginGuard, adminGuard, superadminGuard, treasurerGuard, clubSelectionGuard, clubAdminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/calendar', pathMatch: 'full' },
-  { 
-    path: 'login', 
+  {
+    path: 'login',
     component: LoginComponent,
     canActivate: [loginGuard]
   },
-  { 
-    path: 'register', 
+  {
+    path: 'register',
     component: RegisterComponent,
     canActivate: [loginGuard]
   },
   {
+    path: 'register-club',
+    component: ClubAdminRegistrationComponent,
+    canActivate: [loginGuard] // Redirect if already logged in
+  },
+  // Club selection and registration (auth required but no club selection required)
+  {
+    path: 'club-selector',
+    component: ClubSelectorComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'club-registration',
+    component: ClubRegistrationComponent,
+    canActivate: [authGuard] // Any authenticated user can request club registration
+  },
+  {
+    path: 'browse-clubs',
+    component: BrowseClubsComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'my-requests',
+    component: MyMembershipRequestsComponent,
+    canActivate: [authGuard]
+  },
+  {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Calendar view (new landing page)
   {
     path: 'calendar',
     component: CalendarViewComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Court reservation
-  { 
-    path: 'reservations', 
+  {
+    path: 'reservations',
     component: ReservationsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
-  { 
-    path: 'my-reservations', 
+  {
+    path: 'my-reservations',
     component: MyReservationsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Payment management
   {
     path: 'payments',
     component: PaymentsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Admin credit management
-  { 
-    path: 'admin/credits', 
+  {
+    path: 'admin/credits',
     component: AdminCreditManagementComponent,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [authGuard, clubSelectionGuard, clubAdminGuard]
   },
   // Credit management
-  { 
-    path: 'credits', 
+  {
+    path: 'credits',
     component: CreditDashboardComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Credit top-up
-  { 
-    path: 'credit-topup', 
+  {
+    path: 'credit-topup',
     component: CreditTopupComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Credit history
-  { 
-    path: 'credit-history', 
+  {
+    path: 'credit-history',
     component: CreditHistoryComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Member directory
-  { 
-    path: 'members', 
+  {
+    path: 'members',
     component: MembersDirectoryComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
-  { 
-    path: 'members/:id', 
+  {
+    path: 'members/:id',
     component: MemberProfileComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Admin reports
   {
     path: 'admin/reports',
     component: CourtReceiptsReportComponent,
-    canActivate: [authGuard, treasurerGuard]
+    canActivate: [authGuard, clubSelectionGuard, treasurerGuard]
   },
   // Polls and voting
-  { 
-    path: 'polls', 
+  {
+    path: 'polls',
     component: PollsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Rankings and leaderboard
-  { 
-    path: 'rankings', 
+  {
+    path: 'rankings',
     component: RankingsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Weather forecast
-  { 
-    path: 'weather', 
+  {
+    path: 'weather',
     component: WeatherComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Suggestions and complaints
-  { 
-    path: 'suggestions', 
+  {
+    path: 'suggestions',
     component: SuggestionsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Rules and Regulations
   {
     path: 'rules',
     component: RulesAndRegulationsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Gallery (members only viewing, superadmin upload)
   {
     path: 'gallery',
     component: GalleryComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   {
     path: 'admin/gallery-upload',
     component: AdminGalleryUploadComponent,
-    canActivate: [authGuard, superadminGuard]
+    canActivate: [authGuard, clubSelectionGuard, superadminGuard]
   },
   // Court Usage Report
-  { 
-    path: 'court-usage-report', 
+  {
+    path: 'court-usage-report',
     component: CourtUsageReportComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, clubSelectionGuard]
   },
   // Financial Report (Treasurer/Admin/SuperAdmin)
   {
     path: 'admin/financial-report',
     component: FinancialReportComponent,
-    canActivate: [authGuard, treasurerGuard]
+    canActivate: [authGuard, clubSelectionGuard, treasurerGuard]
   },
   // Expense Report (Admin only)
-  { 
-    path: 'admin/expense-report', 
+  {
+    path: 'admin/expense-report',
     component: ExpenseReportComponent,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [authGuard, clubSelectionGuard, clubAdminGuard]
   },
-  { 
-    path: 'profile', 
+  {
+    path: 'profile',
     component: ProfileComponent,
     canActivate: [authGuard]
   },
-  { 
-    path: 'admin/members', 
+  {
+    path: 'admin/members',
     component: AdminMemberManagementComponent,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [authGuard, clubSelectionGuard, clubAdminGuard]
   },
-  { path: 'admin/polls', component: AdminPollManagementComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/suggestions', component: AdminSuggestionsComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/analytics', component: AdminAnalyticsComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/manual-court-usage', component: AdminManualCourtUsageComponent, canActivate: [authGuard, superadminGuard] },
-  { path: 'admin/block-court', component: AdminBlockCourtComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/membership-payments', component: AdminMembershipPaymentsComponent, canActivate: [authGuard, treasurerGuard] },
-  { path: 'admin/tournaments', component: TournamentManagementComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/payments', component: AdminPaymentManagementComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/resurfacing-contributions', component: AdminResurfacingContributionsComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'admin/announcements', component: AnnouncementManagementComponent, canActivate: [authGuard, superadminGuard] },
-  { path: 'resurfacing-contributions', component: ResurfacingContributionsComponent, canActivate: [authGuard] },
+  { path: 'admin/polls', component: AdminPollManagementComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/suggestions', component: AdminSuggestionsComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/analytics', component: AdminAnalyticsComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/manual-court-usage', component: AdminManualCourtUsageComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/block-court', component: AdminBlockCourtComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/membership-payments', component: AdminMembershipPaymentsComponent, canActivate: [authGuard, clubSelectionGuard, treasurerGuard] },
+  { path: 'admin/tournaments', component: TournamentManagementComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/payments', component: AdminPaymentManagementComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/resurfacing-contributions', component: AdminResurfacingContributionsComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/announcements', component: AnnouncementManagementComponent, canActivate: [authGuard, clubSelectionGuard, superadminGuard] },
+  { path: 'admin/club-settings', component: ClubSettingsComponent, canActivate: [authGuard, clubSelectionGuard, clubAdminGuard] },
+  { path: 'admin/clubs', component: ClubManagementComponent, canActivate: [authGuard, superadminGuard] },
+  { path: 'admin/platform-overview', component: PlatformOverviewComponent, canActivate: [authGuard, superadminGuard] },
+  { path: 'admin/pending-clubs', component: PendingClubsComponent, canActivate: [authGuard, superadminGuard] },
+  { path: 'resurfacing-contributions', component: ResurfacingContributionsComponent, canActivate: [authGuard, clubSelectionGuard] },
   { path: '**', redirectTo: '/calendar' }
 ];

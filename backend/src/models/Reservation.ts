@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { CourtReservation as ICourtReservation } from '../types/index';
+import { PricingService } from '../services/pricingService';
 
 export interface IReservationDocument extends Omit<ICourtReservation, '_id'>, Document {
   blockReason?: 'maintenance' | 'private_event' | 'weather' | 'other';
@@ -7,6 +8,12 @@ export interface IReservationDocument extends Omit<ICourtReservation, '_id'>, Do
 }
 
 const reservationSchema = new Schema<IReservationDocument>({
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: [true, 'Club ID is required'],
+    index: true
+  },
   userId: {
     type: String,
     ref: 'User',
@@ -28,8 +35,9 @@ const reservationSchema = new Schema<IReservationDocument>({
   timeSlot: {
     type: Number,
     required: [true, 'Time slot is required'],
-    min: [5, 'Court operates from 5 AM'],
-    max: [22, 'Court operates until 10 PM']
+    min: [0, 'Time slot must be between 0 and 23'],
+    max: [23, 'Time slot must be between 0 and 23']
+    // Note: Operating hours validation happens in pre-save hook using club-specific settings
   },
   players: [{
     type: Schema.Types.Mixed, // Support both String (old format) and Object (new format with member/guest tracking)
@@ -141,18 +149,18 @@ const reservationSchema = new Schema<IReservationDocument>({
   toObject: { virtuals: true }
 });
 
-// Compound indexes for better query performance
-reservationSchema.index({ userId: 1, date: -1 });
-reservationSchema.index({ date: 1, timeSlot: 1, endTimeSlot: 1 }); // Multi-hour support
-reservationSchema.index({ status: 1, paymentStatus: 1 });
-reservationSchema.index({ date: 1, status: 1 });
-reservationSchema.index({ tournamentTier: 1, status: 1 });
-reservationSchema.index({ pointsProcessed: 1, status: 1 });
-reservationSchema.index({ isMultiHour: 1, status: 1 }); // Multi-hour queries
+// Compound indexes for better query performance (club-scoped)
+reservationSchema.index({ clubId: 1, userId: 1, date: -1 });
+reservationSchema.index({ clubId: 1, date: 1, timeSlot: 1, endTimeSlot: 1 }); // Multi-hour support
+reservationSchema.index({ clubId: 1, status: 1, paymentStatus: 1 });
+reservationSchema.index({ clubId: 1, date: 1, status: 1 });
+reservationSchema.index({ clubId: 1, tournamentTier: 1, status: 1 });
+reservationSchema.index({ clubId: 1, pointsProcessed: 1, status: 1 });
+reservationSchema.index({ clubId: 1, isMultiHour: 1, status: 1 }); // Multi-hour queries
 
-// Unique compound index to prevent double booking
+// Unique compound index to prevent double booking (per club)
 reservationSchema.index(
-  { date: 1, timeSlot: 1 },
+  { clubId: 1, date: 1, timeSlot: 1 },
   {
     unique: true,
     partialFilterExpression: {
@@ -162,24 +170,43 @@ reservationSchema.index(
 );
 
 // Pre-save middleware to calculate derived fields and total fee
-reservationSchema.pre('save', function(next) {
+reservationSchema.pre('save', async function() {
   const reservation = this;
-  
+
+  // Validate clubId is present
+  if (!reservation.clubId) {
+    throw new Error('Club ID is required for reservation');
+  }
+
+  // Get club-specific settings (includes operating hours and pricing)
+  const settings = await PricingService.getClubSettings(reservation.clubId);
+  const { start: courtStart, end: courtEnd } = settings.operatingHours;
+
   // Calculate endTimeSlot and isMultiHour
   if (reservation.isNew || reservation.isModified('timeSlot') || reservation.isModified('duration')) {
     reservation.endTimeSlot = reservation.timeSlot + reservation.duration;
     reservation.isMultiHour = reservation.duration > 1;
-    
+
+    // Validate timeSlot is within operating hours
+    // Note: courtEnd is the closing hour, so last bookable slot is courtEnd - 1
+    if (reservation.timeSlot < courtStart) {
+      throw new Error(`Court opens at ${courtStart}:00 (${courtStart === 0 ? '12 AM' : courtStart < 12 ? courtStart + ' AM' : courtStart === 12 ? '12 PM' : (courtStart - 12) + ' PM'}). Selected time: ${reservation.timeSlot}:00`);
+    }
+    if (reservation.timeSlot >= courtEnd) {
+      throw new Error(`Court closes at ${courtEnd}:00. Last bookable slot is ${courtEnd - 1}:00 (${courtEnd - 1 === 0 ? '12 AM' : courtEnd - 1 < 12 ? (courtEnd - 1) + ' AM' : courtEnd - 1 === 12 ? '12 PM' : (courtEnd - 1 - 12) + ' PM'}). Selected time: ${reservation.timeSlot}:00`);
+    }
+
     // Validate that booking doesn't extend beyond court hours
-    if (reservation.endTimeSlot > 23) {
-      return next(new Error(`Booking extends beyond court hours. Court closes at 10 PM (22:00). Duration: ${reservation.duration} hours from ${reservation.timeSlot}:00 would end at ${reservation.endTimeSlot}:00.`));
+    if (reservation.endTimeSlot > courtEnd + 1) {
+      throw new Error(`Booking extends beyond court hours. Court closes at ${courtEnd}:00. Duration: ${reservation.duration} hours from ${reservation.timeSlot}:00 would end at ${reservation.endTimeSlot}:00.`);
     }
   }
-  
+
   // Calculate total fee for multi-hour reservations if not explicitly provided
   if ((reservation.isNew || reservation.isModified('timeSlot') || reservation.isModified('players') || reservation.isModified('duration')) &&
       (!reservation.totalFee || reservation.totalFee === 0)) {
-    const peakHours = (process.env.PEAK_HOURS || '5,18,19,20,21').split(',').map(h => parseInt(h));
+    // Use pricing from settings already fetched above
+    const peakHours = settings.pricing.peakHours;
 
     // Check if players use new format (objects with isMember/isGuest)
     const hasNewPlayerFormat = reservation.players.length > 0 &&
@@ -189,10 +216,13 @@ reservationSchema.pre('save', function(next) {
     let totalFee = 0;
 
     if (hasNewPlayerFormat) {
-      // December 2025+ pricing: Base rate + guest fees
-      const PEAK_BASE_FEE = 150;
-      const NON_PEAK_BASE_FEE = 100;
-      const GUEST_FEE = 70;
+      // December 2025+ pricing: Club-specific pricing models
+      const pricingModel = settings.pricing.pricingModel || 'variable';
+      const PEAK_BASE_FEE = settings.pricing.peakHourFee;
+      const NON_PEAK_BASE_FEE = settings.pricing.offPeakHourFee;
+      const FIXED_HOURLY_FEE = settings.pricing.fixedHourlyFee;
+      const FIXED_DAILY_FEE = settings.pricing.fixedDailyFee;
+      const GUEST_FEE = settings.pricing.guestFee;
 
       // Count members and guests
       let memberCount = 0;
@@ -204,13 +234,23 @@ reservationSchema.pre('save', function(next) {
         if (p.isGuest) guestCount++;
       }
 
-      // Calculate fee for each hour in the duration
       const calculatedEndTimeSlot = reservation.endTimeSlot || (reservation.timeSlot + reservation.duration);
-      for (let hour = reservation.timeSlot; hour < calculatedEndTimeSlot; hour++) {
-        const isPeakHour = peakHours.includes(hour);
-        const baseFee = isPeakHour ? PEAK_BASE_FEE : NON_PEAK_BASE_FEE;
-        const hourFee = baseFee + (guestCount * GUEST_FEE);
-        totalFee += hourFee;
+      const durationHours = calculatedEndTimeSlot - reservation.timeSlot;
+
+      if (pricingModel === 'fixed-daily') {
+        totalFee = (FIXED_DAILY_FEE * memberCount) + (guestCount * GUEST_FEE);
+      } else if (pricingModel === 'fixed-hourly') {
+        const baseFee = FIXED_HOURLY_FEE * durationHours;
+        const guestFeeTotal = guestCount * GUEST_FEE * durationHours;
+        totalFee = baseFee + guestFeeTotal;
+      } else {
+        // Variable pricing (peak/off-peak)
+        for (let hour = reservation.timeSlot; hour < calculatedEndTimeSlot; hour++) {
+          const isPeakHour = peakHours.includes(hour);
+          const baseFee = isPeakHour ? PEAK_BASE_FEE : NON_PEAK_BASE_FEE;
+          const hourFee = baseFee + (guestCount * GUEST_FEE);
+          totalFee += hourFee;
+        }
       }
     } else {
       // Legacy pricing (pre-December 2025)
@@ -254,8 +294,6 @@ reservationSchema.pre('save', function(next) {
     // Round to nearest 10 pesos (e.g., 183.33 → 190)
     reservation.totalFee = Math.ceil(totalFee / 10) * 10;
   }
-  
-  next();
 });
 
 // Static method to check if a range of slots is available (for multi-hour reservations)

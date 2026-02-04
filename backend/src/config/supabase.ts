@@ -56,3 +56,48 @@ export const deleteFromStorage = async (path: string): Promise<{ success: boolea
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Helper function to upload a club logo to Supabase Storage
+ * @param clubId - The club ID
+ * @param fileBuffer - The file buffer
+ * @param fileName - The original file name
+ * @returns Promise with public URL or error
+ */
+export const uploadClubLogo = async (
+  clubId: string,
+  fileBuffer: Buffer,
+  fileName: string
+): Promise<{ success: boolean; publicUrl?: string; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase is not configured' };
+  }
+
+  try {
+    // Generate a unique filename with club ID
+    const timestamp = Date.now();
+    const ext = fileName.split('.').pop();
+    const storagePath = `club-logos/${clubId}-${timestamp}.${ext}`;
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(storagePath, fileBuffer, {
+        contentType: `image/${ext}`,
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Error uploading to Supabase Storage:', uploadError);
+      return { success: false, error: uploadError.message };
+    }
+
+    // Get public URL
+    const publicUrl = getPublicUrl(storagePath);
+
+    return { success: true, publicUrl };
+  } catch (error: any) {
+    console.error('Exception uploading to Supabase Storage:', error);
+    return { success: false, error: error.message };
+  }
+};

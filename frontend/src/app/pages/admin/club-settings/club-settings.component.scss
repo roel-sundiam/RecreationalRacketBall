@@ -1,0 +1,184 @@
+// Component-specific overrides only
+// Most styles are imported from global forms.scss
+
+// CSS Variables for modern design system
+:host {
+  --primary-gradient-start: #6366f1;
+  --primary-gradient-mid: #4f46e5;
+  --primary-gradient-end: #7c3aed;
+  --primary-color: #6366f1;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --card-bg: #ffffff;
+  --neutral-bg: #f9fafb;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+// Pricing Model Selector
+.pricing-model-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+
+  .model-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+
+    .hidden-radio {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .option-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 100%;
+
+      .option-title {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 1rem;
+      }
+
+      .option-desc {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
+    }
+
+    &:hover {
+      border-color: var(--primary-color);
+      background: rgba(99, 102, 241, 0.02);
+      box-shadow: var(--shadow-md);
+    }
+
+    &.active {
+      border: 2px solid var(--primary-color);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(124, 58, 237, 0.08));
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+
+      .option-title {
+        color: var(--primary-color);
+      }
+
+      &::before {
+        content: '✓';
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 24px;
+        height: 24px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+// Preview Pricing Section
+.preview-pricing {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(99, 102, 241, 0.2);
+}
+
+// Hide unused radio input
+.hidden-radio {
+  display: none;
+}
+
+// Logo Upload Section
+.logo-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--neutral-bg);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color);
+
+  .logo-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 300px;
+    height: 200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+
+    .preview-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 1rem;
+    }
+
+    .preview-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      text-align: center;
+
+      .icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.5;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .logo-upload-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .help-text {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+}
+
+.spinner.small {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  display: inline-block;
+}

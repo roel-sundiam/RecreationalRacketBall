@@ -18,6 +18,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule } from '@angular/forms';
 import { GalleryService, GalleryImage } from '../../services/gallery.service';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-admin-gallery-upload',
@@ -77,7 +78,8 @@ export class AdminGalleryUploadComponent implements OnInit {
     private galleryService: GalleryService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -350,23 +352,27 @@ export class AdminGalleryUploadComponent implements OnInit {
 
   // Delete method
   deleteImage(image: GalleryImage): void {
-    if (!confirm(`Are you sure you want to delete "${image.title}"? This action cannot be undone.`)) {
-      return;
-    }
+    this.dialogService.delete({
+      title: 'Delete Image',
+      message: 'This action cannot be undone.',
+      itemName: image.title
+    }).subscribe(confirmed => {
+      if (!confirmed) return;
 
-    this.galleryService.deleteImage(image._id).subscribe({
-      next: (response) => {
-        this.snackBar.open('Image deleted successfully!', 'Close', {
-          duration: 3000
-        });
-        this.loadImages();
-      },
-      error: (err) => {
-        console.error('Delete error:', err);
-        this.snackBar.open('Failed to delete image', 'Close', {
-          duration: 3000
-        });
-      }
+      this.galleryService.deleteImage(image._id).subscribe({
+        next: (response) => {
+          this.snackBar.open('Image deleted successfully!', 'Close', {
+            duration: 3000
+          });
+          this.loadImages();
+        },
+        error: (err) => {
+          console.error('Delete error:', err);
+          this.snackBar.open('Failed to delete image', 'Close', {
+            duration: 3000
+          });
+        }
+      });
     });
   }
 

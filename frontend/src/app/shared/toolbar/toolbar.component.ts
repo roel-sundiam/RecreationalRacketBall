@@ -4,11 +4,14 @@ import { HttpClient } from '@angular/common/http';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
 import { NotificationService, OpenPlayNotification } from '../../services/notification.service';
 import { PWANotificationService } from '../../services/pwa-notification.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { ClubSwitcherComponent } from '../../components/club-switcher/club-switcher.component';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -18,7 +21,10 @@ import { Subscription } from 'rxjs';
     CommonModule,
     MatToolbarModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatMenuModule,
+    MatDividerModule,
+    ClubSwitcherComponent
   ],
   template: `
     <!-- Modern Header -->
@@ -32,10 +38,11 @@ import { Subscription } from 'rxjs';
         <!-- Logo Section -->
         <div class="logo-section" (click)="handleLogoClick()" role="button" tabindex="0" (keydown.enter)="handleLogoClick()" (keydown.space)="handleLogoClick()">
           <div class="logo-icon">
-            <img src="images/rt2-logo.png" alt="Rich Town 2 Tennis Club" class="club-logo">
+            <img *ngIf="clubLogo" [src]="clubLogo" [alt]="clubName" class="club-logo">
+            <img *ngIf="!clubLogo" src="images/rt2-logo.png" alt="Rich Town 2 Tennis Club" class="club-logo">
           </div>
           <div class="logo-text">
-            <h1 class="club-name">Rich Town 2 Tennis Club</h1>
+            <h1 class="club-name">{{ clubName }}</h1>
           </div>
         </div>
 
@@ -55,27 +62,39 @@ import { Subscription } from 'rxjs';
               <mat-icon>event</mat-icon>
               <span>My Bookings</span>
             </button>
+            <button mat-button class="nav-item" (click)="navigateTo('/my-requests')">
+              <mat-icon>pending</mat-icon>
+              <span>My Requests</span>
+            </button>
           </div>
-          
+
           <div class="nav-separator"></div>
-          
+
           <div class="nav-group">
             <button mat-button class="nav-item" (click)="navigateTo('/members')">
               <mat-icon>people</mat-icon>
               <span>Members</span>
             </button>
-            <button mat-button class="nav-item" (click)="openPlayClick()">
-              <mat-icon>how_to_vote</mat-icon>
-              <span>Open Play</span>
-            </button>
-            <button mat-button class="nav-item" (click)="navigateTo('/rankings')">
-              <mat-icon>leaderboard</mat-icon>
-              <span>Rankings</span>
+          </div>
+
+          <div class="nav-separator" *ngIf="isSuperAdmin"></div>
+
+          <div class="nav-group" *ngIf="isSuperAdmin">
+            <button mat-button class="nav-item" (click)="navigateTo('/admin/pending-clubs')">
+              <mat-icon>pending_actions</mat-icon>
+              <span>Pending Clubs</span>
             </button>
           </div>
-          
+
           <div class="nav-separator"></div>
-          
+
+          <div class="nav-group">
+            <!-- Club Switcher -->
+            <app-club-switcher></app-club-switcher>
+          </div>
+
+          <div class="nav-separator"></div>
+
           <div class="nav-group user-section">
             <div class="user-info">
               <mat-icon class="user-icon">account_circle</mat-icon>
@@ -116,41 +135,36 @@ import { Subscription } from 'rxjs';
             <span class="mobile-user-role" *ngIf="!isAdmin">Member</span>
           </div>
         </div>
-        
+
+        <!-- Club Switcher (Mobile) -->
+        <div class="mobile-club-switcher">
+          <app-club-switcher></app-club-switcher>
+        </div>
+
         <div class="mobile-nav-items">
           <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/reservations')">
             <mat-icon>calendar_today</mat-icon>
             <span>Reserve Court</span>
           </button>
-          
+
           <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/my-reservations')">
             <mat-icon>event</mat-icon>
             <span>My Bookings</span>
           </button>
-          
+
+          <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/my-requests')">
+            <mat-icon>pending</mat-icon>
+            <span>My Requests</span>
+          </button>
+
           <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/members')">
             <mat-icon>people</mat-icon>
             <span>Members Directory</span>
           </button>
 
-          <button mat-button class="mobile-nav-item" (click)="openPlayAndClose()">
-            <mat-icon>how_to_vote</mat-icon>
-            <span>Open Play</span>
-          </button>
-
           <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/payments')">
             <mat-icon>payment</mat-icon>
             <span>Payments</span>
-          </button>
-
-          <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/rankings')">
-            <mat-icon>leaderboard</mat-icon>
-            <span>Rankings</span>
-          </button>
-
-          <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/gallery')">
-            <mat-icon>photo_library</mat-icon>
-            <span>Photo Gallery</span>
           </button>
 
           <!-- Admin Section -->
@@ -204,6 +218,16 @@ import { Subscription } from 'rxjs';
               <mat-icon>campaign</mat-icon>
               <span>Announcements</span>
             </button>
+
+            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/pending-clubs')">
+              <mat-icon>pending_actions</mat-icon>
+              <span>Pending Clubs</span>
+            </button>
+
+            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/clubs')">
+              <mat-icon>business</mat-icon>
+              <span>Club Management</span>
+            </button>
           </div>
           
           <!-- Profile & Logout -->
@@ -229,9 +253,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   isAdmin = false;
   isSuperAdmin = false;
   isMobileMenuOpen = false;
-  
+  clubName: string = 'Rich Town 2 Tennis Club'; // Default fallback
+  clubLogo: string | null = null;
+
   private userSubscription: Subscription = new Subscription();
   private notificationSubscription: Subscription = new Subscription();
+  private clubSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -250,6 +277,20 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       this.isSuperAdmin = user?.role === 'superadmin';
     });
 
+    // Subscribe to selected club changes
+    this.clubSubscription = this.authService.selectedClub$.subscribe(club => {
+      if (club) {
+        // Extract club name
+        this.clubName = club.club?.name || (club as any).clubName || 'Rich Town 2 Tennis Club';
+        
+        // Extract club logo - check nested club object first, then flat structure
+        this.clubLogo = club.club?.logo || (club as any).clubLogo || null;
+      } else {
+        this.clubName = 'Rich Town 2 Tennis Club';
+        this.clubLogo = null;
+      }
+    });
+
     // Subscribe to open play notifications
     this.notificationSubscription = this.notificationService.notifications$.subscribe(notifications => {
       // Handle notifications if needed
@@ -259,6 +300,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.userSubscription.unsubscribe();
     this.notificationSubscription.unsubscribe();
+    this.clubSubscription.unsubscribe();
   }
 
   toggleMobileMenu(): void {
@@ -309,105 +351,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  openPlayClick(): void {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    // Get current user data for auto-login
-    const currentUser = this.authService.currentUser;
-    if (!currentUser) {
-      console.error('❌ No user logged in, cannot open Play Squad');
-      return;
-    }
-
-    // Prepare auth data for Play Squad auto-login
-    const authData = {
-      username: currentUser.username,
-      email: currentUser.email,
-      fullName: currentUser.fullName,
-      userId: currentUser._id,
-      role: currentUser.role,
-      gender: currentUser.gender || 'other'  // Include gender, default to 'other' if not set
-    };
-
-    // Encode auth data as base64 for URL parameter
-    const authToken = btoa(JSON.stringify(authData));
-    // PRODUCTION: Use production URL
-    const playSquadUrl = `https://play-squad.netlify.app/?auth=${encodeURIComponent(authToken)}`;
-    // LOCAL TESTING: Use localhost URL for local development
-    // const playSquadUrl = `http://localhost:4201/?auth=${encodeURIComponent(authToken)}`;
-
-    // Track button click with analytics
-    this.analyticsService.trackButtonClick('Open Play (Play Squad)', 'toolbar', {
-      platform: isMobile ? 'mobile' : 'desktop',
-      userId: currentUser._id
-    });
-
-    // Open Play Squad in new tab (desktop) or same window (mobile)
-    if (isMobile) {
-      window.location.href = playSquadUrl;
-    } else {
-      window.open(playSquadUrl, '_blank');
-    }
-
-    /*
-     * ORIGINAL RECLUB IMPLEMENTATION (Keep for rollback if needed)
-     *
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      // On mobile: Try to open Reclub app
-      this.openReclubApp();
-    } else {
-      // On desktop: Open Reclub website in new tab
-      this.analyticsService.trackButtonClick('Open Play (Reclub Web)', 'toolbar', {
-        platform: 'desktop'
-      });
-      window.open('https://reclub.co/clubs/@rt2-tennis-club?at=TTQSNOQ7', '_blank');
-    }
-    */
-  }
-
-  openPlayAndClose(): void {
-    this.openPlayClick();
-    this.closeMobileMenu();
-  }
-
-  // ORIGINAL RECLUB METHOD (Keep for rollback if needed)
-  /*
-  private openReclubApp(): void {
-    const reclubWebUrl = 'https://reclub.co/clubs/@rt2-tennis-club?at=TTQSNOQ7';
-    const reclubDeepLink = 'reclub://clubs/@rt2-tennis-club';
-
-    // Track the attempt
-    this.analyticsService.trackButtonClick('Open Play (Reclub App)', 'toolbar', {
-      platform: 'mobile'
-    });
-
-    // Try deep link first
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = reclubDeepLink;
-    document.body.appendChild(iframe);
-
-    // Fallback to web URL after short delay
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-
-      // If page is still visible (app didn't open), use web URL
-      if (!document.hidden) {
-        window.location.href = reclubWebUrl;
-      }
-    }, 1000);
-  }
-  */
-
   private getButtonNameForPath(path: string): string {
     const pathMap: Record<string, string> = {
       '/reservations': 'Reserve Court',
       '/my-reservations': 'My Bookings',
       '/members': 'Members',
-      '/polls': 'Open Play',
-      '/rankings': 'Rankings',
       '/payments': 'Payments',
       '/profile': 'My Profile',
       '/dashboard': 'Dashboard',
@@ -415,7 +363,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       '/admin/reports': 'Reports & Analytics',
       '/admin/polls': 'Poll Management',
       '/admin/block-court': 'Block Court',
-      '/admin/manual-court-usage': 'Manual Court Usage'
+      '/admin/manual-court-usage': 'Manual Court Usage',
+      '/admin/pending-clubs': 'Pending Clubs',
+      '/admin/clubs': 'Club Management'
     };
     return pathMap[path] || `Navigate to ${path}`;
   }

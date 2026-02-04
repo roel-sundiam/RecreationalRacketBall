@@ -19,7 +19,7 @@ interface Notification {
   standalone: true,
   imports: [CommonModule, MatIconModule, MatButtonModule, MatBadgeModule],
   template: `
-    <div class="notification-panel" *ngIf="isAdmin && !isHidden">
+    <div class="notification-panel" *ngIf="isSuperAdmin && !isHidden">
       <div class="panel-header">
         <div class="panel-title">
           <mat-icon class="title-icon">notifications_active</mat-icon>
@@ -61,7 +61,7 @@ interface Notification {
 
     <!-- Show button when panel is hidden -->
     <button
-      *ngIf="isAdmin && isHidden"
+      *ngIf="isSuperAdmin && isHidden"
       mat-fab
       class="show-panel-btn"
       (click)="showPanel()"
@@ -262,7 +262,7 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
   private notificationId = 0;
   private subscription?: Subscription;
   isHidden = false; // Panel visibility state
-  isAdmin = false; // Only show for admins
+  isSuperAdmin = false; // Only show for superadmins
 
   constructor(
     private activityMonitorService: ActivityMonitorService,
@@ -270,11 +270,11 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Check if user is admin
-    this.isAdmin = this.authService.isAdmin();
+    // Check if user is superadmin
+    this.isSuperAdmin = this.authService.isSuperAdmin();
 
-    // Only subscribe if user is admin
-    if (!this.isAdmin) {
+    // Only subscribe if user is superadmin
+    if (!this.isSuperAdmin) {
       return;
     }
 
@@ -291,14 +291,16 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
 
         // Format message based on activity type
         let message: string;
-        if (activity.type === 'member_navigation') {
-          message = `${activity.data.fullName} accessed ${activity.data.page || 'Unknown Page'}`;
+        const clubInfo = activity.data.clubName ? ` [${activity.data.clubName}]` : '';
+        
+        if (activity.type === 'page_navigation' || activity.type === 'member_navigation') {
+          message = `${activity.data.fullName}${clubInfo} accessed ${activity.data.page || 'Unknown Page'}`;
         } else if (activity.type === 'member_activity') {
-          message = `${activity.data.fullName} - ${activity.data.action || 'Unknown Action'} on ${activity.data.component || 'Unknown Component'}`;
+          message = `${activity.data.fullName}${clubInfo} - ${activity.data.action || 'Unknown Action'} on ${activity.data.component || 'Unknown Component'}`;
         } else {
           // Fallback for unknown types
           console.warn('Unknown activity type:', activity.type, activity);
-          message = `${activity.data.fullName} performed an action`;
+          message = `${activity.data.fullName}${clubInfo} performed an action`;
         }
 
         this.addNotification(message);

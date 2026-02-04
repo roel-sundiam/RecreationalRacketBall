@@ -6,7 +6,8 @@ import {
   logout,
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  switchClub
 } from '../controllers/authController';
 import { authenticateToken, preventImpersonationFor } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
@@ -103,5 +104,6 @@ router.post('/logout', logout);
 router.get('/profile', getProfile);
 router.put('/profile', updateProfileValidation, validateRequest, updateProfile);
 router.put('/change-password', preventImpersonationFor(['change password']), changePasswordValidation, validateRequest, changePassword);
+router.post('/switch-club', switchClub);
 
 export default router;

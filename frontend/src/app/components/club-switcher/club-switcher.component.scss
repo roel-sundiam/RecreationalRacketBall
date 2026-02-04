@@ -1,0 +1,240 @@
+.club-switcher {
+  display: flex;
+  align-items: center;
+}
+
+.club-button {
+  height: 48px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.no-club {
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}
+
+.club-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.club-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &.placeholder {
+    background: rgba(255, 255, 255, 0.2);
+
+    mat-icon {
+      color: white;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.club-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: white;
+
+  .name {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    opacity: 0.9;
+
+    mat-icon {
+      font-size: 12px;
+      width: 12px;
+      height: 12px;
+    }
+  }
+}
+
+.dropdown-icon {
+  color: white;
+  margin-left: 4px;
+  transition: transform 0.3s ease;
+}
+
+.club-button.has-multiple:hover .dropdown-icon {
+  transform: rotate(180deg);
+}
+
+// Menu styles
+::ng-deep .club-menu {
+  .mat-mdc-menu-content {
+    padding: 0 !important;
+  }
+}
+
+.menu-header {
+  padding: 16px 20px 12px;
+
+  h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+  }
+}
+
+.menu-club-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 0;
+
+  .menu-club-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &.placeholder {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+      mat-icon {
+        color: white;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .menu-club-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .menu-club-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      line-height: 1.3;
+    }
+
+    .menu-club-role {
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.3;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+
+      mat-icon {
+        font-size: 12px;
+        width: 12px;
+        height: 12px;
+      }
+    }
+  }
+
+  .check-icon {
+    color: #4caf50;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+}
+
+button.mat-mdc-menu-item.selected {
+  background-color: #f5f7ff;
+}
+
+.view-all-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #667eea;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Mobile responsiveness
+@media (max-width: 600px) {
+  .club-name {
+    .name {
+      max-width: 120px;
+    }
+  }
+
+  .dropdown-icon {
+    display: none;
+  }
+}

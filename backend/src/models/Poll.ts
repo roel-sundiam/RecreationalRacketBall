@@ -48,6 +48,7 @@ export interface IPollDocument extends Document {
     adminNotes?: string;
   };
   openPlayEvent?: IOpenPlayEvent; // For Open Play polls
+  clubId: mongoose.Types.ObjectId | string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -268,7 +269,13 @@ const pollSchema = new Schema<IPollDocument>({
     },
     adminNotes: { type: String, maxlength: 500 }
   },
-  openPlayEvent: openPlayEventSchema
+  openPlayEvent: openPlayEventSchema,
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: [true, 'Club ID is required'],
+    index: true
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -276,9 +283,9 @@ const pollSchema = new Schema<IPollDocument>({
 });
 
 // Compound indexes
-pollSchema.index({ status: 1, startDate: -1 });
-pollSchema.index({ createdBy: 1, status: 1 });
-pollSchema.index({ endDate: 1, status: 1 });
+pollSchema.index({ clubId: 1, status: 1, startDate: -1 });
+pollSchema.index({ clubId: 1, createdBy: 1, status: 1 });
+pollSchema.index({ clubId: 1, endDate: 1, status: 1 });
 
 // Pre-save middleware to update total votes and calculate blocked time slots
 pollSchema.pre('save', function(next) {

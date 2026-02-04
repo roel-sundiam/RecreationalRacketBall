@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICreditTransactionDocument extends Document {
   userId: string;
+  clubId: mongoose.Types.ObjectId;
   type: 'deposit' | 'deduction' | 'refund' | 'adjustment';
   amount: number;
   balanceBefore: number;
@@ -39,6 +40,7 @@ export interface ICreditTransactionModel extends mongoose.Model<ICreditTransacti
     amount: number,
     description: string,
     options?: {
+      clubId?: mongoose.Types.ObjectId | string;
       referenceId?: string;
       referenceType?: 'payment' | 'reservation' | 'poll' | 'admin_adjustment' | 'deposit';
       refundReason?: 'reservation_cancelled' | 'open_play_cancelled' | 'admin_refund' | 'partial_refund';
@@ -72,6 +74,12 @@ const creditTransactionSchema = new Schema<ICreditTransactionDocument>({
     type: String,
     ref: 'User',
     required: [true, 'User ID is required'],
+    index: true
+  },
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: [true, 'Club ID is required'],
     index: true
   },
   type: {
@@ -218,13 +226,14 @@ creditTransactionSchema.virtual('formattedAmountWithDirection').get(function(thi
   return isCredit ? `+₱${amount.toFixed(2)}` : `-₱${amount.toFixed(2)}`;
 });
 
-// Static method to create a credit transaction and update user balance
+// Static method to create a credit transaction and update club membership balance
 creditTransactionSchema.statics.createTransaction = async function(
   userId: string,
   type: string,
   amount: number,
   description: string,
   options: {
+    clubId?: mongoose.Types.ObjectId | string;
     referenceId?: string;
     referenceType?: string;
     refundReason?: string;
@@ -232,18 +241,23 @@ creditTransactionSchema.statics.createTransaction = async function(
     status?: string;
   } = {}
 ) {
-  const User = mongoose.model('User');
+  const ClubMembership = mongoose.model('ClubMembership');
   const session = await mongoose.startSession();
-  
+
+  const clubId = options.clubId;
+  if (!clubId) {
+    throw new Error('clubId is required for credit transactions');
+  }
+
   try {
     return await session.withTransaction(async () => {
-      // Get current user balance
-      const user = await User.findById(userId).session(session);
-      if (!user) {
-        throw new Error('User not found');
+      // Get current membership balance
+      const membership = await ClubMembership.findOne({ userId, clubId }).session(session);
+      if (!membership) {
+        throw new Error('Club membership not found');
       }
-      
-      const balanceBefore = user.creditBalance || 0;
+
+      const balanceBefore = membership.creditBalance || 0;
       let balanceAfter: number;
       
       // Calculate new balance
@@ -262,6 +276,7 @@ creditTransactionSchema.statics.createTransaction = async function(
       const transactionStatus = options.status || 'completed';
       const transaction = new this({
         userId,
+        clubId,
         type,
         amount,
         balanceBefore,
@@ -273,15 +288,15 @@ creditTransactionSchema.statics.createTransaction = async function(
         metadata: options.metadata,
         status: transactionStatus
       });
-      
+
       await transaction.save({ session });
-      
-      // Only update user balance if transaction is completed
+
+      // Only update membership balance if transaction is completed
       if (transactionStatus === 'completed') {
-        user.creditBalance = balanceAfter;
-        await user.save({ session });
+        membership.creditBalance = balanceAfter;
+        await membership.save({ session });
       }
-      
+
       return transaction;
     });
   } finally {

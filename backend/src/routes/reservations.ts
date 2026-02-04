@@ -19,14 +19,18 @@ import {
   blockCourtValidation
 } from '../controllers/reservationController';
 import { requireAdmin, requireApprovedUser, requireMembershipFees, authenticateToken } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 import { validateRequest } from '../middleware/validation';
 
 const router = express.Router();
 
-// Get user's upcoming reservations (just authentication required, no approval needed)
-router.get('/my-upcoming', authenticateToken, getMyUpcomingReservations);
+// NOTE: authenticateToken is already applied in server.ts line 214, so no need to apply it again here
 
-// All other reservation routes require approved users
+// Get user's upcoming reservations (no club context needed - returns all clubs)
+router.get('/my-upcoming', getMyUpcomingReservations);
+
+// All other routes require club context and approved user
+router.use(extractClubContext);
 router.use(requireApprovedUser);
 
 // Get all reservations (with filtering)
@@ -57,26 +61,26 @@ router.put('/:id',
 // Cancel reservation
 router.delete('/:id', cancelReservation);
 
-// Admin only: Update reservation status
-router.patch('/:id/status', requireAdmin, updateReservationStatus);
+// Admin only: Update reservation status (club admin)
+router.patch('/:id/status', requireClubRole(['admin']), updateReservationStatus);
 
-// Admin only: Complete reservation with match results
+// Admin only: Complete reservation with match results (club admin)
 router.patch('/:id/complete',
-  requireAdmin,
+  requireClubRole(['admin']),
   completeReservationValidation,
   validateRequest,
   completeReservation
 );
 
-// Admin only: Court blocking routes
-router.get('/admin/blocks', requireAdmin, getBlockedReservations);
+// Admin only: Court blocking routes (club admin)
+router.get('/admin/blocks', requireClubRole(['admin']), getBlockedReservations);
 router.post('/admin/block',
-  requireAdmin,
+  requireClubRole(['admin']),
   blockCourtValidation,
   validateRequest,
   blockCourt
 );
-router.put('/admin/block/:id', requireAdmin, updateBlockedReservation);
-router.delete('/admin/block/:id', requireAdmin, deleteBlockedReservation);
+router.put('/admin/block/:id', requireClubRole(['admin']), updateBlockedReservation);
+router.delete('/admin/block/:id', requireClubRole(['admin']), deleteBlockedReservation);
 
 export default router;

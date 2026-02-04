@@ -6,23 +6,25 @@ import { asyncHandler } from '../middleware/errorHandler';
 
 // Get all expenses with pagination and filtering
 export const getAllExpenses = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { 
-    page = 1, 
-    limit = 50, 
-    category, 
-    startDate, 
+  const {
+    page = 1,
+    limit = 50,
+    category,
+    startDate,
     endDate,
     sortBy = 'date',
     sortOrder = 'desc'
   } = req.query;
 
-  const query: any = {};
-  
+  const query: any = {
+    clubId: req.clubId
+  };
+
   // Filter by category
   if (category && category !== 'all') {
     query.category = category;
   }
-  
+
   // Filter by date range
   if (startDate || endDate) {
     query.date = {};
@@ -89,8 +91,16 @@ export const getExpenseById = asyncHandler(async (req: AuthenticatedRequest, res
   const { id } = req.params;
 
   const expense = await Expense.findById(id);
-  
+
   if (!expense) {
+    return res.status(404).json({
+      success: false,
+      message: 'Expense not found'
+    });
+  }
+
+  // Verify clubId
+  if (expense.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       message: 'Expense not found'
@@ -122,7 +132,8 @@ export const createExpense = asyncHandler(async (req: AuthenticatedRequest, res:
     amount: Number(amount),
     details: details.trim(),
     category,
-    createdBy
+    createdBy,
+    clubId: req.clubId
   });
 
   await expense.save();
@@ -151,8 +162,16 @@ export const updateExpense = asyncHandler(async (req: AuthenticatedRequest, res:
   const { date, amount, details, category } = req.body;
 
   const expense = await Expense.findById(id);
-  
+
   if (!expense) {
+    return res.status(404).json({
+      success: false,
+      message: 'Expense not found'
+    });
+  }
+
+  // Verify clubId
+  if (expense.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       message: 'Expense not found'
@@ -180,8 +199,16 @@ export const deleteExpense = asyncHandler(async (req: AuthenticatedRequest, res:
   const { id } = req.params;
 
   const expense = await Expense.findById(id);
-  
+
   if (!expense) {
+    return res.status(404).json({
+      success: false,
+      message: 'Expense not found'
+    });
+  }
+
+  // Verify clubId
+  if (expense.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       message: 'Expense not found'
@@ -204,7 +231,10 @@ export const getExpenseCategories = asyncHandler(async (req: AuthenticatedReques
   const ExpenseCategory = (await import('../models/ExpenseCategory')).default;
 
   // Fetch active categories from database, sorted by displayOrder
-  const categories = await ExpenseCategory.find({ isActive: true })
+  const categories = await ExpenseCategory.find({
+    isActive: true,
+    clubId: req.clubId
+  })
     .sort({ displayOrder: 1, name: 1 })
     .lean();
 
@@ -220,8 +250,10 @@ export const getExpenseCategories = asyncHandler(async (req: AuthenticatedReques
 // Get expense statistics for dashboard
 export const getExpenseStats = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { startDate, endDate } = req.query;
-  
-  const query: any = {};
+
+  const query: any = {
+    clubId: req.clubId
+  };
   if (startDate || endDate) {
     query.date = {};
     if (startDate) {
@@ -312,12 +344,14 @@ export const expenseValidationRules = [
   body('category')
     .notEmpty()
     .withMessage('Category is required')
-    .custom(async (value) => {
+    .custom(async (value, { req }) => {
       // Import ExpenseCategory model dynamically to avoid circular dependencies
       const ExpenseCategory = (await import('../models/ExpenseCategory')).default;
+      const authReq = req as AuthenticatedRequest;
       const category = await ExpenseCategory.findOne({
         name: value,
-        isActive: true
+        isActive: true,
+        clubId: authReq.clubId
       });
       if (!category) {
         throw new Error('Invalid or inactive category');

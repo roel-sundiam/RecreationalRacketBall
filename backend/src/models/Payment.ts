@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPaymentDocument extends Document {
+  clubId: mongoose.Types.ObjectId;
   reservationId?: string;
   pollId?: string; // For Open Play events
   userId: string;
@@ -60,6 +61,12 @@ export interface IPaymentDocument extends Document {
 }
 
 const paymentSchema = new Schema<IPaymentDocument>({
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: [true, 'Club ID is required'],
+    index: true
+  },
   reservationId: {
     type: String,
     ref: 'Reservation',
@@ -217,19 +224,24 @@ const paymentSchema = new Schema<IPaymentDocument>({
   toObject: { virtuals: true }
 });
 
-// Compound indexes for better query performance
-paymentSchema.index({ userId: 1, status: 1 });
-paymentSchema.index({ reservationId: 1, status: 1 });
-paymentSchema.index({ pollId: 1, status: 1 }); // For Open Play payments
-paymentSchema.index({ paymentDate: -1, status: 1 });
-paymentSchema.index({ dueDate: 1, status: 1 });
-paymentSchema.index({ status: 1, paymentMethod: 1 });
-paymentSchema.index({ paymentType: 1, status: 1 }); // For filtering by payment type
-paymentSchema.index({ userId: 1, paymentType: 1, membershipYear: 1 }); // For membership fee queries
+// Compound indexes for better query performance (club-scoped)
+paymentSchema.index({ clubId: 1, userId: 1, status: 1 });
+paymentSchema.index({ clubId: 1, reservationId: 1, status: 1 });
+paymentSchema.index({ clubId: 1, pollId: 1, status: 1 }); // For Open Play payments
+paymentSchema.index({ clubId: 1, paymentDate: -1, status: 1 });
+paymentSchema.index({ clubId: 1, dueDate: 1, status: 1 });
+paymentSchema.index({ clubId: 1, status: 1, paymentMethod: 1 });
+paymentSchema.index({ clubId: 1, paymentType: 1, status: 1 }); // For filtering by payment type
+paymentSchema.index({ clubId: 1, userId: 1, paymentType: 1, membershipYear: 1 }); // For membership fee queries
 
 // Pre-save middleware to set payment date when status changes to completed
 paymentSchema.pre('save', function(next) {
   const payment = this;
+
+  // Validate clubId is present
+  if (!payment.clubId) {
+    return next(new Error('Club ID is required for payment'));
+  }
 
   // Check if this is a manual payment or membership fee
   const isManualPayment = payment.metadata?.isManualPayment;

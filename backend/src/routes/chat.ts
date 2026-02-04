@@ -11,14 +11,15 @@ import {
   createChatRoom,
   updateMessage
 } from '../controllers/chatController';
-import { authenticateToken, requireApprovedUser } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 import { validateRequest } from '../middleware/validation';
 
 const router = express.Router();
 
-// Apply authentication middleware to all routes
+// Apply authentication and club context to all routes
 router.use(authenticateToken);
-router.use(requireApprovedUser);
+router.use(extractClubContext);
 
 // Validation schemas
 const roomIdValidation = [
@@ -115,7 +116,7 @@ const getMessagesValidation = [
 router.get('/', getChatRooms);
 
 // Create new chat room (admin only)
-router.post('/', createRoomValidation, validateRequest, createChatRoom);
+router.post('/', requireClubRole(['admin']), createRoomValidation, validateRequest, createChatRoom);
 
 // Get messages for a specific room
 router.get(

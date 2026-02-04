@@ -6,8 +6,9 @@ import { AuthService } from './auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.token;
+  const selectedClub = authService.selectedClub;
 
-  console.log('🔧 HTTP Interceptor - Token:', !!token);
+  console.log('🔧 HTTP Interceptor - Token:', !!token, 'Club:', selectedClub?.club?.name || selectedClub?.clubId || 'none');
 
   // Check if token is expired before sending request
   if (token && authService.isTokenExpired()) {
@@ -23,18 +24,25 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     }));
   }
 
-  // Clone request and add Authorization header if token exists
-  const authReq = token
-    ? req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${token}`)
-      })
-    : req;
+  // Build headers object
+  let headers = req.headers;
 
+  // Add Authorization header if token exists
   if (token) {
+    headers = headers.set('Authorization', `Bearer ${token}`);
     console.log('🔧 HTTP Interceptor - Added Authorization header');
   } else {
     console.log('🔧 HTTP Interceptor - No token, proceeding without auth');
   }
+
+  // Add X-Club-Id header if club is selected
+  if (selectedClub && selectedClub.clubId) {
+    headers = headers.set('X-Club-Id', selectedClub.clubId);
+    console.log('🏢 HTTP Interceptor - Added X-Club-Id header:', selectedClub.clubId);
+  }
+
+  // Clone request with all headers
+  const authReq = req.clone({ headers });
 
   // Handle the request and catch 401 errors from backend
   return next(authReq).pipe(

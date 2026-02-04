@@ -21,6 +21,7 @@ import {
   removePlayerFromFutureMatches
 } from '../controllers/pollController';
 import { authenticateToken, requireRole } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 import { validationResult } from 'express-validator';
 
 const router = Router();
@@ -70,38 +71,40 @@ router.get('/health', (req, res) => {
 /**
  * @route GET /api/polls/active
  * @desc Get active polls for current user
- * @access Private
+ * @access Private (requires club context)
  */
-router.get('/active', authenticateToken, getActivePolls);
+router.get('/active', authenticateToken, extractClubContext, getActivePolls);
 
 /**
  * @route GET /api/polls/stats
- * @desc Get poll statistics (admin only)
- * @access Private (Admin/SuperAdmin)
+ * @desc Get poll statistics (club admin only)
+ * @access Private (Club Admin)
  */
 router.get(
   '/stats',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   getPollStats
 );
 
 /**
  * @route GET /api/polls/open-play
  * @desc Get all Open Play events
- * @access Private
+ * @access Private (requires club context)
  */
-router.get('/open-play', authenticateToken, getOpenPlayEvents);
+router.get('/open-play', authenticateToken, extractClubContext, getOpenPlayEvents);
 
 /**
  * @route POST /api/polls/open-play
- * @desc Create new Open Play event (superadmin only)
- * @access Private (SuperAdmin)
+ * @desc Create new Open Play event (club admin only)
+ * @access Private (Club Admin)
  */
 router.post(
   '/open-play',
   authenticateToken,
-  requireRole(['superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   createOpenPlayValidation,
   handleValidationErrors,
   createOpenPlay
@@ -110,19 +113,20 @@ router.post(
 /**
  * @route GET /api/polls
  * @desc Get all polls with filtering and pagination
- * @access Private
+ * @access Private (requires club context)
  */
-router.get('/', authenticateToken, getPolls);
+router.get('/', authenticateToken, extractClubContext, getPolls);
 
 /**
  * @route POST /api/polls
- * @desc Create new poll (admin only)
- * @access Private (Admin/SuperAdmin)
+ * @desc Create new poll (club admin only)
+ * @access Private (Club Admin)
  */
 router.post(
   '/',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   createPollValidation,
   handleValidationErrors,
   createPoll
@@ -131,54 +135,58 @@ router.post(
 /**
  * @route GET /api/polls/:id
  * @desc Get single poll with results
- * @access Private
+ * @access Private (requires club context)
  */
-router.get('/:id', authenticateToken, getPoll);
+router.get('/:id', authenticateToken, extractClubContext, getPoll);
 
 /**
  * @route PUT /api/polls/:id
- * @desc Update poll (admin only)
- * @access Private (Admin/SuperAdmin)
+ * @desc Update poll (club admin only)
+ * @access Private (Club Admin)
  */
 router.put(
   '/:id',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   updatePoll
 );
 
 /**
  * @route POST /api/polls/:id/activate
- * @desc Activate poll (admin only)
- * @access Private (Admin/SuperAdmin)
+ * @desc Activate poll (club admin only)
+ * @access Private (Club Admin)
  */
 router.post(
   '/:id/activate',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   activatePoll
 );
 
 /**
  * @route POST /api/polls/:id/close
- * @desc Close poll (admin only)
- * @access Private (Admin/SuperAdmin)
+ * @desc Close poll (club admin only)
+ * @access Private (Club Admin)
  */
 router.post(
   '/:id/close',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   closePoll
 );
 
 /**
  * @route POST /api/polls/:id/vote
  * @desc Vote on poll
- * @access Private
+ * @access Private (requires club context)
  */
 router.post(
   '/:id/vote',
   authenticateToken,
+  extractClubContext,
   voteValidation,
   handleValidationErrors,
   vote
@@ -186,61 +194,66 @@ router.post(
 
 /**
  * @route POST /api/polls/:id/generate-matches
- * @desc Generate random doubles matches for Open Play event (superadmin only)
- * @access Private (SuperAdmin)
+ * @desc Generate random doubles matches for Open Play event (club admin only)
+ * @access Private (Club Admin)
  */
 router.post(
   '/:id/generate-matches',
   authenticateToken,
-  requireRole(['superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   generateMatches
 );
 
 /**
  * @route PUT /api/polls/:id/matches-order
- * @desc Update match order for Open Play event (superadmin only)
- * @access Private (SuperAdmin)
+ * @desc Update match order for Open Play event (club admin only)
+ * @access Private (Club Admin)
  */
 router.put(
   '/:id/matches-order',
   authenticateToken,
-  requireRole(['superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   updateMatchOrder
 );
 
 /**
  * @route POST /api/polls/:id/admin-vote
- * @desc Add vote as admin (admin/superadmin only)
- * @access Private (Admin/SuperAdmin)
+ * @desc Add vote as admin (club admin only)
+ * @access Private (Club Admin)
  */
 router.post(
   '/:id/admin-vote',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   addAdminVote
 );
 
 /**
  * @route DELETE /api/polls/:id/admin-vote
- * @desc Remove vote as admin (admin/superadmin only)
- * @access Private (Admin/SuperAdmin)
+ * @desc Remove vote as admin (club admin only)
+ * @access Private (Club Admin)
  */
 router.delete(
   '/:id/admin-vote',
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   removeAdminVote
 );
 
 /**
  * @route POST /api/polls/:id/remove-player
- * @desc Remove player from future matches and regenerate incomplete matches (superadmin only)
- * @access Private (SuperAdmin)
+ * @desc Remove player from future matches and regenerate incomplete matches (club admin only)
+ * @access Private (Club Admin)
  */
 router.post(
   '/:id/remove-player',
   authenticateToken,
-  requireRole(['superadmin']),
+  extractClubContext,
+  requireClubRole(['admin']),
   removePlayerFromFutureMatches
 );
 

@@ -17,6 +17,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ExpenseCategoryService } from '../../services/expense-category.service';
 import { ExpenseCategory, CreateCategoryDto, UpdateCategoryDto } from '../../models/expense-category.model';
+import { DialogService } from '../../services/dialog.service';
 
 interface CategoryWithUsage extends ExpenseCategory {
   usageCount?: number;
@@ -86,7 +87,8 @@ export class ExpenseCategoryManagementComponent implements OnInit {
     private fb: FormBuilder,
     private categoryService: ExpenseCategoryService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogService: DialogService
   ) {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
@@ -270,7 +272,16 @@ export class ExpenseCategoryManagementComponent implements OnInit {
       return;
     }
 
-    if (confirm(`Are you sure you want to deactivate the category "${category.name}"?`)) {
+    this.dialogService.confirm({
+      title: 'Deactivate Category',
+      message: `Are you sure you want to deactivate the category "${category.name}"?`,
+      type: 'warning',
+      icon: 'archive',
+      confirmText: 'Deactivate',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
+      if (!confirmed) return;
+
       this.categoryService.deleteCategory(category._id).subscribe({
         next: (response) => {
           if (response.success) {
@@ -284,7 +295,7 @@ export class ExpenseCategoryManagementComponent implements OnInit {
           this.snackBar.open(errorMessage, 'Close', { duration: 5000 });
         }
       });
-    }
+    });
   }
 
   /**

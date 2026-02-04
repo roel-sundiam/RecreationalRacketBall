@@ -6,6 +6,7 @@ export interface IExpenseDocument extends Document {
   details: string;
   category: string;
   createdBy?: string; // Admin who created the expense
+  clubId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +48,12 @@ const ExpenseSchema = new Schema<IExpenseDocument>({
   createdBy: {
     type: String,
     required: false
+  },
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: false,
+    index: true
   }
 }, {
   timestamps: true,

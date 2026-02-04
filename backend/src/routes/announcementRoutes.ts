@@ -10,31 +10,36 @@ import {
   updateAnnouncement
 } from '../controllers/announcementController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 
 const router = express.Router();
 
-// Get active announcements (not dismissed by current user) - All authenticated users
-router.get('/active', authenticateToken, getActiveAnnouncements);
+// Apply auth and club context to all routes
+router.use(authenticateToken);
+router.use(extractClubContext);
 
-// Dismiss announcement - All authenticated users
-router.post('/:id/dismiss', authenticateToken, dismissAnnouncement);
+// Get active announcements (not dismissed by current user) - All club members
+router.get('/active', getActiveAnnouncements);
 
-// Get all announcements (admin view with pagination) - Admin/Superadmin only
-router.get('/', authenticateToken, requireAdmin, getAnnouncements);
+// Dismiss announcement - All club members
+router.post('/:id/dismiss', dismissAnnouncement);
 
-// Create announcement - Superadmin only
-router.post('/', authenticateToken, requireSuperAdmin, createAnnouncement);
+// Get all announcements (admin view with pagination) - Club admin only
+router.get('/', requireClubRole(['admin']), getAnnouncements);
 
-// Update announcement - Superadmin only
-router.put('/:id', authenticateToken, requireSuperAdmin, updateAnnouncement);
+// Create announcement - Club admin only
+router.post('/', requireClubRole(['admin']), createAnnouncement);
 
-// Stop announcement (deactivate) - Superadmin only
-router.patch('/:id/stop', authenticateToken, requireSuperAdmin, stopAnnouncement);
+// Update announcement - Club admin only
+router.put('/:id', requireClubRole(['admin']), updateAnnouncement);
 
-// Activate announcement (reactivate) - Superadmin only
-router.patch('/:id/activate', authenticateToken, requireSuperAdmin, activateAnnouncement);
+// Stop announcement (deactivate) - Club admin only
+router.patch('/:id/stop', requireClubRole(['admin']), stopAnnouncement);
 
-// Delete announcement - Superadmin only
-router.delete('/:id', authenticateToken, requireSuperAdmin, deleteAnnouncement);
+// Activate announcement (reactivate) - Club admin only
+router.patch('/:id/activate', requireClubRole(['admin']), activateAnnouncement);
+
+// Delete announcement - Club admin only
+router.delete('/:id', requireClubRole(['admin']), deleteAnnouncement);
 
 export default router;

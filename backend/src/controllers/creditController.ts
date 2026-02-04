@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import User from '../models/User';
+import ClubMembership from '../models/ClubMembership';
 import CreditTransaction from '../models/CreditTransaction';
 import { AuthenticatedRequest } from '../middleware/auth';
 import {
@@ -15,24 +16,26 @@ import {
 export const getCreditBalance = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!._id;
-    
-    const user = await User.findById(userId).select('creditBalance');
-    if (!user) {
+    const clubId = req.clubId;
+
+    const membership = await ClubMembership.findOne({ userId, clubId }).select('creditBalance updatedAt');
+    if (!membership) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: 'Club membership not found'
       });
     }
 
     const pendingTransactions = await CreditTransaction.countDocuments({
       userId,
+      clubId,
       status: 'pending'
     });
 
     const balance: CreditBalance = {
-      balance: user.creditBalance || 0,
+      balance: membership.creditBalance || 0,
       pendingTransactions,
-      lastUpdated: user.updatedAt
+      lastUpdated: membership.updatedAt
     };
 
     res.json({
@@ -52,11 +55,12 @@ export const getCreditBalance = async (req: AuthenticatedRequest, res: Response)
 export const getCreditTransactions = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!._id;
+    const clubId = req.clubId;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const type = req.query.type as string;
 
-    const filter: any = { userId };
+    const filter: any = { userId, clubId };
     if (type) {
       filter.type = type;
     }
@@ -133,18 +137,19 @@ export const depositCredits = async (req: AuthenticatedRequest, res: Response) =
 export const getCreditStats = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!._id;
+    const clubId = req.clubId;
 
-    const user = await User.findById(userId).select('creditBalance');
-    if (!user) {
+    const membership = await ClubMembership.findOne({ userId, clubId }).select('creditBalance');
+    if (!membership) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: 'Club membership not found'
       });
     }
 
     // Get transaction statistics
     const stats = await CreditTransaction.aggregate([
-      { $match: { userId } },
+      { $match: { userId, clubId } },
       {
         $group: {
           _id: null,
@@ -184,7 +189,7 @@ export const getCreditStats = async (req: AuthenticatedRequest, res: Response) =
       totalDeposits: stats[0]?.totalDeposits || 0,
       totalUsed: stats[0]?.totalUsed || 0,
       totalRefunds: stats[0]?.totalRefunds || 0,
-      currentBalance: user.creditBalance || 0,
+      currentBalance: membership.creditBalance || 0,
       transactionCount: stats[0]?.transactionCount || 0
     };
 
@@ -205,14 +210,15 @@ export const getCreditStats = async (req: AuthenticatedRequest, res: Response) =
 export const adjustCredits = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const adminId = req.user!._id;
+    const clubId = req.clubId;
     const { userId, amount, type, reason }: AdjustCreditsRequest = req.body;
 
-    // Verify target user exists
-    const targetUser = await User.findById(userId);
-    if (!targetUser) {
+    // Verify target user's membership in this club
+    const membership = await ClubMembership.findOne({ userId, clubId }).populate('userId', 'fullName');
+    if (!membership) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: 'User membership not found in this club'
       });
     }
 
@@ -225,6 +231,7 @@ export const adjustCredits = async (req: AuthenticatedRequest, res: Response) =>
       amount,
       description,
       {
+        clubId,
         referenceType: 'admin_adjustment',
         metadata: {
           adminUserId: adminId,
@@ -234,6 +241,7 @@ export const adjustCredits = async (req: AuthenticatedRequest, res: Response) =>
       }
     );
 
+    const targetUser = membership.userId as any;
     res.json({
       success: true,
       data: transaction,
@@ -251,37 +259,45 @@ export const adjustCredits = async (req: AuthenticatedRequest, res: Response) =>
 // Admin: Get all users' credit balances
 export const getAllUserCredits = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const clubId = req.clubId;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const search = req.query.search as string;
 
     const skip = (page - 1) * limit;
-    
-    let filter: any = { isActive: true };
+
+    let filter: any = { clubId, status: 'approved' };
+
+    // Query memberships with populated user data
+    let query = ClubMembership.find(filter)
+      .populate('userId', 'username fullName email isActive')
+      .select('userId creditBalance role status updatedAt')
+      .sort({ creditBalance: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Apply search filter if provided
     if (search) {
-      filter = {
-        ...filter,
+      const searchedUsers = await User.find({
         $or: [
           { fullName: { $regex: search, $options: 'i' } },
           { username: { $regex: search, $options: 'i' } },
           { email: { $regex: search, $options: 'i' } }
         ]
-      };
+      }).select('_id');
+      const userIds = searchedUsers.map(u => u._id);
+      filter.userId = { $in: userIds };
     }
 
-    const [users, total] = await Promise.all([
-      User.find(filter)
-        .select('username fullName email creditBalance isApproved role')
-        .sort({ creditBalance: -1, fullName: 1 })
-        .skip(skip)
-        .limit(limit),
-      User.countDocuments(filter)
+    const [memberships, total] = await Promise.all([
+      query.exec(),
+      ClubMembership.countDocuments(filter)
     ]);
 
     // Get recent transactions for each user
-    const userIds = users.map(user => user._id);
+    const userIds = memberships.map(m => m.userId);
     const recentTransactions = await CreditTransaction.aggregate([
-      { $match: { userId: { $in: userIds } } },
+      { $match: { clubId, userId: { $in: userIds } } },
       { $sort: { createdAt: -1 } },
       {
         $group: {
@@ -291,21 +307,30 @@ export const getAllUserCredits = async (req: AuthenticatedRequest, res: Response
       }
     ]);
 
-    // Map transactions to users
+    // Map transactions to memberships
     const transactionMap = recentTransactions.reduce((acc, item) => {
       acc[item._id] = item.lastTransaction;
       return acc;
     }, {});
 
-    const usersWithTransactions = users.map(user => ({
-      ...user.toJSON(),
-      lastTransaction: transactionMap[user._id.toString()]
-    }));
+    const membershipsWithTransactions = memberships.map(membership => {
+      const user = membership.userId as any;
+      return {
+        userId: user._id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        creditBalance: membership.creditBalance,
+        clubRole: membership.role,
+        clubStatus: membership.status,
+        lastTransaction: transactionMap[user._id.toString()]
+      };
+    });
 
     res.json({
       success: true,
       data: {
-        users: usersWithTransactions,
+        users: membershipsWithTransactions,
         pagination: {
           current: page,
           pages: Math.ceil(total / limit),
@@ -444,15 +469,23 @@ export const recordCreditDeposit = async (req: AuthenticatedRequest, res: Respon
           throw new Error('Transaction is already recorded');
         }
 
-        // Update user's credit balance (add the deposited amount)
-        const user = await User.findById(transaction.userId).session(session);
-        if (!user) {
-          throw new Error('User not found');
+        // Verify transaction belongs to current club
+        if (transaction.clubId?.toString() !== req.clubId?.toString()) {
+          throw new Error('Transaction not found in this club');
         }
 
-        const currentBalance = user.creditBalance || 0;
+        // Update club membership's credit balance (add the deposited amount)
+        const membership = await ClubMembership.findOne({
+          userId: transaction.userId,
+          clubId: transaction.clubId
+        }).session(session);
+        if (!membership) {
+          throw new Error('Club membership not found');
+        }
+
+        const currentBalance = membership.creditBalance || 0;
         const newBalance = currentBalance + transaction.amount;
-        
+
         // Update transaction status and balance fields
         transaction.status = 'recorded';
         transaction.processedAt = new Date();
@@ -463,15 +496,17 @@ export const recordCreditDeposit = async (req: AuthenticatedRequest, res: Respon
           recordedBy: adminId.toString(),
           recordedAt: new Date()
         };
-        
-        // Save both user and transaction
-        user.creditBalance = newBalance;
+
+        // Save both membership and transaction
+        membership.creditBalance = newBalance;
         await Promise.all([
-          user.save({ session }),
+          membership.save({ session }),
           transaction.save({ session })
         ]);
-        
-        console.log(`💳 Credit deposit recorded: ${user.fullName} balance updated from ₱${currentBalance} to ₱${newBalance}`);
+
+        // Get user info for logging
+        const user = await User.findById(transaction.userId);
+        console.log(`💳 Credit deposit recorded: ${user?.fullName} balance updated from ₱${currentBalance} to ₱${newBalance}`);
         updatedTransaction = transaction;
       });
     } catch (error: any) {

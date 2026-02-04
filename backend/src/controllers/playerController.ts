@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import ClubMembership from '../models/ClubMembership';
 import Player from '../models/Player';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
@@ -10,40 +11,49 @@ export const getPlayers = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const limit = parseInt(req.query.limit as string) || 20;
   const skip = (page - 1) * limit;
 
-  // Build filter query
-  const filter: any = {};
-
-  // Search by name or email
-  if (req.query.search) {
-    const searchRegex = new RegExp(req.query.search as string, 'i');
-    filter.$or = [
-      { fullName: searchRegex },
-      { email: searchRegex }
-    ];
-  }
-
-  // Filter by active status (default: only active players)
-  if (req.query.includeInactive !== 'true') {
-    filter.isActive = true;
-  }
+  // Build filter query with clubId
+  const filter: any = {
+    clubId: req.clubId,
+    status: 'approved'
+  };
 
   // Sort options
-  let sortOption: any = { seedPoints: -1, fullName: 1 }; // Default: by seed points descending
+  let sortOption: any = { seedPoints: -1, matchesWon: -1 }; // Default: by seed points descending
 
   if (req.query.sort === 'name') {
-    sortOption = { fullName: 1 };
+    sortOption = { 'userId.fullName': 1 };
   } else if (req.query.sort === 'newest') {
-    sortOption = { createdAt: -1 };
+    sortOption = { joinedAt: -1 };
   } else if (req.query.sort === 'oldest') {
-    sortOption = { createdAt: 1 };
+    sortOption = { joinedAt: 1 };
   }
 
-  const total = await Player.countDocuments(filter);
-  const players = await Player.find(filter)
+  // Include inactive players if requested
+  if (req.query.includeInactive === 'true') {
+    delete filter.status;
+  }
+
+  const total = await ClubMembership.countDocuments(filter);
+  const memberships = await ClubMembership.find(filter)
+    .populate('userId', 'username fullName email profilePicture')
     .sort(sortOption)
     .skip(skip)
     .limit(limit)
     .lean();
+
+  // Apply search filter after population if needed
+  let players = memberships;
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search as string, 'i');
+    players = memberships.filter((m: any) => {
+      const user = m.userId;
+      return (
+        user?.fullName?.match(searchRegex) ||
+        user?.email?.match(searchRegex) ||
+        user?.username?.match(searchRegex)
+      );
+    });
+  }
 
   res.status(200).json({
     success: true,
@@ -51,21 +61,24 @@ export const getPlayers = asyncHandler(async (req: AuthenticatedRequest, res: Re
     pagination: {
       page,
       limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      hasNext: page * limit < total,
+      total: req.query.search ? players.length : total,
+      totalPages: Math.ceil((req.query.search ? players.length : total) / limit),
+      hasNext: page * limit < (req.query.search ? players.length : total),
       hasPrev: page > 1
     }
   });
 });
 
-// Get single player by ID
+// Get single player by ID (membership ID)
 export const getPlayer = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
 
-  const player = await Player.findById(id);
+  const membership = await ClubMembership.findOne({
+    _id: id,
+    clubId: req.clubId
+  }).populate('userId', 'username fullName email profilePicture');
 
-  if (!player) {
+  if (!membership) {
     res.status(404).json({
       success: false,
       error: 'Player not found'
@@ -75,7 +88,7 @@ export const getPlayer = asyncHandler(async (req: AuthenticatedRequest, res: Res
 
   res.status(200).json({
     success: true,
-    data: player
+    data: membership
   });
 });
 

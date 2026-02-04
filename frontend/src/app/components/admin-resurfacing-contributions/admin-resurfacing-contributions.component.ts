@@ -16,6 +16,7 @@ import { environment } from '../../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { ConfirmDeleteDialogComponent } from '../confirm-delete-dialog/confirm-delete-dialog.component';
 import { ContributionFormDialogComponent } from '../contribution-form-dialog/contribution-form-dialog.component';
+import { SnackbarService } from '../../services/snackbar.service';
 
 interface Contribution {
   _id: string;
@@ -70,7 +71,8 @@ export class AdminResurfacingContributionsComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private snackbarService: SnackbarService
   ) {}
 
   ngOnInit(): void {
@@ -132,7 +134,7 @@ export class AdminResurfacingContributionsComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ Error updating status:', error);
-        alert('Failed to update status. Please try again.');
+        this.snackbarService.error('Failed to update status. Please try again.');
       }
     });
   }

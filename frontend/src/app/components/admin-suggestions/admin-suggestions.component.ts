@@ -25,16 +25,21 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { AdminResponseDialogComponent } from '../admin-response-dialog/admin-response-dialog.component';
-import { ConfirmationDialogComponent, ConfirmationDialogData } from '../confirmation-dialog/confirmation-dialog.component';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData,
+} from '../confirmation-dialog/confirmation-dialog.component';
 import { environment } from '../../../environments/environment';
 
 interface Suggestion {
   _id: string;
-  userId: {
-    _id: string;
-    fullName: string;
-    username: string;
-  } | string;
+  userId:
+    | {
+        _id: string;
+        fullName: string;
+        username: string;
+      }
+    | string;
   type: 'suggestion' | 'complaint';
   category: 'facility' | 'service' | 'booking' | 'payments' | 'general' | 'staff' | 'maintenance';
   priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -43,11 +48,13 @@ interface Suggestion {
   status: 'open' | 'in_review' | 'in_progress' | 'resolved' | 'closed';
   isAnonymous: boolean;
   adminResponse?: {
-    responderId: {
-      _id: string;
-      fullName: string;
-      username: string;
-    } | string;
+    responderId:
+      | {
+          _id: string;
+          fullName: string;
+          username: string;
+        }
+      | string;
     response: string;
     responseDate: Date;
     actionTaken?: string;
@@ -101,24 +108,33 @@ interface SuggestionStats {
     MatMenuModule,
     MatBadgeModule,
     MatTooltipModule,
-    MatDividerModule
+    MatDividerModule,
   ],
   template: `
     <div class="admin-suggestions-container">
-      <div class="admin-header">
-        <button mat-icon-button (click)="goBack()" class="back-button">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h1>
-          <mat-icon>admin_panel_settings</mat-icon>
-          Suggestions & Complaints Management
-        </h1>
+      <!-- Modern Gradient Header -->
+      <div class="modern-header">
+        <div class="header-content">
+          <div class="header-left">
+            <button (click)="goBack()" class="back-button">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
+            <div class="icon-wrapper">
+              <mat-icon>feedback</mat-icon>
+            </div>
+            <div class="title-group">
+              <h1>Feedback Management</h1>
+              <p class="subtitle">Manage suggestions, complaints, and member feedback</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Statistics Cards -->
-      <div class="stats-grid" *ngIf="stats">
-        <mat-card class="stat-card total">
-          <mat-card-content>
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Statistics Cards -->
+        <div class="stats-grid" *ngIf="stats">
+          <div class="stat-card total">
             <div class="stat-content">
               <div class="stat-icon">
                 <mat-icon>feedback</mat-icon>
@@ -128,14 +144,9 @@ interface SuggestionStats {
                 <p>Total Feedback</p>
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
+          </div>
 
-        <mat-card class="stat-card urgent" 
-                 [matBadge]="stats.general.urgentCount || 0" 
-                 matBadgeColor="warn"
-                 [matBadgeHidden]="!stats.general.urgentCount">
-          <mat-card-content>
+          <div class="stat-card urgent">
             <div class="stat-content">
               <div class="stat-icon">
                 <mat-icon>priority_high</mat-icon>
@@ -143,13 +154,14 @@ interface SuggestionStats {
               <div class="stat-info">
                 <h3>{{ stats.general.openCount || 0 }}</h3>
                 <p>Open Items</p>
+                <span class="badge" *ngIf="stats.general.urgentCount"
+                  >{{ stats.general.urgentCount }} urgent</span
+                >
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
+          </div>
 
-        <mat-card class="stat-card complaints">
-          <mat-card-content>
+          <div class="stat-card complaints">
             <div class="stat-content">
               <div class="stat-icon">
                 <mat-icon>report_problem</mat-icon>
@@ -159,11 +171,9 @@ interface SuggestionStats {
                 <p>Complaints</p>
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
+          </div>
 
-        <mat-card class="stat-card suggestions">
-          <mat-card-content>
+          <div class="stat-card suggestions">
             <div class="stat-content">
               <div class="stat-icon">
                 <mat-icon>lightbulb</mat-icon>
@@ -173,246 +183,307 @@ interface SuggestionStats {
                 <p>Suggestions</p>
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
+          </div>
+        </div>
 
-      <mat-card class="main-card">
-        <mat-tab-group [(selectedIndex)]="selectedTab">
-          
-          <!-- All Suggestions -->
-          <mat-tab [label]="'All Feedback (' + (totalCount || 0) + ')'">
-            <div class="tab-content">
-              
-              <!-- Filters -->
-              <div class="filters-section">
-                <div class="filters-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Type</mat-label>
-                    <mat-select [(value)]="filters.type" (selectionChange)="applyFilters()">
-                      <mat-option value="">All Types</mat-option>
-                      <mat-option value="suggestion">Suggestions</mat-option>
-                      <mat-option value="complaint">Complaints</mat-option>
-                    </mat-select>
-                  </mat-form-field>
+        <mat-card class="main-card">
+          <mat-tab-group [(selectedIndex)]="selectedTab">
+            <!-- All Suggestions -->
+            <mat-tab [label]="'All Feedback (' + (totalCount || 0) + ')'">
+              <div class="tab-content">
+                <!-- Filters -->
+                <div class="filters-section">
+                  <div class="filters-row">
+                    <div class="filter-group">
+                      <label for="typeFilter">Type</label>
+                      <select id="typeFilter" [(ngModel)]="filters.type" (change)="applyFilters()">
+                        <option value="">All Types</option>
+                        <option value="suggestion">Suggestions</option>
+                        <option value="complaint">Complaints</option>
+                      </select>
+                    </div>
 
-                  <mat-form-field appearance="outline">
-                    <mat-label>Status</mat-label>
-                    <mat-select [(value)]="filters.status" (selectionChange)="applyFilters()">
-                      <mat-option value="">All Statuses</mat-option>
-                      <mat-option value="open">Open</mat-option>
-                      <mat-option value="in_review">In Review</mat-option>
-                      <mat-option value="in_progress">In Progress</mat-option>
-                      <mat-option value="resolved">Resolved</mat-option>
-                      <mat-option value="closed">Closed</mat-option>
-                    </mat-select>
-                  </mat-form-field>
+                    <div class="filter-group">
+                      <label for="statusFilter">Status</label>
+                      <select
+                        id="statusFilter"
+                        [(ngModel)]="filters.status"
+                        (change)="applyFilters()"
+                      >
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="in_review">In Review</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                      </select>
+                    </div>
 
-                  <mat-form-field appearance="outline">
-                    <mat-label>Category</mat-label>
-                    <mat-select [(value)]="filters.category" (selectionChange)="applyFilters()">
-                      <mat-option value="">All Categories</mat-option>
-                      <mat-option value="facility">Facility</mat-option>
-                      <mat-option value="service">Service</mat-option>
-                      <mat-option value="booking">Booking</mat-option>
-                      <mat-option value="payments">Payments</mat-option>
-                      <mat-option value="staff">Staff</mat-option>
-                      <mat-option value="maintenance">Maintenance</mat-option>
-                      <mat-option value="general">General</mat-option>
-                    </mat-select>
-                  </mat-form-field>
+                    <div class="filter-group">
+                      <label for="categoryFilter">Category</label>
+                      <select
+                        id="categoryFilter"
+                        [(ngModel)]="filters.category"
+                        (change)="applyFilters()"
+                      >
+                        <option value="">All Categories</option>
+                        <option value="facility">Facility</option>
+                        <option value="service">Service</option>
+                        <option value="booking">Booking</option>
+                        <option value="payments">Payments</option>
+                        <option value="staff">Staff</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="general">General</option>
+                      </select>
+                    </div>
 
-                  <mat-form-field appearance="outline">
-                    <mat-label>Priority</mat-label>
-                    <mat-select [(value)]="filters.priority" (selectionChange)="applyFilters()">
-                      <mat-option value="">All Priorities</mat-option>
-                      <mat-option value="urgent">Urgent</mat-option>
-                      <mat-option value="high">High</mat-option>
-                      <mat-option value="medium">Medium</mat-option>
-                      <mat-option value="low">Low</mat-option>
-                    </mat-select>
-                  </mat-form-field>
+                    <div class="filter-group">
+                      <label for="priorityFilter">Priority</label>
+                      <select
+                        id="priorityFilter"
+                        [(ngModel)]="filters.priority"
+                        (change)="applyFilters()"
+                      >
+                        <option value="">All Priorities</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                      </select>
+                    </div>
 
-                  <mat-form-field appearance="outline">
-                    <mat-label>Search</mat-label>
-                    <input matInput [(ngModel)]="filters.search" 
-                           (keyup.enter)="applyFilters()" 
-                           placeholder="Search title or description">
-                    <mat-icon matSuffix>search</mat-icon>
-                  </mat-form-field>
+                    <div class="filter-group search-group">
+                      <label for="searchFilter">Search</label>
+                      <div class="search-wrapper">
+                        <mat-icon>search</mat-icon>
+                        <input
+                          id="searchFilter"
+                          type="text"
+                          [(ngModel)]="filters.search"
+                          (keyup.enter)="applyFilters()"
+                          placeholder="Search title or description"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-                  <button mat-raised-button color="primary" (click)="applyFilters()">
-                    <mat-icon>search</mat-icon>
-                    Search
-                  </button>
+                  <div class="button-row">
+                    <button class="clear-button" (click)="clearFilters()">
+                      <mat-icon>clear</mat-icon>
+                      Clear
+                    </button>
 
-                  <button mat-button (click)="clearFilters()">
-                    <mat-icon>clear</mat-icon>
-                    Clear
-                  </button>
+                    <button class="search-button" (click)="applyFilters()">
+                      <mat-icon>search</mat-icon>
+                      Search
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Loading State -->
-              <div *ngIf="loading" class="loading-container">
-                <mat-spinner diameter="50"></mat-spinner>
-                <p>Loading suggestions...</p>
-              </div>
+                <!-- Loading State -->
+                <div *ngIf="loading" class="loading-container">
+                  <mat-spinner diameter="50"></mat-spinner>
+                  <p>Loading suggestions...</p>
+                </div>
 
-              <!-- Suggestions List -->
-              <div *ngIf="!loading" class="suggestions-list">
-                <mat-card *ngFor="let suggestion of suggestions" class="suggestion-card"
-                         [class]="getSuggestionClass(suggestion)">
-                  <mat-card-header>
-                    <div class="suggestion-header">
-                      <div class="suggestion-info">
-                        <div class="suggestion-title">
-                          <mat-icon>{{ getSuggestionIcon(suggestion) }}</mat-icon>
-                          <h3>{{ suggestion.title }}</h3>
-                          <span *ngIf="suggestion.isAnonymous" class="anonymous-badge" matTooltip="Anonymous submission">
-                            <mat-icon>visibility_off</mat-icon>
-                          </span>
-                        </div>
-                        <div class="suggestion-meta">
-                          <span class="type-badge" [class]="suggestion.type">
-                            {{ suggestion.type | titlecase }}
-                          </span>
-                          <span class="category-badge">
-                            {{ getCategoryLabel(suggestion.category) }}
-                          </span>
-                          <span class="priority-badge" [class]="suggestion.priority">
-                            {{ suggestion.priority | titlecase }}
-                          </span>
-                          <span class="status-badge" [class]="suggestion.status">
-                            {{ getStatusLabel(suggestion.status) }}
-                          </span>
-                        </div>
-                        <div class="suggestion-submitter">
-                          <mat-icon>person</mat-icon>
-                          <span *ngIf="!suggestion.isAnonymous">{{ getUserFullName(suggestion) || 'Unknown User' }}</span>
-                          <span *ngIf="suggestion.isAnonymous" class="anonymous-text">Anonymous User</span>
-                          <span class="submission-date">• {{ formatDate(suggestion.createdAt) }}</span>
-                        </div>
-                      </div>
-                      <div class="suggestion-actions">
-                        <button mat-icon-button [matMenuTriggerFor]="actionMenu">
-                          <mat-icon>more_vert</mat-icon>
-                        </button>
-                        <mat-menu #actionMenu="matMenu">
-                          <button mat-menu-item (click)="changeStatus(suggestion, 'in_review')"
-                                  [disabled]="suggestion.status === 'in_review'">
-                            <mat-icon>rate_review</mat-icon>
-                            Mark as In Review
-                          </button>
-                          <button mat-menu-item (click)="changeStatus(suggestion, 'in_progress')"
-                                  [disabled]="suggestion.status === 'in_progress'">
-                            <mat-icon>hourglass_empty</mat-icon>
-                            Mark as In Progress
-                          </button>
-                          <button mat-menu-item (click)="changeStatus(suggestion, 'resolved')"
-                                  [disabled]="suggestion.status === 'resolved'">
-                            <mat-icon>check_circle</mat-icon>
-                            Mark as Resolved
-                          </button>
-                          <button mat-menu-item (click)="changeStatus(suggestion, 'closed')"
-                                  [disabled]="suggestion.status === 'closed'">
-                            <mat-icon>close</mat-icon>
-                            Close
-                          </button>
-                          <mat-divider></mat-divider>
-                          <button mat-menu-item (click)="openResponseDialog(suggestion)">
-                            <mat-icon>reply</mat-icon>
-                            {{ suggestion.adminResponse ? 'Update Response' : 'Add Response' }}
-                          </button>
-                        </mat-menu>
-                      </div>
-                    </div>
-                  </mat-card-header>
-
-                  <mat-card-content>
-                    <p class="suggestion-description">{{ suggestion.description }}</p>
-                    
-                    <!-- Admin Response -->
-                    <div *ngIf="suggestion.adminResponse" class="admin-response">
-                      <div class="response-header">
-                        <mat-icon>admin_panel_settings</mat-icon>
-                        <h4>Official Response</h4>
-                        <span class="response-date">{{ formatDate(suggestion.adminResponse.responseDate) }}</span>
-                      </div>
-                      <div class="response-content">
-                        <p>{{ suggestion.adminResponse.response }}</p>
-                        <div *ngIf="suggestion.adminResponse.actionTaken" class="action-taken">
-                          <strong>Action Taken:</strong> {{ suggestion.adminResponse.actionTaken }}
-                        </div>
-                        <div class="responder-info">
-                          <mat-icon>person</mat-icon>
-                          <span>{{ getResponderFullName(suggestion.adminResponse) }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </mat-card-content>
-
-                  <mat-card-actions>
-                    <button mat-button color="primary" (click)="openResponseDialog(suggestion)">
-                      <mat-icon>reply</mat-icon>
-                      {{ suggestion.adminResponse ? 'Update Response' : 'Add Response' }}
-                    </button>
-                    <button mat-button color="warn" (click)="deleteSuggestion(suggestion)"
-                            *ngIf="authService.currentUser?.role === 'superadmin'">
-                      <mat-icon>delete</mat-icon>
-                      Delete
-                    </button>
-                  </mat-card-actions>
-                </mat-card>
-              </div>
-
-              <!-- Pagination -->
-              <mat-paginator
-                *ngIf="!loading && suggestions.length > 0"
-                [length]="totalCount"
-                [pageSize]="pageSize"
-                [pageSizeOptions]="[5, 10, 20, 50]"
-                [pageIndex]="currentPage - 1"
-                (page)="onPageChange($event)"
-                showFirstLastButtons>
-              </mat-paginator>
-            </div>
-          </mat-tab>
-
-          <!-- Statistics Tab -->
-          <mat-tab label="Statistics">
-            <div class="tab-content">
-              <div class="stats-section" *ngIf="stats">
-                <h2>Feedback Analytics</h2>
-                
-                <!-- Category Breakdown -->
-                <div class="category-stats">
-                  <h3>By Category</h3>
-                  <div class="category-grid">
-                    <mat-card *ngFor="let category of stats.categories" class="category-card">
-                      <mat-card-content>
-                        <div class="category-info">
-                          <h4>{{ getCategoryLabel(category._id) }}</h4>
-                          <div class="category-numbers">
-                            <span class="total">{{ category.count }} total</span>
-                            <span class="open" *ngIf="category.openCount > 0">{{ category.openCount }} open</span>
-                            <span class="resolved" *ngIf="category.resolvedCount > 0">{{ category.resolvedCount }} resolved</span>
+                <!-- Suggestions List -->
+                <div *ngIf="!loading" class="suggestions-list">
+                  <mat-card
+                    *ngFor="let suggestion of suggestions"
+                    class="suggestion-card"
+                    [class]="getSuggestionClass(suggestion)"
+                  >
+                    <mat-card-header>
+                      <div class="suggestion-header">
+                        <div class="suggestion-info">
+                          <div class="suggestion-title">
+                            <mat-icon>{{ getSuggestionIcon(suggestion) }}</mat-icon>
+                            <h3>{{ suggestion.title }}</h3>
+                            <span
+                              *ngIf="suggestion.isAnonymous"
+                              class="anonymous-badge"
+                              matTooltip="Anonymous submission"
+                            >
+                              <mat-icon>visibility_off</mat-icon>
+                            </span>
+                          </div>
+                          <div class="suggestion-meta">
+                            <span class="type-badge" [class]="suggestion.type">
+                              {{ suggestion.type | titlecase }}
+                            </span>
+                            <span class="category-badge">
+                              {{ getCategoryLabel(suggestion.category) }}
+                            </span>
+                            <span class="priority-badge" [class]="suggestion.priority">
+                              {{ suggestion.priority | titlecase }}
+                            </span>
+                            <span class="status-badge" [class]="suggestion.status">
+                              {{ getStatusLabel(suggestion.status) }}
+                            </span>
+                          </div>
+                          <div class="suggestion-submitter">
+                            <mat-icon>person</mat-icon>
+                            <span *ngIf="!suggestion.isAnonymous">{{
+                              getUserFullName(suggestion) || 'Unknown User'
+                            }}</span>
+                            <span *ngIf="suggestion.isAnonymous" class="anonymous-text"
+                              >Anonymous User</span
+                            >
+                            <span class="submission-date"
+                              >• {{ formatDate(suggestion.createdAt) }}</span
+                            >
                           </div>
                         </div>
-                      </mat-card-content>
-                    </mat-card>
+                        <div class="suggestion-actions">
+                          <button mat-icon-button [matMenuTriggerFor]="actionMenu">
+                            <mat-icon>more_vert</mat-icon>
+                          </button>
+                          <mat-menu #actionMenu="matMenu">
+                            <button
+                              mat-menu-item
+                              (click)="changeStatus(suggestion, 'in_review')"
+                              [disabled]="suggestion.status === 'in_review'"
+                            >
+                              <mat-icon>rate_review</mat-icon>
+                              Mark as In Review
+                            </button>
+                            <button
+                              mat-menu-item
+                              (click)="changeStatus(suggestion, 'in_progress')"
+                              [disabled]="suggestion.status === 'in_progress'"
+                            >
+                              <mat-icon>hourglass_empty</mat-icon>
+                              Mark as In Progress
+                            </button>
+                            <button
+                              mat-menu-item
+                              (click)="changeStatus(suggestion, 'resolved')"
+                              [disabled]="suggestion.status === 'resolved'"
+                            >
+                              <mat-icon>check_circle</mat-icon>
+                              Mark as Resolved
+                            </button>
+                            <button
+                              mat-menu-item
+                              (click)="changeStatus(suggestion, 'closed')"
+                              [disabled]="suggestion.status === 'closed'"
+                            >
+                              <mat-icon>close</mat-icon>
+                              Close
+                            </button>
+                            <mat-divider></mat-divider>
+                            <button mat-menu-item (click)="openResponseDialog(suggestion)">
+                              <mat-icon>reply</mat-icon>
+                              {{ suggestion.adminResponse ? 'Update Response' : 'Add Response' }}
+                            </button>
+                          </mat-menu>
+                        </div>
+                      </div>
+                    </mat-card-header>
+
+                    <mat-card-content>
+                      <p class="suggestion-description">{{ suggestion.description }}</p>
+
+                      <!-- Admin Response -->
+                      <div *ngIf="suggestion.adminResponse" class="admin-response">
+                        <div class="response-header">
+                          <mat-icon>admin_panel_settings</mat-icon>
+                          <h4>Official Response</h4>
+                          <span class="response-date">{{
+                            formatDate(suggestion.adminResponse.responseDate)
+                          }}</span>
+                        </div>
+                        <div class="response-content">
+                          <p>{{ suggestion.adminResponse.response }}</p>
+                          <div *ngIf="suggestion.adminResponse.actionTaken" class="action-taken">
+                            <strong>Action Taken:</strong>
+                            {{ suggestion.adminResponse.actionTaken }}
+                          </div>
+                          <div class="responder-info">
+                            <mat-icon>person</mat-icon>
+                            <span>{{ getResponderFullName(suggestion.adminResponse) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </mat-card-content>
+
+                    <mat-card-actions>
+                      <button mat-button color="primary" (click)="openResponseDialog(suggestion)">
+                        <mat-icon>reply</mat-icon>
+                        {{ suggestion.adminResponse ? 'Update Response' : 'Add Response' }}
+                      </button>
+                      <button
+                        mat-button
+                        color="warn"
+                        (click)="deleteSuggestion(suggestion)"
+                        *ngIf="authService.currentUser?.role === 'superadmin'"
+                      >
+                        <mat-icon>delete</mat-icon>
+                        Delete
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+                </div>
+
+                <!-- Pagination -->
+                <mat-paginator
+                  *ngIf="!loading && suggestions.length > 0"
+                  [length]="totalCount"
+                  [pageSize]="pageSize"
+                  [pageSizeOptions]="[5, 10, 20, 50]"
+                  [pageIndex]="currentPage - 1"
+                  (page)="onPageChange($event)"
+                  showFirstLastButtons
+                >
+                </mat-paginator>
+
+                <!-- No Results -->
+                <div *ngIf="!loading && suggestions.length === 0" class="no-results">
+                  <mat-icon>inbox</mat-icon>
+                  <p>No feedback found matching your criteria</p>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Statistics Tab -->
+            <mat-tab label="Statistics">
+              <div class="tab-content">
+                <div class="stats-section" *ngIf="stats">
+                  <h2>Feedback Analytics</h2>
+
+                  <!-- Category Breakdown -->
+                  <div class="category-stats">
+                    <h3>By Category</h3>
+                    <div class="category-grid">
+                      <mat-card *ngFor="let category of stats.categories" class="category-card">
+                        <mat-card-content>
+                          <div class="category-info">
+                            <h4>{{ getCategoryLabel(category._id) }}</h4>
+                            <div class="category-numbers">
+                              <span class="total">{{ category.count }} total</span>
+                              <span class="open" *ngIf="category.openCount > 0"
+                                >{{ category.openCount }} open</span
+                              >
+                              <span class="resolved" *ngIf="category.resolvedCount > 0"
+                                >{{ category.resolvedCount }} resolved</span
+                              >
+                            </div>
+                          </div>
+                        </mat-card-content>
+                      </mat-card>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </mat-tab>
-        </mat-tab-group>
-      </mat-card>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card>
+      </div>
     </div>
 
     <!-- Response Dialog Template (will be created in a real implementation) -->
   `,
-  styleUrl: './admin-suggestions.component.scss'
+  styleUrl: './admin-suggestions.component.scss',
 })
 export class AdminSuggestionsComponent implements OnInit, OnDestroy {
   private apiUrl = environment.apiUrl;
@@ -432,7 +503,7 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
     status: '',
     category: '',
     priority: '',
-    search: ''
+    search: '',
   };
 
   constructor(
@@ -441,12 +512,23 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
     private router: Router,
     public authService: AuthService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
-    // Check admin access
-    if (!this.authService.currentUser || !['admin', 'superadmin'].includes(this.authService.currentUser.role)) {
+    // Check admin access using multi-tenant role system
+    if (!this.authService.isClubAdmin() && !this.authService.isSuperAdmin()) {
+      this.snackBar.open('Access denied. Admin access required.', 'Close', { duration: 3000 });
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    // For regular club admins, require a selected club
+    // For superadmins, they can view all clubs without selecting one
+    if (!this.authService.selectedClub && !this.authService.isSuperAdmin()) {
+      this.snackBar.open('Please select a club from the top menu to manage feedback.', 'Close', {
+        duration: 5000,
+      });
       this.router.navigate(['/dashboard']);
       return;
     }
@@ -468,11 +550,16 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
 
     const params: any = {
       page: this.currentPage.toString(),
-      limit: this.pageSize.toString()
+      limit: this.pageSize.toString(),
     };
 
+    // For superadmins without selected club, request all clubs
+    if (this.authService.isSuperAdmin() && !this.authService.selectedClub) {
+      params.allClubs = 'true';
+    }
+
     // Add filters
-    Object.keys(this.filters).forEach(key => {
+    Object.keys(this.filters).forEach((key) => {
       if (this.filters[key as keyof typeof this.filters]) {
         params[key] = this.filters[key as keyof typeof this.filters];
       }
@@ -493,14 +580,21 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
           console.error('Error loading suggestions:', error);
           this.showMessage('Failed to load suggestions', 'error');
           this.loading = false;
-        }
-      })
+        },
+      }),
     );
   }
 
   loadStatistics(): void {
+    const params: any = {};
+
+    // For superadmins without selected club, request all clubs
+    if (this.authService.isSuperAdmin() && !this.authService.selectedClub) {
+      params.allClubs = 'true';
+    }
+
     this.subscription.add(
-      this.http.get<any>(`${this.apiUrl}/suggestions/stats`).subscribe({
+      this.http.get<any>(`${this.apiUrl}/suggestions/stats`, { params }).subscribe({
         next: (response) => {
           if (response.success) {
             this.stats = response.data;
@@ -508,8 +602,8 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading statistics:', error);
-        }
-      })
+        },
+      }),
     );
   }
 
@@ -524,28 +618,30 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       status: '',
       category: '',
       priority: '',
-      search: ''
+      search: '',
     };
     this.applyFilters();
   }
 
   changeStatus(suggestion: Suggestion, newStatus: string): void {
     this.subscription.add(
-      this.http.patch<any>(`${this.apiUrl}/suggestions/${suggestion._id}/status`, { status: newStatus }).subscribe({
-        next: (response) => {
-          if (response.success) {
-            suggestion.status = newStatus as any;
-            this.showMessage(`Status updated to ${this.getStatusLabel(newStatus)}`, 'success');
-            this.loadStatistics(); // Refresh stats
-          } else {
+      this.http
+        .patch<any>(`${this.apiUrl}/suggestions/${suggestion._id}/status`, { status: newStatus })
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              suggestion.status = newStatus as any;
+              this.showMessage(`Status updated to ${this.getStatusLabel(newStatus)}`, 'success');
+              this.loadStatistics(); // Refresh stats
+            } else {
+              this.showMessage('Failed to update status', 'error');
+            }
+          },
+          error: (error) => {
+            console.error('Error updating status:', error);
             this.showMessage('Failed to update status', 'error');
-          }
-        },
-        error: (error) => {
-          console.error('Error updating status:', error);
-          this.showMessage('Failed to update status', 'error');
-        }
-      })
+          },
+        }),
     );
   }
 
@@ -556,20 +652,20 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       maxWidth: '95vw',
       maxHeight: '90vh',
       disableClose: false,
-      autoFocus: true
+      autoFocus: true,
     });
 
-    dialogRef.afterClosed().subscribe(updatedSuggestion => {
+    dialogRef.afterClosed().subscribe((updatedSuggestion) => {
       if (updatedSuggestion) {
         // Update the suggestion in the list
-        const index = this.suggestions.findIndex(s => s._id === updatedSuggestion._id);
+        const index = this.suggestions.findIndex((s) => s._id === updatedSuggestion._id);
         if (index !== -1) {
           this.suggestions[index] = updatedSuggestion;
         }
-        
+
         // Refresh statistics
         this.loadStatistics();
-        
+
         this.showMessage('Response saved successfully!', 'success');
       }
     });
@@ -583,7 +679,7 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       confirmText: 'Delete',
       cancelText: 'Cancel',
       type: 'error',
-      icon: 'delete_forever'
+      icon: 'delete_forever',
     };
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
@@ -591,10 +687,10 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       width: '500px',
       maxWidth: '95vw',
       disableClose: false,
-      autoFocus: true
+      autoFocus: true,
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.subscription.add(
           this.http.delete<any>(`${this.apiUrl}/suggestions/${suggestion._id}`).subscribe({
@@ -610,8 +706,8 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
             error: (error) => {
               console.error('Error deleting suggestion:', error);
               this.showMessage('Failed to delete suggestion', 'error');
-            }
-          })
+            },
+          }),
         );
       }
     });
@@ -646,7 +742,7 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       payments: 'Payments',
       staff: 'Staff',
       maintenance: 'Maintenance',
-      general: 'General'
+      general: 'General',
     };
     return categoryMap[category] || category;
   }
@@ -657,7 +753,7 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       in_review: 'Under Review',
       in_progress: 'In Progress',
       resolved: 'Resolved',
-      closed: 'Closed'
+      closed: 'Closed',
     };
     return statusMap[status] || status;
   }
@@ -668,7 +764,7 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
@@ -694,7 +790,7 @@ export class AdminSuggestionsComponent implements OnInit, OnDestroy {
       duration: 4000,
       panelClass: [`snackbar-${type}`],
       horizontalPosition: 'center' as const,
-      verticalPosition: 'bottom' as const
+      verticalPosition: 'bottom' as const,
     };
 
     this.snackBar.open(message, 'Close', config);

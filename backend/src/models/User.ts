@@ -90,6 +90,18 @@ const userSchema = new Schema<IUserDocument>({
     ref: 'User',
     default: null
   },
+  // Platform-level role (not club-specific)
+  platformRole: {
+    type: String,
+    enum: {
+      values: ['user', 'platform_admin'],
+      message: 'Platform role must be user or platform_admin'
+    },
+    default: 'user',
+    index: true
+  },
+  // Deprecated fields - kept for backward compatibility during migration
+  // These will be moved to ClubMembership model
   role: {
     type: String,
     enum: {

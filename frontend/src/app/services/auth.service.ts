@@ -4,11 +4,45 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
+export interface Club {
+  _id: string;
+  name: string;
+  slug: string;
+  logo?: string;
+  primaryColor: string;
+  accentColor: string;
+  status: 'active' | 'suspended' | 'trial';
+}
+
+export interface ClubMembership {
+  _id: string;
+  clubId: string;
+  club?: Club;
+  // Flat structure (as returned by backend)
+  clubName?: string;
+  clubSlug?: string;
+  clubLogo?: string;
+  clubPrimaryColor?: string;
+  clubAccentColor?: string;
+  clubStatus?: string;
+  // Membership details
+  role: 'member' | 'admin' | 'treasurer';
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  membershipFeesPaid: boolean;
+  creditBalance: number;
+  seedPoints: number;
+  matchesWon: number;
+  matchesPlayed: number;
+  joinedAt: string;
+}
+
 export interface User {
   _id: string;
   username: string;
   fullName: string;
   email: string;
+  platformRole?: 'user' | 'platform_admin';
+  // Deprecated fields (kept for backward compatibility)
   role: 'member' | 'admin' | 'superadmin' | 'treasurer';
   gender?: 'male' | 'female' | 'other';
   seedPoints?: number;
@@ -22,6 +56,7 @@ export interface AuthResponse {
   token: string;
   user: User;
   expiresIn: string;
+  clubs: ClubMembership[];
 }
 
 export interface LoginRequest {
@@ -65,11 +100,17 @@ export class AuthService {
     startedAt: null
   });
 
+  // Multi-tenant state
+  private clubsSubject = new BehaviorSubject<ClubMembership[]>([]);
+  private selectedClubSubject = new BehaviorSubject<ClubMembership | null>(null);
+
   public currentUser$ = this.currentUserSubject.asObservable();
   public token$ = this.tokenSubject.asObservable();
   public isLoading$ = this.isLoadingSubject.asObservable();
   public intendedRoute$ = this.intendedRouteSubject.asObservable();
   public impersonation$ = this.impersonationSubject.asObservable();
+  public clubs$ = this.clubsSubject.asObservable();
+  public selectedClub$ = this.selectedClubSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -79,6 +120,8 @@ export class AuthService {
     const token = localStorage.getItem('token');
     const userString = localStorage.getItem('user');
     const tokenExpiration = localStorage.getItem('tokenExpiration');
+    const clubsString = localStorage.getItem('clubs');
+    const selectedClubString = localStorage.getItem('selectedClub');
 
     if (token && userString && userString !== 'undefined' && userString !== 'null') {
       try {
@@ -91,6 +134,40 @@ export class AuthService {
         } else {
           this.tokenSubject.next(token);
           this.currentUserSubject.next(user);
+
+          // Restore clubs if available
+          if (clubsString && clubsString !== 'undefined' && clubsString !== 'null') {
+            try {
+              const clubs = JSON.parse(clubsString);
+              this.clubsSubject.next(clubs);
+            } catch (error) {
+              console.error('Error parsing clubs from localStorage:', error);
+            }
+          }
+
+          // Restore selected club if available
+          if (selectedClubString && selectedClubString !== 'undefined' && selectedClubString !== 'null') {
+            try {
+              const selectedClub = JSON.parse(selectedClubString);
+              this.selectedClubSubject.next(selectedClub);
+              console.log('🏢 Restored selected club:', selectedClub.club?.name || selectedClub.clubId);
+            } catch (error) {
+              console.error('Error parsing selected club from localStorage:', error);
+            }
+          }
+
+          // Ensure selected club has up-to-date membership details (role/status)
+          const currentSelectedClub = this.selectedClubSubject.value;
+          if (currentSelectedClub) {
+            const clubs = this.clubsSubject.value;
+            const matchingClub = clubs.find(c => c.clubId === currentSelectedClub.clubId);
+            if (matchingClub) {
+              this.selectedClubSubject.next(matchingClub);
+              localStorage.setItem('selectedClub', JSON.stringify(matchingClub));
+              console.log('🔄 Synced selected club from clubs list:', matchingClub.club?.name || matchingClub.clubId);
+            }
+          }
+
           console.log('🔐 Restored auth state from localStorage:', user.username);
         }
       } catch (error) {
@@ -116,10 +193,11 @@ export class AuthService {
       .pipe(
         tap((response: any) => {
           console.log('Login response:', response); // Debug log
-          // Backend returns: { success: true, data: { token, user, expiresIn }, message }
+          // Backend returns: { success: true, data: { token, user, expiresIn, clubs }, message }
           const token = response.data?.token || response.token;
           const user = response.data?.user || response.user;
           const expiresIn = response.data?.expiresIn || response.expiresIn || '7d';
+          const clubs = response.data?.clubs || [];
 
           if (token && user) {
             // Calculate and store token expiration timestamp
@@ -129,11 +207,23 @@ export class AuthService {
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
             localStorage.setItem('loginTime', Date.now().toString());
+            localStorage.setItem('clubs', JSON.stringify(clubs));
 
             this.tokenSubject.next(token);
             this.currentUserSubject.next(user);
+            this.clubsSubject.next(clubs);
 
-            console.log('Auth state updated - token:', !!token, 'user:', user.username, 'expires:', new Date(expirationTimestamp).toLocaleString());
+            // Auto-select first approved club if available
+            const approvedClubs = clubs.filter((c: ClubMembership) => c.status === 'approved');
+            if (approvedClubs.length > 0) {
+              this.selectClub(approvedClubs[0]);
+            } else {
+              // Clear selected club if no approved clubs
+              this.selectedClubSubject.next(null);
+              localStorage.removeItem('selectedClub');
+            }
+
+            console.log('Auth state updated - token:', !!token, 'user:', user.username, 'clubs:', clubs.length, 'expires:', new Date(expirationTimestamp).toLocaleString());
           } else {
             console.error('Invalid login response - missing token or user');
           }
@@ -166,10 +256,14 @@ export class AuthService {
     localStorage.removeItem('tokenExpiration');
     localStorage.removeItem('loginTime');
     localStorage.removeItem('impersonation');
+    localStorage.removeItem('clubs');
+    localStorage.removeItem('selectedClub');
     // Note: intendedRoute is NOT cleared here - handled separately
     this.tokenSubject.next(null);
     this.currentUserSubject.next(null);
     this.isLoadingSubject.next(false);
+    this.clubsSubject.next([]);
+    this.selectedClubSubject.next(null);
     this.impersonationSubject.next({
       isImpersonating: false,
       adminUser: null,
@@ -205,22 +299,62 @@ export class AuthService {
     return this.isLoadingSubject.value;
   }
 
+  /**
+   * Check if user is admin (backward compatibility - checks old role OR current club role)
+   */
   isAdmin(): boolean {
-    return this.currentUser?.role === 'admin' || this.currentUser?.role === 'superadmin';
+    // Check platform admin
+    if (this.isPlatformAdmin()) {
+      return true;
+    }
+    // Check old role field (backward compatibility)
+    if (this.currentUser?.role === 'admin' || this.currentUser?.role === 'superadmin') {
+      return true;
+    }
+    // Check current club role
+    return this.isClubAdmin();
   }
 
+  /**
+   * Check if user is superadmin (backward compatibility - now platform_admin)
+   */
   isSuperAdmin(): boolean {
+    // Platform admin is the new superadmin
+    if (this.isPlatformAdmin()) {
+      return true;
+    }
+    // Backward compatibility
     return this.currentUser?.role === 'superadmin';
   }
 
+  /**
+   * Check if user is treasurer (backward compatibility - checks old role OR current club role)
+   */
   isTreasurer(): boolean {
-    return this.currentUser?.role === 'treasurer';
+    // Check old role field (backward compatibility)
+    if (this.currentUser?.role === 'treasurer') {
+      return true;
+    }
+    // Check current club role
+    return this.isClubTreasurer();
   }
 
+  /**
+   * Check if user has financial access (backward compatibility)
+   */
   hasFinancialAccess(): boolean {
-    return this.currentUser?.role === 'treasurer' ||
-           this.currentUser?.role === 'admin' ||
-           this.currentUser?.role === 'superadmin';
+    // Platform admin has all access
+    if (this.isPlatformAdmin()) {
+      return true;
+    }
+    // Check old role field (backward compatibility)
+    if (this.currentUser?.role === 'treasurer' ||
+        this.currentUser?.role === 'admin' ||
+        this.currentUser?.role === 'superadmin') {
+      return true;
+    }
+    // Check current club role
+    return this.hasClubFinancialAccess();
   }
 
   /**
@@ -365,6 +499,154 @@ export class AuthService {
   isTokenExpiringSoon(thresholdMs: number): boolean {
     const remaining = this.getRemainingSessionTime();
     return remaining > 0 && remaining <= thresholdMs;
+  }
+
+  /**
+   * Get user's clubs
+   */
+  get clubs(): ClubMembership[] {
+    return this.clubsSubject.value;
+  }
+
+  /**
+   * Get currently selected club
+   */
+  get selectedClub(): ClubMembership | null {
+    return this.selectedClubSubject.value;
+  }
+
+  /**
+   * Get approved clubs only
+   */
+  get approvedClubs(): ClubMembership[] {
+    return this.clubsSubject.value.filter(c => c.status === 'approved');
+  }
+
+  /**
+   * Select a club (switches context to this club)
+   */
+  selectClub(club: ClubMembership): void {
+    if (!club || club.status !== 'approved') {
+      console.warn('Cannot select club:', club?.status || 'null club');
+      return;
+    }
+
+    this.selectedClubSubject.next(club);
+    localStorage.setItem('selectedClub', JSON.stringify(club));
+    console.log('🏢 Selected club:', club.club?.name || club.clubId);
+  }
+
+  /**
+   * Reload the currently selected club to get updated data
+   */
+  async reloadSelectedClub(): Promise<void> {
+    const selectedClub = this.selectedClubSubject.value;
+    if (!selectedClub || !selectedClub.clubId) {
+      return;
+    }
+
+    try {
+      // Fetch the club's public info to get updated logo
+      const response = await this.http.get<any>(`${environment.apiUrl}/clubs/${selectedClub.clubId}/public`).toPromise();
+      console.log('Reload club response:', response);
+      if (response.success && response.data && response.data.club) {
+        const clubData = response.data.club;
+        
+        // Update the selected club with new logo
+        const updatedSelectedClub = {
+          ...selectedClub,
+          club: {
+            ...selectedClub.club,
+            logo: clubData.logo,
+            primaryColor: clubData.primaryColor,
+            accentColor: clubData.accentColor
+          }
+        };
+        
+        console.log('Updated selected club:', updatedSelectedClub);
+        this.selectedClubSubject.next(updatedSelectedClub);
+        localStorage.setItem('selectedClub', JSON.stringify(updatedSelectedClub));
+        
+        // Also update in clubs list
+        const clubs = this.clubsSubject.value;
+        const clubIndex = clubs.findIndex((c: ClubMembership) => c.clubId === selectedClub.clubId);
+        if (clubIndex !== -1) {
+          clubs[clubIndex] = updatedSelectedClub;
+          this.clubsSubject.next(clubs);
+          localStorage.setItem('clubs', JSON.stringify(clubs));
+        }
+      }
+    } catch (error) {
+      console.error('Error reloading selected club:', error);
+    }
+  }
+
+  /**
+   * Switch to a different club by clubId
+   */
+  switchClub(clubId: string): boolean {
+    const club = this.approvedClubs.find(c => c.clubId === clubId);
+    if (club) {
+      this.selectClub(club);
+      return true;
+    }
+    console.warn('Club not found or not approved:', clubId);
+    return false;
+  }
+
+  /**
+   * Check if user has any approved clubs
+   */
+  hasApprovedClubs(): boolean {
+    return this.approvedClubs.length > 0;
+  }
+
+  /**
+   * Get user's role in the currently selected club
+   */
+  getClubRole(): 'member' | 'admin' | 'treasurer' | null {
+    const selectedRole = this.selectedClub?.role;
+    if (selectedRole) {
+      return selectedRole;
+    }
+
+    const selectedClubId = this.selectedClub?.clubId;
+    if (!selectedClubId) {
+      return null;
+    }
+
+    const fallbackClub = this.clubsSubject.value.find(c => c.clubId === selectedClubId);
+    return fallbackClub?.role || null;
+  }
+
+  /**
+   * Check if user is admin in current club
+   */
+  isClubAdmin(): boolean {
+    const role = this.getClubRole();
+    return role === 'admin' || role === 'treasurer';
+  }
+
+  /**
+   * Check if user is treasurer in current club
+   */
+  isClubTreasurer(): boolean {
+    return this.getClubRole() === 'treasurer';
+  }
+
+  /**
+   * Check if user has financial access in current club
+   */
+  hasClubFinancialAccess(): boolean {
+    const role = this.getClubRole();
+    return role === 'treasurer' || role === 'admin';
+  }
+
+  /**
+   * Get platform role
+   */
+  isPlatformAdmin(): boolean {
+    return this.currentUser?.platformRole === 'platform_admin';
   }
 
   /**

@@ -248,12 +248,20 @@ export class WebSocketService {
           return;
         }
 
-        // Broadcast to all admins in the admin_monitor room (excluding sender)
-        socket.to('admin_monitor').emit('activity_broadcast', {
-          type: 'member_navigation',
-          data: navData.data,
-          timestamp: new Date().toISOString()
-        });
+        // Log the navigation
+        console.log(`📍 Received page_navigation from ${navData.data.fullName} to ${navData.data.page}`);
+
+        // Broadcast to all in the admin_monitor room including sender
+        // Use io.to() instead of socket.to() to include the sender
+        const io = this.io;
+        if (io) {
+          io.to('admin_monitor').emit('activity_broadcast', {
+            type: 'member_navigation',
+            data: navData.data,
+            timestamp: new Date().toISOString()
+          });
+          console.log(`📢 Broadcasted activity for ${navData.data.fullName} to admin_monitor room`);
+        }
 
         // Log anonymous visits to public pages
         if (isAnonymous && isPublicPage) {

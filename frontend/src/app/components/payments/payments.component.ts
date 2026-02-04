@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { CancellationDialogComponent, CancellationDialogData } from '../cancellation-dialog/cancellation-dialog.component';
 import { environment } from '../../../environments/environment';
 import { canCancelReservation } from '../../utils/date-validation.util';
+import { DialogService } from '../../services/dialog.service';
 
 // Interfaces
 interface Payment {
@@ -442,7 +443,10 @@ interface Notification {
                     *ngFor="let individualPayment of payment._groupedPayments" 
                     class="breakdown-item">
                     <div class="breakdown-time">
-                      {{formatTime(individualPayment.reservationId.timeSlot)}} - {{formatTime(individualPayment.reservationId.timeSlot + 1)}}
+                      <span *ngIf="!individualPayment.amount || individualPayment.amount === 0">Daily Fee</span>
+                      <span *ngIf="individualPayment.amount && individualPayment.amount > 0">
+                        {{formatTime(individualPayment.reservationId.timeSlot)}} - {{formatTime(individualPayment.reservationId.timeSlot + 1)}}
+                      </span>
                     </div>
                     <div class="breakdown-amount">
                       ₱{{individualPayment.amount.toFixed(2)}}
@@ -971,7 +975,8 @@ export class PaymentsComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogService: DialogService
   ) {
     this.paymentForm = this.fb.group({
       reservationId: ['', Validators.required],
@@ -1851,27 +1856,39 @@ export class PaymentsComponent implements OnInit {
     }
 
     // Show confirmation dialog
-    const confirmed = confirm(`Are you sure you want to unrecord this payment?\n\nThis will:\n- Change status from "Recorded" back to "Completed"\n- Remove it from the Court Usage Report\n- Keep the payment as paid but no longer counted in monthly reports\n\nPayment: ${payment.description}\nAmount: ${payment.formattedAmount || '₱' + payment.amount.toFixed(2)}`);
+    this.dialogService.confirm({
+      title: 'Unrecord Payment?',
+      message: `Are you sure you want to unrecord this payment?\n\nPayment: ${payment.description}\nAmount: ${payment.formattedAmount || '₱' + payment.amount.toFixed(2)}`,
+      details: [
+        'Change status from "Recorded" back to "Completed"',
+        'Remove it from the Court Usage Report',
+        'Keep the payment as paid but no longer counted in monthly reports'
+      ],
+      type: 'warning',
+      icon: 'undo',
+      confirmText: 'Unrecord',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
+      if (!confirmed) return;
 
-    if (!confirmed) return;
+      this.processing.push(paymentId);
 
-    this.processing.push(paymentId);
+      this.http.put<any>(`${this.apiUrl}/payments/${paymentId}/unrecord`, {
+        notes: 'Unrecorded via Payment Management interface'
+      }).subscribe({
+        next: (response) => {
+          this.processing = this.processing.filter(id => id !== paymentId);
+          this.showSuccess('Payment Unrecorded', 'Payment has been unrecorded successfully and removed from Court Usage Report');
 
-    this.http.put<any>(`${this.apiUrl}/payments/${paymentId}/unrecord`, {
-      notes: 'Unrecorded via Payment Management interface'
-    }).subscribe({
-      next: (response) => {
-        this.processing = this.processing.filter(id => id !== paymentId);
-        this.showSuccess('Payment Unrecorded', 'Payment has been unrecorded successfully and removed from Court Usage Report');
-        
-        // Refresh payment history to show the status change
-        this.loadPaymentHistory(true);
-      },
-      error: (error) => {
-        this.processing = this.processing.filter(id => id !== paymentId);
-        const message = error.error?.error || 'Failed to unrecord payment';
-        this.showError('Unrecord Failed', message);
-      }
+          // Refresh payment history to show the status change
+          this.loadPaymentHistory(true);
+        },
+        error: (error) => {
+          this.processing = this.processing.filter(id => id !== paymentId);
+          const message = error.error?.error || 'Failed to unrecord payment';
+          this.showError('Unrecord Failed', message);
+        }
+      });
     });
   }
 
@@ -1895,6 +1912,11 @@ export class PaymentsComponent implements OnInit {
         day: 'numeric',
         year: 'numeric'
       });
+      // For fixed-daily payments with ₱0 amount (fee already covered), show only date
+      console.log('📍 formatPaymentReservation - payment.amount:', payment.amount, 'check:', !payment.amount || payment.amount === 0);
+      if (!payment.amount || payment.amount === 0) {
+        return `${date} (Daily fee)`;
+      }
       // Use timeSlotDisplay if available (for grouped payments), otherwise calculate manually using endTimeSlot
       const endTime = payment.reservationId.endTimeSlot ||
                       (payment.reservationId.timeSlot + (payment.reservationId.duration || 1));

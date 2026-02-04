@@ -6,12 +6,14 @@ import { AuthService } from './auth.service';
 import { WebSocketService } from './websocket.service';
 
 export interface ActivityBroadcast {
-  type: 'member_navigation' | 'member_activity';
+  type: 'member_navigation' | 'member_activity' | 'page_navigation';
   data: {
     userId: string;
     username: string;
     fullName: string;
     role: string;
+    clubId?: string;
+    clubName?: string;
     page?: string;
     path?: string;
     action?: string;
@@ -129,9 +131,11 @@ export class ActivityMonitorService {
         websocketConnected: isConnected,
         socketId: this.webSocketService.socket?.id
       });
-      this.addDebugLog(`WebSocket ${isConnected ? 'connected' : 'disconnected'} (ID: ${this.webSocketService.socket?.id || 'none'})`);
-
+      
+      // Reduce logging spam
       if (isConnected) {
+        this.addDebugLog(`WebSocket connected (ID: ${this.webSocketService.socket?.id || 'none'})`);
+
         // Wait a bit for socket to be fully ready
         setTimeout(() => {
           const user = this.authService.currentUser;
@@ -155,7 +159,10 @@ export class ActivityMonitorService {
             // For admins, also explicitly subscribe
             if (this.authService.isAdmin()) {
               setTimeout(() => {
-                this.addDebugLog('Admin detected - calling subscribeToActivityMonitor()');
+                this.addDebugLog('Admin detected - setting up activity listeners and subscribing');
+                // Set up listeners for activity broadcasts (must be done after WebSocket connects)
+                this.subscribeToActivityBroadcasts();
+                // Then subscribe to the admin_monitor room
                 this.webSocketService.subscribeToActivityMonitor();
                 this.addDebugLog('Emitted subscribe_activity_monitor event');
               }, 500);
@@ -174,7 +181,7 @@ export class ActivityMonitorService {
           userAuthenticated: false,
           adminSubscribed: false
         });
-        this.addDebugLog('WebSocket disconnected - clearing auth state');
+        // Suppress disconnect logging to reduce console spam
       }
     });
   }
@@ -233,8 +240,8 @@ export class ActivityMonitorService {
 
     console.log('📊 ActivityMonitor: Initializing admin notifications');
 
-    // Subscribe to activity broadcasts
-    this.subscribeToActivityBroadcasts();
+    // Note: subscribeToActivityBroadcasts() is now called in authenticateUserWhenConnected()
+    // when the WebSocket connects, to ensure listeners are set up after connection
 
     // Notifications are now handled by ActivityNotificationComponent
 
@@ -253,7 +260,7 @@ export class ActivityMonitorService {
 
     // Check if WebSocket is ready
     if (!this.webSocketService.isConnected()) {
-      console.warn('📊 ActivityMonitor: WebSocket not connected, queueing activity:', action);
+      // Silently queue activity until WebSocket connects (removed noisy log)
       this.queueActivity(action, component, details);
       return;
     }
@@ -274,6 +281,12 @@ export class ActivityMonitorService {
    * Actually emit the activity to WebSocket (extracted for reuse)
    */
   private doEmitActivity(action: string, component: string, details: any | undefined, user: any): void {
+    const selectedClub = this.authService.selectedClub;
+    const clubName = selectedClub?.club?.name || selectedClub?.clubName || null;
+    
+    console.log('🏢 Activity emission - Selected Club:', selectedClub);
+    console.log('🏢 Activity emission - Club Name:', clubName);
+    
     this.webSocketService.socket?.emit('user_activity', {
       type: 'user_activity',
       data: {
@@ -281,6 +294,8 @@ export class ActivityMonitorService {
         username: user.username,
         fullName: user.fullName,
         role: user.role,
+        clubId: selectedClub?.clubId || null,
+        clubName: clubName,
         action: action,
         component: component,
         details: details,
@@ -407,13 +422,13 @@ export class ActivityMonitorService {
   private emitPageNavigation(path: string): void {
     // Wait for WebSocket to be connected
     if (!this.webSocketService.isConnected()) {
-      console.log('📊 ActivityMonitor: WebSocket not connected, waiting...');
-      // Retry after a short delay
+      // Silently retry after a short delay (removed noisy log)
       setTimeout(() => this.emitPageNavigation(path), 1000);
       return;
     }
 
     const user = this.authService.currentUser;
+    const selectedClub = this.authService.selectedClub;
     const pageName = this.getPageName(path);
 
     // Allow anonymous tracking for specific public pages
@@ -426,6 +441,7 @@ export class ActivityMonitorService {
     }
 
     // Emit page navigation event (with anonymous data if not logged in)
+    console.log('🔴 Emitting page_navigation:', { page: pageName, path, user: user?.username, club: selectedClub?.clubName });
     this.webSocketService.socket?.emit('page_navigation', {
       type: 'page_navigation',
       data: {
@@ -433,6 +449,8 @@ export class ActivityMonitorService {
         username: user?.username || 'anonymous',
         fullName: user?.fullName || 'Anonymous User',
         role: user?.role || 'visitor',
+        clubId: selectedClub?.clubId || null,
+        clubName: selectedClub?.club?.name || selectedClub?.clubName || null,
         page: pageName,
         path: path,
         timestamp: new Date().toISOString()
@@ -454,14 +472,20 @@ export class ActivityMonitorService {
       return;
     }
 
+    // Remove old listeners if they exist to prevent duplicates
+    this.webSocketService.socket.off('subscription_confirmed');
+    this.webSocketService.socket.off('activity_broadcast');
+
     // NOTE: DO NOT emit subscribe_activity_monitor here!
     // It's already done in authenticateUserWhenConnected() after authentication
     // this.webSocketService.socket.emit('subscribe_activity_monitor'); // REMOVED
 
     // Listen for subscription confirmation
     this.webSocketService.socket.on('subscription_confirmed', (data: any) => {
+      console.log('🔴 Received subscription_confirmed:', data);
       this.addDebugLog(`Received subscription_confirmed: ${JSON.stringify(data)}`);
       if (data.type === 'activity_monitor') {
+        console.log('✅ Successfully subscribed to activity monitor!');
         this.addDebugLog('✅ Successfully subscribed to activity monitor!');
         this.updateDebug({ adminSubscribed: true });
       }
@@ -469,11 +493,13 @@ export class ActivityMonitorService {
 
     // Listen for activity broadcasts
     this.webSocketService.socket.on('activity_broadcast', (data: ActivityBroadcast) => {
+      console.log('🔴 Received activity broadcast:', data);
       this.addDebugLog(`Received activity broadcast from ${data.data.fullName}`);
       this.activitySubject.next(data);
       this.addRecentActivity(`${new Date().toLocaleTimeString()}: ${data.data.fullName} → ${data.data.page}`);
     });
 
+    console.log('🔴 Set up listeners for subscription_confirmed and activity_broadcast');
     this.addDebugLog('Set up listeners for subscription_confirmed and activity_broadcast');
   }
 

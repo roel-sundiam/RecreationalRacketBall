@@ -1,0 +1,692 @@
+// ============================================================================
+// MODERN PROFESSIONAL DESIGN - Club Admin Registration Form
+// ============================================================================
+
+// Color Variables
+$primary: #667eea;
+$primary-light: #f0f4ff;
+$primary-dark: #5a67d8;
+$secondary: #764ba2;
+$success: #48bb78;
+$error: #f56565;
+$text-primary: #1a202c;
+$text-secondary: #4a5568;
+$text-muted: #718096;
+$border: #cbd5e0;
+$bg-light: #f7fafc;
+$bg-lighter: #f5f5f5;
+$white: #ffffff;
+
+// ============================================================================
+// PAGE LAYOUT
+// ============================================================================
+
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.modern-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: $white;
+  padding: 3rem 1rem;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
+
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+  }
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
+}
+
+.club-logo {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+.club-info {
+  .club-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
+  }
+
+  .club-tagline {
+    font-size: 0.95rem;
+    margin: 0.5rem 0 0 0;
+    opacity: 0.95;
+    font-weight: 300;
+  }
+}
+
+.page-content {
+  flex: 1;
+  padding: 3rem 1rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+  }
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// ============================================================================
+// WELCOME SECTION
+// ============================================================================
+
+.welcome-section {
+  text-align: center;
+  margin-bottom: 2.5rem;
+
+  .welcome-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 2rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 1rem 0;
+
+    mat-icon {
+      font-size: 2.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      color: $primary;
+    }
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+
+      mat-icon {
+        font-size: 1.75rem;
+        width: 1.75rem;
+        height: 1.75rem;
+      }
+    }
+  }
+
+  .welcome-subtitle {
+    font-size: 1.1rem;
+    color: $text-secondary;
+    margin: 0;
+    line-height: 1.6;
+
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+  }
+}
+
+// ============================================================================
+// REGISTRATION CARD
+// ============================================================================
+
+.registration-form-card {
+  width: 100%;
+  max-width: 700px;
+  background: rgba($white, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba($white, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  &:hover {
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// ============================================================================
+// INFO SECTION
+// ============================================================================
+
+.info-section {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba($primary, 0.05) 0%, rgba($secondary, 0.05) 100%);
+  border-left: 4px solid $primary;
+  border-radius: 12px;
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.info-icon {
+  flex-shrink: 0;
+  color: $primary;
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.info-content {
+  h3 {
+    margin: 0 0 0.75rem 0;
+    color: $primary;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: none;
+
+    li {
+      margin-bottom: 0.5rem;
+      color: $text-secondary;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      position: relative;
+      padding-left: 0.5rem;
+
+      &:before {
+        content: '✓';
+        position: absolute;
+        left: -1rem;
+        color: $success;
+        font-weight: bold;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// ============================================================================
+// STEPPER STYLES
+// ============================================================================
+
+.modern-stepper {
+  margin: 0 !important;
+}
+
+::ng-deep {
+  .mat-stepper-horizontal {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .mat-step-header {
+    padding: 1rem 0.75rem !important;
+    height: auto !important;
+    background: transparent !important;
+
+    &:hover {
+      background: transparent !important;
+    }
+
+    .mat-step-icon {
+      background-color: $border !important;
+      color: $text-muted !important;
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      transition: all 0.3s ease !important;
+
+      &.mat-step-icon-selected {
+        background: linear-gradient(135deg, $primary 0%, $secondary 100%) !important;
+        color: $white !important;
+        box-shadow: 0 4px 12px rgba($primary, 0.3) !important;
+      }
+
+      &.mat-step-icon-state-done {
+        background: $success !important;
+        color: $white !important;
+      }
+    }
+
+    .mat-step-label {
+      font-size: 0.95rem !important;
+      font-weight: 500 !important;
+      color: $text-secondary !important;
+      transition: all 0.3s ease !important;
+
+      &.mat-step-label-active {
+        color: $primary !important;
+        font-weight: 600 !important;
+      }
+    }
+  }
+
+  .mat-horizontal-stepper-header-container {
+    margin-bottom: 2rem !important;
+    border-bottom: 2px solid $border !important;
+  }
+
+  .mat-horizontal-content-container {
+    padding: 0 !important;
+  }
+
+  .mat-step-content {
+    padding: 0 !important;
+  }
+}
+
+// ============================================================================
+// FORM STYLES
+// ============================================================================
+
+h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $text-primary;
+  border-bottom: 2px solid $border;
+  padding-bottom: 0.75rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+}
+
+h4 {
+  margin: 1.5rem 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: $text-secondary;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+  width: 100%;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: $text-secondary;
+  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  right: 0.75rem;
+  color: $text-muted;
+  font-size: 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  pointer-events: none;
+  transition: color 0.3s ease;
+}
+
+// ============================================================================
+// INPUT FIELDS
+// ============================================================================
+
+.form-input,
+.form-select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 3.5rem 0.75rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: $text-primary;
+  background: $white;
+  border: 2px solid $border;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 4px rgba($primary, 0.1);
+    background: rgba($primary, 0.01);
+  }
+
+  &::placeholder {
+    color: #a0aec0;
+  }
+
+  &:disabled {
+    background: $bg-lighter;
+    color: $text-muted;
+    cursor: not-allowed;
+  }
+
+  &.error {
+    border-color: $error;
+    background: rgba($error, 0.03);
+
+    &:focus {
+      box-shadow: 0 0 0 4px rgba($error, 0.1);
+    }
+  }
+}
+
+.form-select {
+  padding: 0.75rem 3.5rem 0.75rem 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: $white !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E") !important;
+  background-position: right 0.75rem center !important;
+  background-repeat: no-repeat !important;
+  background-size: 1rem !important;
+  background-clip: padding-box !important;
+  cursor: pointer;
+
+  &:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E") !important;
+  }
+
+  option {
+    background: $white;
+    color: $text-primary;
+    padding: 0.5rem;
+  }
+}
+
+// Prevent Material from interfering
+.form-select.mat-select {
+  display: none !important;
+}
+
+// Deep styling to override any Material interference
+::ng-deep {
+  select.form-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: $white !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E") !important;
+    background-position: right 0.75rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1rem !important;
+    background-clip: padding-box !important;
+
+    &:focus {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E") !important;
+    }
+  }
+}
+
+// No icon inputs
+.no-icon {
+  padding-left: 1rem !important;
+
+  ~ .input-icon {
+    display: none;
+  }
+}
+
+// Reset Material Select styles on native selects
+select.form-select {
+  &::ng-deep .mat-select-panel {
+    display: none !important;
+  }
+}
+
+// ============================================================================
+// ERROR MESSAGES
+// ============================================================================
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  color: $error;
+  font-weight: 500;
+}
+
+// ============================================================================
+// GRID LAYOUTS
+// ============================================================================
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-group {
+    margin-bottom: 0;
+
+    @media (max-width: 768px) {
+      margin-bottom: 1.25rem;
+    }
+  }
+}
+
+// ============================================================================
+// BUTTONS
+// ============================================================================
+
+.location-button {
+  margin-bottom: 1rem;
+  width: 100%;
+  min-height: 48px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 2px dashed $border;
+  background: $white;
+  color: $text-secondary;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  padding: 0;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+    background: $primary-light;
+  }
+
+  mat-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid $border;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  button {
+    min-height: 48px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0 2rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    letter-spacing: 0.5px;
+
+    mat-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+      width: 100%;
+      padding: 0 1.5rem;
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+      color: $white;
+      box-shadow: 0 4px 12px rgba($primary, 0.3);
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba($primary, 0.4);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      mat-spinner {
+        ::ng-deep {
+          circle {
+            stroke: $white !important;
+          }
+        }
+      }
+    }
+
+    &.btn-secondary {
+      background: $bg-light;
+      color: $text-secondary;
+      border: 2px solid $border;
+
+      &:hover {
+        background: $border;
+        color: $text-primary;
+      }
+
+      mat-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+  }
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.registration-form-card {
+  animation: slideInUp 0.6s ease-out;
+}
+
+// ============================================================================
+// ACCESSIBILITY & SENIOR-FRIENDLY
+// ============================================================================
+
+button,
+.form-input,
+.form-select {
+  min-height: 48px; // Minimum touch target
+}
+
+// High contrast mode support
+@media (prefers-contrast: more) {
+  .form-input,
+  .form-select {
+    border-width: 3px;
+  }
+
+  .button-row button {
+    font-weight: 700;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

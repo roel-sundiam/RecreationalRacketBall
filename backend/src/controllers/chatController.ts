@@ -16,35 +16,38 @@ import {
 export const getChatRooms = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!._id;
   const userRole = req.user!.role;
+  const clubId = req.clubId;
 
   // Find rooms that user can access based on their role
-  const rooms = await (ChatRoom as any).findRoomsForRole(userRole);
+  const rooms = await (ChatRoom as any).findRoomsForRole(userRole, clubId);
   
   // Get participant info and unread counts for each room
   const roomsWithInfo = await Promise.all(
     rooms.map(async (room: any) => {
-      let participant = await (ChatParticipant as any).getParticipantWithUnreadCount(room._id, userId);
-      
+      let participant = await (ChatParticipant as any).getParticipantWithUnreadCount(room._id, userId, clubId);
+
       // If user is not a participant but has access to the room, auto-join them
       if (!participant && room.participantRoles.includes(userRole)) {
         console.log(`🔄 Auto-joining user ${userId} to room ${room.name}`);
         try {
-          await (ChatParticipant as any).joinRoom(room._id.toString(), userId, userRole === 'superadmin' || userRole === 'admin' ? 'admin' : 'member');
-          participant = await (ChatParticipant as any).getParticipantWithUnreadCount(room._id, userId);
+          await (ChatParticipant as any).joinRoom(room._id.toString(), userId, userRole === 'superadmin' || userRole === 'admin' ? 'admin' : 'member', clubId);
+          participant = await (ChatParticipant as any).getParticipantWithUnreadCount(room._id, userId, clubId);
         } catch (error) {
           console.error(`❌ Failed to auto-join user ${userId} to room ${room.name}:`, error);
         }
       }
       
-      const participantCount = await ChatParticipant.countDocuments({ 
-        roomId: room._id, 
-        isActive: true 
+      const participantCount = await ChatParticipant.countDocuments({
+        roomId: room._id,
+        isActive: true,
+        clubId: req.clubId
       });
       
       // Get last message for each room
       const lastMessage = await ChatMessage.findOne({
         roomId: room._id,
-        isDeleted: false
+        isDeleted: false,
+        clubId: req.clubId
       })
       .populate('userId', 'username fullName')
       .sort({ createdAt: -1 });
@@ -70,12 +73,24 @@ export const getRoomMessages = asyncHandler(async (req: AuthenticatedRequest, re
   const { roomId } = req.params;
   const { limit = 50, before } = req.query;
   const userId = req.user!._id;
+  const clubId = req.clubId;
+
+  // Verify room belongs to club
+  const room = await ChatRoom.findOne({ _id: roomId, clubId });
+  if (!room) {
+    res.status(404).json({
+      success: false,
+      error: 'Chat room not found'
+    });
+    return;
+  }
 
   // Check if user is participant of this room
   const participant = await ChatParticipant.findOne({
     roomId,
     userId,
-    isActive: true
+    isActive: true,
+    clubId
   });
 
   if (!participant) {
@@ -88,9 +103,10 @@ export const getRoomMessages = asyncHandler(async (req: AuthenticatedRequest, re
 
   const beforeDate = before ? new Date(before as string) : undefined;
   const messages = await (ChatMessage as any).getRecentMessages(
-    roomId, 
-    parseInt(limit as string), 
-    beforeDate
+    roomId,
+    parseInt(limit as string),
+    beforeDate,
+    clubId
   );
 
   // Manually populate user data for each message
@@ -130,12 +146,24 @@ export const sendMessage = asyncHandler(async (req: AuthenticatedRequest, res: R
   const { content, type = 'text', replyTo }: SendMessageRequest = req.body;
   const userId = req.user!._id;
   const userRole = req.user!.role;
+  const clubId = req.clubId;
+
+  // Verify room belongs to club
+  const room = await ChatRoom.findOne({ _id: roomId, clubId });
+  if (!room) {
+    res.status(404).json({
+      success: false,
+      error: 'Chat room not found'
+    });
+    return;
+  }
 
   // Check if user is participant of this room
   const participant = await ChatParticipant.findOne({
     roomId,
     userId,
-    isActive: true
+    isActive: true,
+    clubId
   });
 
   if (!participant) {
@@ -160,7 +188,8 @@ export const sendMessage = asyncHandler(async (req: AuthenticatedRequest, res: R
     const replyMessage = await ChatMessage.findOne({
       _id: replyTo,
       roomId,
-      isDeleted: false
+      isDeleted: false,
+      clubId
     });
 
     if (!replyMessage) {
@@ -178,7 +207,8 @@ export const sendMessage = asyncHandler(async (req: AuthenticatedRequest, res: R
     userId,
     content,
     type,
-    replyTo: replyTo || null
+    replyTo: replyTo || null,
+    clubId
   });
 
   await message.save();
@@ -245,12 +275,14 @@ export const joinRoom = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   const { roomId } = req.params;
   const userId = req.user!._id;
   const userRole = req.user!.role;
+  const clubId = req.clubId;
 
   // Check if room exists and user can access it
   const room = await ChatRoom.findOne({
     _id: roomId,
     isActive: true,
-    participantRoles: { $in: [userRole] }
+    participantRoles: { $in: [userRole] },
+    clubId
   });
 
   if (!room) {
@@ -265,11 +297,12 @@ export const joinRoom = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   const existingParticipant = await ChatParticipant.findOne({
     roomId,
     userId,
-    isActive: true
+    isActive: true,
+    clubId
   });
 
   // Join the room
-  const participant = await (ChatParticipant as any).joinRoom(roomId, userId);
+  const participant = await (ChatParticipant as any).joinRoom(roomId, userId, 'member', clubId);
 
   // Skip creating system join messages to keep chat cleaner
   // Users join automatically without announcement
@@ -284,8 +317,19 @@ export const joinRoom = asyncHandler(async (req: AuthenticatedRequest, res: Resp
 export const leaveRoom = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { roomId } = req.params;
   const userId = req.user!._id;
+  const clubId = req.clubId;
 
-  const participant = await (ChatParticipant as any).leaveRoom(roomId, userId);
+  // Verify room belongs to club
+  const room = await ChatRoom.findOne({ _id: roomId, clubId });
+  if (!room) {
+    res.status(404).json({
+      success: false,
+      error: 'Chat room not found'
+    });
+    return;
+  }
+
+  const participant = await (ChatParticipant as any).leaveRoom(roomId, userId, clubId);
 
   if (!participant) {
     res.status(404).json({
@@ -308,19 +352,30 @@ export const updateParticipant = asyncHandler(async (req: AuthenticatedRequest, 
   const { roomId } = req.params;
   const { lastReadAt, notifications }: UpdateChatParticipantRequest = req.body;
   const userId = req.user!._id;
+  const clubId = req.clubId;
+
+  // Verify room belongs to club
+  const room = await ChatRoom.findOne({ _id: roomId, clubId });
+  if (!room) {
+    res.status(404).json({
+      success: false,
+      error: 'Chat room not found'
+    });
+    return;
+  }
 
   const updateData: any = {};
-  
+
   if (lastReadAt !== undefined) {
     updateData.lastReadAt = lastReadAt ? new Date(lastReadAt) : new Date();
   }
-  
+
   if (notifications !== undefined) {
     updateData.notifications = notifications;
   }
 
   const participant = await ChatParticipant.findOneAndUpdate(
-    { roomId, userId, isActive: true },
+    { roomId, userId, isActive: true, clubId },
     { $set: updateData },
     { new: true }
   );
@@ -343,12 +398,24 @@ export const updateParticipant = asyncHandler(async (req: AuthenticatedRequest, 
 export const getRoomParticipants = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { roomId } = req.params;
   const userId = req.user!._id;
+  const clubId = req.clubId;
+
+  // Verify room belongs to club
+  const room = await ChatRoom.findOne({ _id: roomId, clubId });
+  if (!room) {
+    res.status(404).json({
+      success: false,
+      error: 'Chat room not found'
+    });
+    return;
+  }
 
   // Check if user is participant of this room
   const userParticipant = await ChatParticipant.findOne({
     roomId,
     userId,
-    isActive: true
+    isActive: true,
+    clubId
   });
 
   if (!userParticipant) {
@@ -359,7 +426,7 @@ export const getRoomParticipants = asyncHandler(async (req: AuthenticatedRequest
     return;
   }
 
-  const participants = await (ChatParticipant as any).getRoomParticipants(roomId, true);
+  const participants = await (ChatParticipant as any).getRoomParticipants(roomId, true, clubId);
 
   res.json({
     success: true,
@@ -372,6 +439,7 @@ export const createChatRoom = asyncHandler(async (req: AuthenticatedRequest, res
   const { name, description, type, participantRoles }: CreateChatRoomRequest = req.body;
   const userId = req.user!._id;
   const userRole = req.user!.role;
+  const clubId = req.clubId;
 
   // Only admins can create rooms
   if (!['admin', 'superadmin'].includes(userRole)) {
@@ -387,13 +455,14 @@ export const createChatRoom = asyncHandler(async (req: AuthenticatedRequest, res
     description,
     type,
     participantRoles: participantRoles || ['member', 'admin', 'superadmin'],
-    createdBy: userId
+    createdBy: userId,
+    clubId
   });
 
   await room.save();
 
   // Automatically join the creator
-  await (ChatParticipant as any).joinRoom(room._id, userId, 'admin');
+  await (ChatParticipant as any).joinRoom(room._id, userId, 'admin', clubId);
 
   // Create system message for room creation
   const systemMessage = new ChatMessage({
@@ -403,7 +472,8 @@ export const createChatRoom = asyncHandler(async (req: AuthenticatedRequest, res
     type: 'system',
     metadata: {
       systemType: 'room_created'
-    }
+    },
+    clubId
   });
 
   await systemMessage.save();
@@ -420,8 +490,9 @@ export const updateMessage = asyncHandler(async (req: AuthenticatedRequest, res:
   const { content, isDeleted } = req.body;
   const userId = req.user!._id;
   const userRole = req.user!.role;
+  const clubId = req.clubId;
 
-  const message = await ChatMessage.findById(messageId);
+  const message = await ChatMessage.findOne({ _id: messageId, clubId });
 
   if (!message) {
     res.status(404).json({

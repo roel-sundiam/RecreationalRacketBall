@@ -86,45 +86,32 @@ export class NotificationService {
       return;
     }
 
-    // Load both payment notifications and Open Play events using RxJS
-    console.log('🔔 Making API calls with RxJS...');
-    const payments$ = this.http.get<any>(`${this.apiUrl}/payments/my`).pipe(
+    // Load payment notifications
+    console.log('🔔 Making API call to load payments...');
+    this.http.get<any>(`${this.apiUrl}/payments/my`).pipe(
       catchError(error => {
         console.error('🔔 Error loading payments:', error);
         return of({ data: [] });
       })
-    );
-    
-    const openPlay$ = this.http.get<any>(`${this.apiUrl}/polls/active`).pipe(
-      catchError(error => {
-        console.error('🔔 Error loading open play:', error);
-        return of({ data: [] });
-      })
-    );
-
-    forkJoin([payments$, openPlay$]).subscribe({
-      next: ([paymentResponse, pollResponse]) => {
-        console.log('🔔 API responses received:', {
-          payments: !!paymentResponse.data,
-          polls: !!pollResponse.data
+    ).subscribe({
+      next: (paymentResponse) => {
+        console.log('🔔 API response received:', {
+          payments: !!paymentResponse.data
         });
-        
+
         const payments = paymentResponse?.data || [];
-        const polls = pollResponse?.data || [];
-        
         const paymentNotifications = this.processPayments(payments);
-        const openPlayNotifications = this.processOpenPlayEvents(polls);
-        
-        const combinedSummary: NotificationSummary = {
+
+        const summary: NotificationSummary = {
           overdueCount: paymentNotifications.overdueCount,
           dueSoonCount: paymentNotifications.dueSoonCount,
           dueTodayCount: paymentNotifications.dueTodayCount,
-          openPlayCount: openPlayNotifications.length,
-          totalCount: paymentNotifications.totalCount + openPlayNotifications.length,
-          notifications: [...paymentNotifications.notifications, ...openPlayNotifications]
+          openPlayCount: 0,
+          totalCount: paymentNotifications.totalCount,
+          notifications: paymentNotifications.notifications
         };
 
-        this.notificationSubject.next(combinedSummary);
+        this.notificationSubject.next(summary);
       },
       error: (error) => {
         console.error('🔔 Error loading notifications:', error);

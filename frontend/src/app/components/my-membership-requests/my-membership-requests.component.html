@@ -1,0 +1,132 @@
+<div class="requests-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>My Membership Requests</h1>
+        <p>Track your club membership applications</p>
+      </div>
+      <div class="header-actions">
+        <button mat-raised-button class="action-btn secondary-btn" (click)="goToClubSelector()">
+          <mat-icon>groups</mat-icon>
+          <span>My Clubs</span>
+        </button>
+        <button mat-raised-button class="action-btn" color="primary" (click)="browseClubs()">
+          <mat-icon>explore</mat-icon>
+          <span>Browse Clubs</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading your requests...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && requests.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <mat-icon>assignment_ind</mat-icon>
+    </div>
+    <h2>No Membership Requests</h2>
+    <p>You haven't requested to join any clubs yet. Start exploring!</p>
+    <button mat-raised-button color="primary" (click)="browseClubs()" class="empty-btn">
+      <mat-icon>explore</mat-icon>
+      Browse Available Clubs
+    </button>
+  </div>
+
+  <!-- Requests List -->
+  <div class="requests-list" *ngIf="!loading && requests.length > 0">
+    <div class="list-header">
+      <p>{{ requests.length }} Request<span *ngIf="requests.length !== 1">s</span></p>
+    </div>
+
+    <div *ngFor="let request of requests" class="request-card" [class]="'status-' + request.status">
+      <div class="card-header" [style.border-left-color]="request.club.primaryColor">
+        <div class="club-avatar" [style.background-color]="request.club.primaryColor">
+          <mat-icon>sports_tennis</mat-icon>
+        </div>
+        <div class="header-info">
+          <h3 class="club-name">{{ request.club.name }}</h3>
+          <p class="request-date">Requested on {{ request.joinedAt | date: 'MMM d, yyyy' }}</p>
+        </div>
+        <div class="status-badge" [class]="'badge-' + request.status">
+          <mat-icon>{{ getStatusIcon(request.status) }}</mat-icon>
+          <span>{{ request.status | titlecase }}</span>
+        </div>
+      </div>
+
+      <div class="card-content">
+        <!-- Pending Status -->
+        <div *ngIf="request.status === 'pending'" class="status-content pending">
+          <p class="info-text">Your membership request is under review. The club admin will review your application soon.</p>
+        </div>
+
+        <!-- Approved Status -->
+        <div *ngIf="request.status === 'approved'" class="status-content approved">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Approved on</span>
+              <span class="value">{{ request.approvedAt | date: 'MMM d, yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Role</span>
+              <span class="value badge">{{ request.role | titlecase }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Credit Balance</span>
+              <span class="value">{{ request.creditBalance }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Seed Points</span>
+              <span class="value">{{ request.seedPoints }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rejected Status -->
+        <div *ngIf="request.status === 'rejected'" class="status-content rejected">
+          <p class="error-text">
+            <mat-icon>error_outline</mat-icon>
+            Your request was rejected. Please contact the club admin for more information.
+          </p>
+        </div>
+
+        <!-- Suspended Status -->
+        <div *ngIf="request.status === 'suspended'" class="status-content suspended">
+          <p class="warning-text">
+            <mat-icon>warning</mat-icon>
+            Your membership is suspended. Please contact the club admin.
+          </p>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button
+          *ngIf="request.status === 'pending'"
+          mat-stroked-button
+          class="cancel-btn"
+          [disabled]="canceling && selectedRequestId === request._id"
+          (click)="cancelRequest(request._id)">
+          <mat-spinner *ngIf="canceling && selectedRequestId === request._id" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!(canceling && selectedRequestId === request._id)">close</mat-icon>
+          <span *ngIf="!(canceling && selectedRequestId === request._id)">Cancel Request</span>
+          <span *ngIf="canceling && selectedRequestId === request._id">Canceling...</span>
+        </button>
+
+        <button
+          *ngIf="request.status === 'approved'"
+          mat-raised-button
+          color="primary"
+          class="access-btn"
+          (click)="goToClubSelector()">
+          <mat-icon>arrow_forward</mat-icon>
+          <span>Access Club</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

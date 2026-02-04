@@ -27,7 +27,7 @@ export const recordMatchResult = asyncHandler(async (req: AuthenticatedRequest, 
 
   // Find the Open Play event
   console.log(`🔍 DEBUGGING: Looking for poll with ID: ${pollId}`);
-  const poll = await Poll.findById(pollId);
+  const poll = await Poll.findOne({ _id: pollId, clubId: req.clubId });
   if (!poll || !poll.openPlayEvent) {
     console.log(`❌ DEBUGGING: Poll not found or not an open play event`);
     res.status(404).json({
@@ -208,7 +208,7 @@ export const recordMatchResult = asyncHandler(async (req: AuthenticatedRequest, 
 export const getOpenPlayMatches = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { pollId } = req.params;
 
-  const poll = await Poll.findById(pollId)
+  const poll = await Poll.findOne({ _id: pollId, clubId: req.clubId })
     .populate('openPlayEvent.matches.players', 'username fullName')
     .populate('openPlayEvent.matches.team1', 'username fullName')
     .populate('openPlayEvent.matches.team2', 'username fullName');

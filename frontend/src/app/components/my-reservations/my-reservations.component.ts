@@ -1358,8 +1358,8 @@ click "Try Again" below to reconnect.
         this.convertToAMPMFormat(this.allReservations);
         console.log('🔍 After formatting:', this.allReservations.length);
 
-        // Add Homeowner's Day entries for upcoming Wednesdays
-        this.addHomeownerDayEntries();
+        // Homeowner's Day entries removed - no longer blocking Wednesdays
+        // this.addHomeownerDayEntries();
 
         // Group reservations by date for mobile view
         this.groupedAllReservations = this.groupReservationsByDate(this.allReservations);

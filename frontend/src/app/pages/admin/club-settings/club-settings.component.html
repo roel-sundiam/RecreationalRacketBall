@@ -1,0 +1,530 @@
+<div class="form-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <button class="back-btn" (click)="goBack()" type="button" aria-label="Go back">
+      ←
+    </button>
+    <h1>
+      <span class="icon">⚙</span>
+      Club Settings
+    </h1>
+  </div>
+
+  <!-- Success Message -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <span class="icon">✓</span>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <span class="icon">⚠</span>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading club settings...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card" *ngIf="!loading">
+    <div class="card-header">
+      <h2>Club Branding</h2>
+      <p>Upload your club logo to personalize your club's appearance</p>
+    </div>
+
+    <div class="card-body">
+      <!-- Club Logo Upload Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <span class="icon">🎨</span>
+          <h3>Club Logo</h3>
+        </div>
+        <p class="section-description">
+          Upload your club's logo. This will appear in the navigation bar and throughout the app.
+        </p>
+
+        <div class="logo-upload-container">
+          <div class="logo-preview">
+            <img *ngIf="clubLogoUrl" [src]="clubLogoUrl" alt="Club Logo" class="preview-image">
+            <div *ngIf="!clubLogoUrl" class="preview-placeholder">
+              <span class="icon">📷</span>
+              <p>No logo uploaded</p>
+            </div>
+          </div>
+
+          <div class="logo-upload-controls">
+            <input
+              type="file"
+              #logoInput
+              (change)="onLogoFileSelected($event)"
+              accept="image/*"
+              style="display: none;">
+            
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="logoInput.click()"
+              [disabled]="uploadingLogo">
+              <span class="icon">📁</span>
+              Choose Image
+            </button>
+
+            <button
+              *ngIf="selectedLogoFile"
+              type="button"
+              class="btn btn-primary"
+              (click)="uploadLogo()"
+              [disabled]="uploadingLogo">
+              <span *ngIf="!uploadingLogo" class="icon">⬆</span>
+              <span *ngIf="uploadingLogo" class="spinner small"></span>
+              {{ uploadingLogo ? 'Uploading...' : 'Upload Logo' }}
+            </button>
+
+            <button
+              *ngIf="clubLogoUrl && !selectedLogoFile"
+              type="button"
+              class="btn btn-outline"
+              (click)="removeLogo()">
+              <span class="icon">🗑</span>
+              Remove
+            </button>
+          </div>
+
+          <p class="help-text">
+            Recommended: Square image, at least 200x200px. Max file size: 5MB
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card" *ngIf="!loading">
+    <div class="card-header">
+      <h2>Court Configuration</h2>
+      <p>Configure operating hours and reservation fees for your club</p>
+    </div>
+
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="saveSettings()">
+
+        <!-- Operating Hours Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <span class="icon">🕐</span>
+            <h3>Operating Hours</h3>
+          </div>
+          <p class="section-description">
+            Set the hours when courts are available for reservations
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="operatingStart">
+                Opening Hour
+                <span class="required">*</span>
+              </label>
+              <select
+                id="operatingStart"
+                formControlName="operatingStart"
+                [class.error]="hasError('operatingStart')"
+              >
+                <option *ngFor="let hour of hours" [value]="hour.value">
+                  {{ hour.label }}
+                </option>
+              </select>
+              <span class="hint">Select the hour when courts open. Example: 5 AM</span>
+              <span class="error-message" *ngIf="hasError('operatingStart')">
+                {{ getErrorMessage('operatingStart') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="operatingEnd">
+                Closing Hour
+                <span class="required">*</span>
+              </label>
+              <select
+                id="operatingEnd"
+                formControlName="operatingEnd"
+                [class.error]="hasError('operatingEnd')"
+              >
+                <option *ngFor="let hour of hours" [value]="hour.value">
+                  {{ hour.label }}
+                </option>
+              </select>
+              <span class="hint">Select the hour when courts close. Example: 10 PM</span>
+              <span class="error-message" *ngIf="hasError('operatingEnd')">
+                {{ getErrorMessage('operatingEnd') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Membership Fee Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <span class="icon">💳</span>
+            <h3>Membership Fee</h3>
+          </div>
+          <p class="section-description">
+            Set the annual membership fee for joining your club
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="membershipFeeAnnual">
+                Annual Membership Fee
+                <span class="required">*</span>
+              </label>
+              <input
+                type="number"
+                id="membershipFeeAnnual"
+                formControlName="membershipFeeAnnual"
+                min="0"
+                [class.error]="hasError('membershipFeeAnnual')"
+                placeholder="1000"
+              />
+              <span class="hint">Annual fee members pay to join the club. Example: ₱1000</span>
+              <span class="error-message" *ngIf="hasError('membershipFeeAnnual')">
+                {{ getErrorMessage('membershipFeeAnnual') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="membershipFeeCurrency">
+                Currency Code
+                <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="membershipFeeCurrency"
+                formControlName="membershipFeeCurrency"
+                maxlength="3"
+                [class.error]="hasError('membershipFeeCurrency')"
+                placeholder="PHP"
+                style="text-transform: uppercase"
+              />
+              <span class="hint">3-letter currency code (ISO 4217). Example: PHP, USD, EUR</span>
+              <span class="error-message" *ngIf="hasError('membershipFeeCurrency')">
+                {{ getErrorMessage('membershipFeeCurrency') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <span class="icon">💰</span>
+            <h3>Pricing Model</h3>
+          </div>
+          <p class="section-description">
+            Choose how to price court reservations for your club
+          </p>
+
+          <!-- Pricing Model Selector -->
+          <div class="pricing-model-selector">
+            <label class="model-option" [class.active]="isVariablePricing()">
+              <input
+                type="radio"
+                name="pricingModel"
+                value="variable"
+                formControlName="pricingModel"
+                class="hidden-radio"
+              />
+              <span class="option-content">
+                <span class="option-title">Variable Pricing (Peak/Off-Peak)</span>
+                <span class="option-desc">Different rates for peak and off-peak hours</span>
+              </span>
+            </label>
+
+            <label class="model-option" [class.active]="isFixedHourly()">
+              <input
+                type="radio"
+                name="pricingModel"
+                value="fixed-hourly"
+                formControlName="pricingModel"
+                class="hidden-radio"
+              />
+              <span class="option-content">
+                <span class="option-title">Fixed Hourly Rate</span>
+                <span class="option-desc">Same rate per hour all day</span>
+              </span>
+            </label>
+
+            <!-- TEMPORARILY DISABLED: Fixed Daily Rate option -->
+            <!--
+            <label class="model-option" [class.active]="isFixedDaily()">
+              <input
+                type="radio"
+                name="pricingModel"
+                value="fixed-daily"
+                formControlName="pricingModel"
+                class="hidden-radio"
+              />
+              <span class="option-content">
+                <span class="option-title">Fixed Daily Rate</span>
+                <span class="option-desc">Flat fee for the entire day</span>
+              </span>
+            </label>
+            -->
+          </div>
+        </div>
+
+        <!-- Variable Pricing Section -->
+        <div class="form-section" *ngIf="isVariablePricing()">
+          <div class="section-header">
+            <span class="icon">📊</span>
+            <h3>Peak & Off-Peak Rates</h3>
+          </div>
+          <p class="section-description">
+            Set different rates based on court demand hours
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="peakHourFee">
+                Peak Hour Fee (₱)
+                <span class="required">*</span>
+              </label>
+              <input
+                type="number"
+                id="peakHourFee"
+                formControlName="peakHourFee"
+                min="0"
+                [class.error]="hasError('peakHourFee')"
+                placeholder="150"
+              />
+              <span class="hint">Base fee for peak hours (e.g., evenings). Default: ₱150</span>
+              <span class="error-message" *ngIf="hasError('peakHourFee')">
+                {{ getErrorMessage('peakHourFee') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="offPeakHourFee">
+                Off-Peak Hour Fee (₱)
+                <span class="required">*</span>
+              </label>
+              <input
+                type="number"
+                id="offPeakHourFee"
+                formControlName="offPeakHourFee"
+                min="0"
+                [class.error]="hasError('offPeakHourFee')"
+                placeholder="100"
+              />
+              <span class="hint">Base fee for off-peak hours. Default: ₱100</span>
+              <span class="error-message" *ngIf="hasError('offPeakHourFee')">
+                {{ getErrorMessage('offPeakHourFee') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="peakHoursInput">
+              Peak Hours (comma-separated)
+            </label>
+            <input
+              type="text"
+              id="peakHoursInput"
+              formControlName="peakHoursInput"
+              [class.error]="hasError('peakHoursInput')"
+              placeholder="5, 18, 19, 20, 21"
+            />
+            <span class="hint">Enter hours in 24-hour format (0-23), separated by commas. Example: 18, 19, 20, 21</span>
+            <span class="error-message" *ngIf="hasError('peakHoursInput')">
+              {{ getErrorMessage('peakHoursInput') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Fixed Hourly Rate Section -->
+        <div class="form-section" *ngIf="isFixedHourly()">
+          <div class="section-header">
+            <span class="icon">⏰</span>
+            <h3>Hourly Rate</h3>
+          </div>
+          <p class="section-description">
+            Set a single hourly rate that applies all day
+          </p>
+
+          <div class="form-group">
+            <label for="fixedHourlyFee">
+              Hourly Rate (₱)
+              <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="fixedHourlyFee"
+              formControlName="fixedHourlyFee"
+              min="0"
+              [class.error]="hasError('fixedHourlyFee')"
+              placeholder="125"
+            />
+            <span class="hint">Charge this amount per hour for all reservations. Example: ₱125/hour</span>
+            <span class="error-message" *ngIf="hasError('fixedHourlyFee')">
+              {{ getErrorMessage('fixedHourlyFee') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Fixed Daily Rate Section -->
+        <div class="form-section" *ngIf="isFixedDaily()">
+          <div class="section-header">
+            <span class="icon">📅</span>
+            <h3>Daily Rate</h3>
+          </div>
+          <p class="section-description">
+            Set a flat fee for using the court for the entire day
+          </p>
+
+          <div class="form-group">
+            <label for="fixedDailyFee">
+              Daily Fee (₱)
+              <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="fixedDailyFee"
+              formControlName="fixedDailyFee"
+              min="0"
+              [class.error]="hasError('fixedDailyFee')"
+              placeholder="500"
+            />
+            <span class="hint">Flat fee for all-day court access. Example: ₱500/day</span>
+            <span class="error-message" *ngIf="hasError('fixedDailyFee')">
+              {{ getErrorMessage('fixedDailyFee') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Guest Fee Section (Always Show) -->
+        <div class="form-section">
+          <div class="section-header">
+            <span class="icon">👥</span>
+            <h3>Guest Fee</h3>
+          </div>
+          <p class="section-description">
+            Additional charge per guest (applies to all pricing models)
+          </p>
+
+          <div class="form-group">
+            <label for="guestFee">
+              Guest Fee (₱)
+              <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="guestFee"
+              formControlName="guestFee"
+              min="0"
+              [class.error]="hasError('guestFee')"
+              placeholder="70"
+            />
+            <span class="hint">Additional fee per guest. Default: ₱70</span>
+            <span class="error-message" *ngIf="hasError('guestFee')">
+              {{ getErrorMessage('guestFee') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="form-section">
+          <div class="preview-box">
+            <h4>
+              <span class="icon">👁</span>
+              Preview
+            </h4>
+
+            <div class="preview-item">
+              <strong>Operating Hours:</strong>
+              <span>{{ formatHour(form.value.operatingStart) }} - {{ formatHour(form.value.operatingEnd) }}</span>
+            </div>
+
+            <div class="preview-item">
+              <strong>Annual Membership Fee:</strong>
+              <span>{{ form.value.membershipFeeCurrency }} {{ form.value.membershipFeeAnnual }}</span>
+            </div>
+
+            <!-- Variable Pricing Preview -->
+            <div *ngIf="isVariablePricing()" class="preview-pricing">
+              <div class="preview-item">
+                <strong>Peak Hours:</strong>
+                <span>{{ formatPeakHours() }}</span>
+              </div>
+              <div class="preview-item">
+                <strong>Peak Rate:</strong>
+                <span>₱{{ form.value.peakHourFee }}/hour</span>
+              </div>
+              <div class="preview-item">
+                <strong>Off-Peak Rate:</strong>
+                <span>₱{{ form.value.offPeakHourFee }}/hour</span>
+              </div>
+              <div class="preview-item">
+                <strong>Example (1 hour peak, 2 members, 1 guest):</strong>
+                <ul>
+                  <li>Peak: ₱{{ form.value.peakHourFee }} + (1 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.peakHourFee + form.value.guestFee }}</li>
+                  <li>Off-Peak: ₱{{ form.value.offPeakHourFee }} + (1 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.offPeakHourFee + form.value.guestFee }}</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Fixed Hourly Preview -->
+            <div *ngIf="isFixedHourly()" class="preview-pricing">
+              <div class="preview-item">
+                <strong>Hourly Rate:</strong>
+                <span>₱{{ form.value.fixedHourlyFee }}/hour (all day)</span>
+              </div>
+              <div class="preview-item">
+                <strong>Example (1 hour, 2 members, 1 guest):</strong>
+                <ul>
+                  <li>Hourly: ₱{{ form.value.fixedHourlyFee }} + (1 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.fixedHourlyFee + form.value.guestFee }}</li>
+                  <li>2 Hours: (2 × ₱{{ form.value.fixedHourlyFee }}) + (1 × ₱{{ form.value.guestFee }}) = ₱{{ (2 * form.value.fixedHourlyFee) + form.value.guestFee }}</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Fixed Daily Preview -->
+            <div *ngIf="isFixedDaily()" class="preview-pricing">
+              <div class="preview-item">
+                <strong>Daily Rate:</strong>
+                <span>₱{{ form.value.fixedDailyFee }}/day</span>
+              </div>
+              <div class="preview-item">
+                <strong>Example (1 member, 1 guest):</strong>
+                <ul>
+                  <li>Member: ₱{{ form.value.fixedDailyFee }}</li>
+                  <li>Member + Guest: ₱{{ form.value.fixedDailyFee }} + ₱{{ form.value.guestFee }} = ₱{{ form.value.fixedDailyFee + form.value.guestFee }}</li>
+                  <li>Multiple Guests: ₱{{ form.value.fixedDailyFee }} + (2 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.fixedDailyFee + (2 * form.value.guestFee) }}</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="preview-item">
+              <strong>Guest Fee:</strong>
+              <span>₱{{ form.value.guestFee }} per guest</span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card-footer">
+      <button type="button" class="btn btn-secondary" (click)="goBack()" [disabled]="saving">
+        <span class="icon">✕</span>
+        Cancel
+      </button>
+      <button type="button" class="btn btn-primary" (click)="saveSettings()" [disabled]="form.invalid || saving">
+        <span class="icon" *ngIf="!saving">💾</span>
+        <span class="icon" *ngIf="saving">⏳</span>
+        <span *ngIf="!saving">Save Settings</span>
+        <span *ngIf="saving">Saving...</span>
+      </button>
+    </div>
+  </div>
+</div>

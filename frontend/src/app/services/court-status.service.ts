@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval, of } from 'rxjs';
 import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface PlayerDisplay {
   name: string;
@@ -52,7 +53,10 @@ export class CourtStatusService {
   private readonly COURT_OPEN_HOUR = 5;  // 5 AM
   private readonly COURT_CLOSE_HOUR = 22; // 10 PM
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
   /**
    * Get current court status as an Observable
@@ -103,6 +107,18 @@ export class CourtStatusService {
    * Fetch today's reservations and process them
    */
   private fetchAndProcessStatus(): Observable<CourtStatusData> {
+    // Only fetch if a club is selected
+    if (!this.authService.selectedClub) {
+      const emptyStatus: CourtStatusData = {
+        current: { exists: false, timeRange: '', players: [], isBlocked: false },
+        next: { exists: false, timeRange: '', players: [], isBlocked: false },
+        courtStatus: 'available',
+        lastUpdated: new Date(),
+        hasAnyReservationsToday: false
+      };
+      return of(emptyStatus);
+    }
+
     const todayStr = this.getTodayDateString();
 
     return this.http.get<any>(`${this.apiUrl}/reservations/date/${todayStr}`).pipe(

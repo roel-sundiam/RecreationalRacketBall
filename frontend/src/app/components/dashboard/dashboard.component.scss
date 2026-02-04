@@ -607,6 +607,71 @@
   border-top: 2px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Platform Administration Section (Superadmin Only) */
+.platform-admin-section {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 3px solid rgba(103, 58, 183, 0.3);
+  background: linear-gradient(180deg, rgba(103, 58, 183, 0.02) 0%, transparent 100%);
+  padding-bottom: 2rem;
+
+  .platform-admin-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: #673ab7;
+    margin-bottom: 2rem;
+
+    mat-icon {
+      font-size: 2.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+  }
+}
+
+.platform-admin-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.platform-admin-card {
+  background: linear-gradient(135deg, rgba(103, 58, 183, 0.08), rgba(103, 58, 183, 0.03)) !important;
+  border: 2px solid rgba(103, 58, 183, 0.3) !important;
+
+  &::before {
+    background: linear-gradient(90deg, #673ab7, #9c27b0);
+  }
+
+  .platform-admin-icon {
+    color: #673ab7 !important;
+  }
+
+  .platform-admin-btn {
+    background: linear-gradient(135deg, #673ab7, #9c27b0) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(103, 58, 183, 0.3) !important;
+
+    &:hover {
+      background: linear-gradient(135deg, #5e35b1, #8e24aa) !important;
+      box-shadow: 0 6px 20px rgba(103, 58, 183, 0.4) !important;
+      transform: translateY(-2px);
+    }
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
 /* Partner Section */
 .partner-section {
   margin-top: 4rem;
@@ -920,48 +985,6 @@
   }
 }
 
-/* Developer Card Styling */
-.developer-card {
-  background: linear-gradient(135deg, rgba(238, 242, 255, 0.98), rgba(224, 231, 255, 0.95)) !important;
-  border: 2px solid rgba(102, 126, 234, 0.3) !important;
-
-  &::before {
-    background: linear-gradient(90deg, #667eea, #764ba2);
-  }
-
-  &:hover {
-    border-color: rgba(102, 126, 234, 0.5) !important;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(238, 242, 255, 0.95)) !important;
-  }
-}
-
-.developer-icon {
-  background: linear-gradient(135deg, #667eea, #764ba2) !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
-}
-
-.developer-features {
-  list-style: none;
-  padding: 0;
-  margin-top: 1rem;
-
-  li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    color: #4a5568;
-    font-size: 0.95rem;
-
-    mat-icon {
-      font-size: 1.1rem;
-      width: 1.1rem;
-      height: 1.1rem;
-      color: #48bb78;
-    }
-  }
-}
-
 /* Notification Components */
 .header-actions {
   display: flex;
@@ -1253,19 +1276,6 @@ app-coin-balance-alerts {
 
     &[data-icon="store"] .mobile-card-icon {
       background: linear-gradient(135deg, #3b82f6, #2563eb);
-    }
-
-    &[data-icon="code"] .mobile-card-icon {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-    }
-
-    /* Developer card mobile - hide features list */
-    &.developer-card {
-      height: 120px !important;
-
-      .developer-features {
-        display: none !important;
-      }
     }
   }
 
@@ -1868,181 +1878,6 @@ button:focus,
           font-size: 0.9rem !important;
           width: 0.9rem !important;
           height: 0.9rem !important;
-        }
-      }
-    }
-  }
-}
-
-/* Database Indicator Styling */
-.database-indicator-card {
-  margin-bottom: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-left: 6px solid;
-  transition: all 0.3s ease;
-
-  mat-card-content {
-    padding: 1rem 1.5rem;
-  }
-
-  .database-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-
-    .database-icon {
-      font-size: 2rem;
-      width: 2rem;
-      height: 2rem;
-    }
-
-    .database-text {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-
-      .database-label {
-        font-size: 0.875rem;
-        color: #6b7280;
-        font-weight: 500;
-      }
-
-      .database-name {
-        font-size: 1.25rem;
-        font-weight: 700;
-        font-family: 'Courier New', monospace;
-        letter-spacing: 0.5px;
-      }
-    }
-  }
-
-  /* Production Database Style - Red/Orange Warning */
-  &.database-production {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-left-color: #f59e0b;
-
-    .database-icon {
-      color: #f59e0b;
-    }
-
-    .database-name {
-      color: #d97706;
-    }
-  }
-
-  /* Test Database Style - Green/Safe */
-  &.database-test {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    border-left-color: #10b981;
-
-    .database-icon {
-      color: #10b981;
-    }
-
-    .database-name {
-      color: #059669;
-    }
-  }
-
-  /* Unknown Database Style - Gray */
-  &.database-unknown {
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-    border-left-color: #6b7280;
-
-    .database-icon {
-      color: #6b7280;
-    }
-
-    .database-name {
-      color: #4b5563;
-    }
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  }
-
-  .debug-info {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-
-    details {
-      cursor: pointer;
-
-      summary {
-        font-size: 0.875rem;
-        font-weight: 600;
-        padding: 0.5rem;
-        border-radius: 6px;
-        background: rgba(0, 0, 0, 0.05);
-        user-select: none;
-
-        &:hover {
-          background: rgba(0, 0, 0, 0.08);
-        }
-      }
-
-      .debug-content {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: rgba(0, 0, 0, 0.02);
-        border-radius: 6px;
-        font-family: 'Courier New', monospace;
-        font-size: 0.75rem;
-
-        .debug-row {
-          margin-bottom: 0.75rem;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          strong {
-            display: block;
-            margin-bottom: 0.25rem;
-            color: #4b5563;
-          }
-
-          pre {
-            background: white;
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
-            margin: 0;
-            font-size: 0.7rem;
-            line-height: 1.4;
-          }
-        }
-      }
-    }
-  }
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .database-indicator-card {
-    margin-bottom: 1.5rem;
-
-    .database-info {
-      gap: 0.75rem;
-
-      .database-icon {
-        font-size: 1.5rem;
-        width: 1.5rem;
-        height: 1.5rem;
-      }
-
-      .database-text {
-        .database-label {
-          font-size: 0.75rem;
-        }
-
-        .database-name {
-          font-size: 1rem;
         }
       }
     }

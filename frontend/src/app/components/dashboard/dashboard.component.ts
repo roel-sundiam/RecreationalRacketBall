@@ -16,7 +16,6 @@ import { NotificationService } from '../../services/notification.service';
 import { PWANotificationService } from '../../services/pwa-notification.service';
 import { OpenPlayNotificationModalComponent } from '../open-play-notification-modal/open-play-notification-modal.component';
 import { TennisBallMachineDialogComponent } from '../tennis-ball-machine-dialog/tennis-ball-machine-dialog.component';
-import { DeveloperContactDialogComponent } from '../developer-contact-dialog/developer-contact-dialog.component';
 import { ModalManagerService } from '../../services/modal-manager.service';
 import { CourtStatusWidgetComponent } from '../court-status-widget/court-status-widget.component';
 import { Subscription } from 'rxjs';
@@ -124,92 +123,6 @@ import { environment } from '../../../environments/environment';
               <button mat-raised-button class="primary-btn" (click)="navigateTo('/payments')">
                 <mat-icon>payment</mat-icon>
                 Manage Payments
-              </button>
-            </mat-card-actions>
-          </mat-card>
-
-          <!-- Tennis Ball Machine Rental -->
-          <mat-card class="action-card" data-icon="smart_toy" data-title="Ball Machine Rental"
-                   (click)="openTennisBallMachineDialog()"
-                   (touchstart)="handleTouchStart($event)"
-                   (touchend)="handleTouchEnd($event, 'ball-machine')">
-            <!-- Mobile Icon -->
-            <div class="mobile-card-icon ball-machine-img-icon">
-              <img src="ball-machine.png" alt="Ball Machine">
-            </div>
-            <div class="mobile-card-title">Ball Machine Rental</div>
-
-            <!-- Desktop Content -->
-            <mat-card-header>
-              <div mat-card-avatar class="action-icon ball-machine-img-icon">
-                <img src="ball-machine.png" alt="Ball Machine">
-              </div>
-              <mat-card-title>Ball Machine Rental</mat-card-title>
-              <mat-card-subtitle>Pusun PT-9001 Intelligent Trainer</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <p>Rent our advanced ball machine for solo practice. 150+ balls, 26 modes, app-controlled.</p>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button class="info-btn" (click)="openTennisBallMachineDialog(); $event.stopPropagation()">
-                <mat-icon>info</mat-icon>
-                View Details
-              </button>
-            </mat-card-actions>
-          </mat-card>
-
-          <!-- Open Play - PlaySquad Integration -->
-          <mat-card class="action-card" data-icon="how_to_vote" data-title="Open Play"
-                   (click)="openPlaySquadAutoLogin()"
-                   (touchstart)="handleTouchStart($event)"
-                   (touchend)="handleTouchEnd($event, 'open-play-squad')">
-            <!-- Mobile Icon -->
-            <div class="mobile-card-icon">
-              <mat-icon>how_to_vote</mat-icon>
-            </div>
-            <div class="mobile-card-title">Open Play</div>
-
-            <!-- Desktop Content -->
-            <mat-card-header>
-              <mat-icon mat-card-avatar class="action-icon">how_to_vote</mat-icon>
-              <mat-card-title>Open Play</mat-card-title>
-              <mat-card-subtitle>Find teammates for casual games</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <p>Connect with other players and organize casual tennis sessions.</p>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button class="success-btn" (click)="openPlaySquadAutoLogin(); $event.stopPropagation()">
-                <mat-icon>open_in_new</mat-icon>
-                Open PlaySquad
-              </button>
-            </mat-card-actions>
-          </mat-card>
-
-          <!-- Rankings -->
-          <mat-card class="action-card" data-icon="leaderboard" data-title="Player Rankings" 
-                   (click)="navigateTo('/rankings')" 
-                   (touchstart)="handleTouchStart($event)"
-                   (touchend)="handleTouchEnd($event, '/rankings')">
-            <!-- Mobile Icon -->
-            <div class="mobile-card-icon">
-              <mat-icon>leaderboard</mat-icon>
-            </div>
-            <div class="mobile-card-title">Player Rankings</div>
-            
-            <!-- Desktop Content -->
-            <mat-card-header>
-              <mat-icon mat-card-avatar class="action-icon">leaderboard</mat-icon>
-              <mat-card-title>Player Rankings</mat-card-title>
-              <mat-card-subtitle>See how you stack up</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <p>View player rankings and tournament standings.</p>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button class="success-btn" (click)="navigateTo('/rankings')">
-                <mat-icon>leaderboard</mat-icon>
-                View Rankings
               </button>
             </mat-card-actions>
           </mat-card>
@@ -326,69 +239,9 @@ import { environment } from '../../../environments/environment';
             </mat-card-actions>
           </mat-card>
 
-          <!-- Photo Gallery -->
-          <mat-card class="action-card" data-icon="photo_library" data-title="Photo Gallery"
-                   (click)="navigateTo('/gallery')"
-                   (touchstart)="handleTouchStart($event)"
-                   (touchend)="handleTouchEnd($event, '/gallery')">
-            <!-- Mobile Icon -->
-            <div class="mobile-card-icon">
-              <mat-icon>photo_library</mat-icon>
-            </div>
-            <div class="mobile-card-title">Photo Gallery</div>
-
-            <!-- Desktop Content -->
-            <mat-card-header>
-              <mat-icon mat-card-avatar class="action-icon">photo_library</mat-icon>
-              <mat-card-title>Photo Gallery</mat-card-title>
-              <mat-card-subtitle>View club photos and memories</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <p>Browse photos from club events, tournaments, and activities.</p>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button class="info-btn" (click)="navigateTo('/gallery')">
-                <mat-icon>photo_library</mat-icon>
-                View Gallery
-              </button>
-            </mat-card-actions>
-          </mat-card>
-
-          <!-- Credit Management (Admin only for now) -->
-          <mat-card class="action-card" data-icon="account_balance" data-title="Credit Management"
-                   (click)="navigateTo('/credits')"
-                   (touchstart)="handleTouchStart($event)"
-                   (touchend)="handleTouchEnd($event, '/credits')" *ngIf="isAdmin">
-            <!-- Mobile Icon -->
-            <div class="mobile-card-icon">
-              <mat-icon>account_balance</mat-icon>
-            </div>
-            <div class="mobile-card-title">Credit Management</div>
-            
-            <!-- Desktop Content -->
-            <mat-card-header>
-              <mat-icon mat-card-avatar class="action-icon">account_balance</mat-icon>
-              <mat-card-title>Credit Management</mat-card-title>
-              <mat-card-subtitle>Manage your prepaid credits</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <p>View credit balance, transaction history, and top up credits for seamless bookings.</p>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button class="success-btn" (click)="navigateTo('/credits')">
-                <mat-icon>account_balance</mat-icon>
-                View Credits
-              </button>
-              <button mat-raised-button class="primary-btn" (click)="navigateTo('/credit-topup')">
-                <mat-icon>add</mat-icon>
-                Add Credits
-              </button>
-            </mat-card-actions>
-          </mat-card>
-
           <!-- Court Usage Report -->
-          <mat-card class="action-card" data-icon="analytics" data-title="Court Usage Report" 
-                   (click)="navigateTo('/court-usage-report')" 
+          <mat-card class="action-card" data-icon="analytics" data-title="Court Usage Report"
+                   (click)="navigateTo('/court-usage-report')"
                    (touchstart)="handleTouchStart($event)"
                    (touchend)="handleTouchEnd($event, '/court-usage-report')">
             <!-- Mobile Icon -->
@@ -414,40 +267,6 @@ import { environment } from '../../../environments/environment';
             </mat-card-actions>
           </mat-card>
 
-          <!-- Developer Contact Card -->
-          <mat-card class="action-card developer-card"
-                    (click)="openDeveloperContactDialog()"
-                    (touchstart)="handleTouchStart($event)"
-                    (touchend)="handleTouchEnd($event, 'developer-contact')">
-            <!-- Mobile View -->
-            <div class="mobile-card-icon">
-              <mat-icon>code</mat-icon>
-            </div>
-            <div class="mobile-card-title">Developer</div>
-
-            <!-- Desktop View -->
-            <mat-card-header>
-              <mat-icon mat-card-avatar class="action-icon developer-icon">code</mat-icon>
-              <mat-card-title>App Development</mat-card-title>
-              <mat-card-subtitle>Custom tennis club apps by Roel Sundiam</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <p>Need a custom app for your tennis club or sports organization? Professional development services available!</p>
-              <ul class="developer-features">
-                <li><mat-icon>check_circle</mat-icon> Tennis Club Management</li>
-                <li><mat-icon>check_circle</mat-icon> Court Booking Systems</li>
-                <li><mat-icon>check_circle</mat-icon> Mobile Apps & PWAs</li>
-                <li><mat-icon>check_circle</mat-icon> Custom Features</li>
-              </ul>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button class="info-btn">
-                <mat-icon>contact_mail</mat-icon>
-                Get in Touch
-              </button>
-            </mat-card-actions>
-          </mat-card>
-
         </div>
 
         <!-- Financial Management Section -->
@@ -456,19 +275,6 @@ import { environment } from '../../../environments/environment';
             <mat-icon>account_balance</mat-icon>
             Financial Management
           </h2>
-
-          <!-- Database Indicator (only show for admins) -->
-          <mat-card class="database-indicator-card" [ngClass]="getDatabaseClass()" *ngIf="isAdmin">
-            <mat-card-content>
-              <div class="database-info">
-                <mat-icon class="database-icon">storage</mat-icon>
-                <div class="database-text">
-                  <span class="database-label">Connected Database:</span>
-                  <span class="database-name">{{ databaseName }}</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
 
           <div class="financial-grid">
             <!-- Reports & Analytics -->
@@ -606,56 +412,6 @@ import { environment } from '../../../environments/environment';
               </mat-card-actions>
             </mat-card>
 
-            <!-- Poll Management -->
-            <mat-card class="action-card admin-card" data-icon="poll" data-title="Poll Management" (click)="navigateTo('/admin/polls')">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>poll</mat-icon>
-              </div>
-              <div class="mobile-card-title">Poll Management</div>
-
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">poll</mat-icon>
-                <mat-card-title>Poll Management</mat-card-title>
-                <mat-card-subtitle>Create and manage polls</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Create polls and manage club voting.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/polls')">
-                  <mat-icon>poll</mat-icon>
-                  Manage Polls
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
-            <!-- Tournament Management -->
-            <mat-card class="action-card admin-card" data-icon="emoji_events" data-title="Tournament Management" (click)="navigateTo('/admin/tournaments')">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>emoji_events</mat-icon>
-              </div>
-              <div class="mobile-card-title">Tournament Management</div>
-
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">emoji_events</mat-icon>
-                <mat-card-title>Tournament Management</mat-card-title>
-                <mat-card-subtitle>Manage tournaments and scoring</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Create tournaments, record match results, and award points based on games won.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/tournaments')">
-                  <mat-icon>emoji_events</mat-icon>
-                  Manage Tournaments
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
             <!-- Block Court -->
             <mat-card class="action-card admin-card" data-icon="block" data-title="Block Court" (click)="navigateTo('/admin/block-court')">
               <!-- Mobile Icon -->
@@ -681,27 +437,27 @@ import { environment } from '../../../environments/environment';
               </mat-card-actions>
             </mat-card>
 
-            <!-- Credit Management -->
-            <mat-card class="action-card admin-card" data-icon="account_balance" data-title="Credit Management" (click)="navigateTo('/admin/credits')">
+            <!-- Club Settings -->
+            <mat-card class="action-card admin-card" data-icon="tune" data-title="Club Settings" (click)="navigateTo('/admin/club-settings')">
               <!-- Mobile Icon -->
               <div class="mobile-card-icon">
-                <mat-icon>account_balance</mat-icon>
+                <mat-icon>tune</mat-icon>
               </div>
-              <div class="mobile-card-title">Credit Management</div>
-              
+              <div class="mobile-card-title">Club Settings</div>
+
               <!-- Desktop Content -->
               <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">account_balance</mat-icon>
-                <mat-card-title>Credit Management</mat-card-title>
-                <mat-card-subtitle>Manage member prepaid credits</mat-card-subtitle>
+                <mat-icon mat-card-avatar class="action-icon admin-icon">tune</mat-icon>
+                <mat-card-title>Club Settings</mat-card-title>
+                <mat-card-subtitle>Configure court and pricing</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-                <p>View and manage member credit balances and transactions.</p>
+                <p>Manage operating hours, court fees, and club configuration.</p>
               </mat-card-content>
               <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/credits')">
-                  <mat-icon>account_balance</mat-icon>
-                  Manage Credits
+                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/club-settings')">
+                  <mat-icon>tune</mat-icon>
+                  Configure Club
                 </button>
               </mat-card-actions>
             </mat-card>
@@ -727,56 +483,6 @@ import { environment } from '../../../environments/environment';
                 <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/suggestions')">
                   <mat-icon>feedback</mat-icon>
                   Manage Feedback
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
-            <!-- Site Analytics -->
-            <mat-card class="action-card admin-card" data-icon="folder" data-title="Site Analytics" (click)="navigateTo('/admin/analytics')">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>folder</mat-icon>
-              </div>
-              <div class="mobile-card-title">Site Analytics</div>
-              
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">analytics</mat-icon>
-                <mat-card-title>Site Analytics</mat-card-title>
-                <mat-card-subtitle>View usage statistics</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Monitor page views, user activity, and engagement metrics.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/analytics')">
-                  <mat-icon>analytics</mat-icon>
-                  View Analytics
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
-            <!-- Gallery Upload (Superadmin Only) -->
-            <mat-card class="action-card admin-card superadmin-card" data-icon="add_photo_alternate" data-title="Upload Gallery Photo" (click)="navigateTo('/admin/gallery-upload')" *ngIf="isSuperAdmin">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>add_photo_alternate</mat-icon>
-              </div>
-              <div class="mobile-card-title">Upload Gallery Photo</div>
-
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">add_photo_alternate</mat-icon>
-                <mat-card-title>Upload Gallery Photo</mat-card-title>
-                <mat-card-subtitle>Add photos to club gallery</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Upload and manage photos for the public gallery.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/gallery-upload')">
-                  <mat-icon>add_photo_alternate</mat-icon>
-                  Upload Photo
                 </button>
               </mat-card-actions>
             </mat-card>
@@ -831,139 +537,88 @@ import { environment } from '../../../environments/environment';
               </mat-card-actions>
             </mat-card>
 
-            <!-- Resurfacing Contributions Management -->
-            <mat-card class="action-card admin-card" data-icon="construction" data-title="Resurfacing Contributions" (click)="navigateTo('/admin/resurfacing-contributions')">
-              <!-- Mobile Icon -->
-              <div class="mobile-card-icon">
-                <mat-icon>construction</mat-icon>
-              </div>
-              <div class="mobile-card-title">Resurfacing Contributions</div>
-
-              <!-- Desktop Content -->
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="action-icon admin-icon">construction</mat-icon>
-                <mat-card-title>Resurfacing Contributions</mat-card-title>
-                <mat-card-subtitle>Manage court resurfacing donations</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>View and manage member contributions for the tennis court resurfacing project.</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-raised-button class="admin-btn" (click)="navigateTo('/admin/resurfacing-contributions')">
-                  <mat-icon>construction</mat-icon>
-                  View Contributions
-                </button>
-              </mat-card-actions>
-            </mat-card>
           </div>
         </div>
 
-        <!-- Partner Section -->
-        <div class="partner-section">
-          <h2 class="section-title partner-title">
-            <mat-icon>handshake</mat-icon>
-            Our Club Partners
+        <!-- Platform Administration Section (Superadmin Only) -->
+        <div class="platform-admin-section" *ngIf="isSuperAdmin">
+          <h2 class="section-title platform-admin-title">
+            <mat-icon>verified_user</mat-icon>
+            Platform Administration
           </h2>
 
-          <div class="partner-grid">
-            <!-- Helen's Kitchen Partner -->
-            <mat-card class="partner-card food-partner" (click)="openHelensKitchen()">
+          <div class="platform-admin-grid">
+            <!-- Club Management -->
+            <mat-card class="action-card platform-admin-card" data-icon="business" data-title="Club Management" (click)="navigateTo('/admin/clubs')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>business</mat-icon>
+              </div>
+              <div class="mobile-card-title">Club Management</div>
+
+              <!-- Desktop Content -->
               <mat-card-header>
-                <img src="helens-kitchen-logo.jpg" alt="Helen's Kitchen Logo" mat-card-avatar class="partner-logo-header">
-                <mat-card-title>Helen's Kitchen</mat-card-title>
-                <mat-card-subtitle>Delicious Meals & Tennis Club Catering</mat-card-subtitle>
+                <mat-icon mat-card-avatar class="action-icon platform-admin-icon">business</mat-icon>
+                <mat-card-title>Club Management</mat-card-title>
+                <mat-card-subtitle>Manage all clubs and admins</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-                <div class="partner-content">
-                  <p>Looking for great food after your tennis match? Check out Helen's Kitchen for authentic, delicious meals!</p>
-                  <div class="partner-features">
-                    <div class="feature-item">
-                      <mat-icon>local_dining</mat-icon>
-                      <span>Fresh Daily Menu</span>
-                    </div>
-                    <div class="feature-item">
-                      <mat-icon>delivery_dining</mat-icon>
-                      <span>Court-side Delivery</span>
-                    </div>
-                    <div class="feature-item">
-                      <mat-icon>group</mat-icon>
-                      <span>Group Catering</span>
-                    </div>
-                  </div>
-                </div>
+                <p>Create clubs, assign club admins, and manage multi-tenant platform.</p>
               </mat-card-content>
               <mat-card-actions>
-                <button mat-raised-button class="partner-btn food-btn" (click)="openHelensKitchen()">
-                  <mat-icon>open_in_new</mat-icon>
-                  View Menu
+                <button mat-raised-button class="platform-admin-btn" (click)="navigateTo('/admin/clubs')">
+                  <mat-icon>business</mat-icon>
+                  Manage Clubs
                 </button>
               </mat-card-actions>
             </mat-card>
 
-            <!-- Baseline Gearhub Partner -->
-            <mat-card class="partner-card equipment-partner" (click)="openBaselineGearhub()">
+            <!-- Platform Overview -->
+            <mat-card class="action-card platform-admin-card" data-icon="account_tree" data-title="Platform Overview" (click)="navigateTo('/admin/platform-overview')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>account_tree</mat-icon>
+              </div>
+              <div class="mobile-card-title">Platform Overview</div>
+
+              <!-- Desktop Content -->
               <mat-card-header>
-                <img src="baseline-gearhub-logo.png" alt="Baseline Gearhub Logo" mat-card-avatar class="partner-logo-header baseline-logo" loading="lazy">
-                <mat-card-title>Baseline Gearhub</mat-card-title>
-                <mat-card-subtitle>Your hub for tennis & pickleball gear</mat-card-subtitle>
+                <mat-icon mat-card-avatar class="action-icon platform-admin-icon">account_tree</mat-icon>
+                <mat-card-title>Platform Overview</mat-card-title>
+                <mat-card-subtitle>View all clubs, admins, and members</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-                <div class="partner-content">
-                  <p>Elevate your game with premium equipment for both tennis and pickleball! Discover quality rackets, paddles, and accessories for every skill level.</p>
-                  <div class="partner-features">
-                    <div class="feature-item">
-                      <mat-icon>sports_tennis</mat-icon>
-                      <span>Tennis & Pickleball</span>
-                    </div>
-                    <div class="feature-item">
-                      <mat-icon>shopping_cart</mat-icon>
-                      <span>Gear & Accessories</span>
-                    </div>
-                    <div class="feature-item">
-                      <mat-icon>local_shipping</mat-icon>
-                      <span>Fast Delivery</span>
-                    </div>
-                  </div>
-                </div>
+                <p>Complete overview of all clubs with their administrators and member lists.</p>
               </mat-card-content>
               <mat-card-actions>
-                <button mat-raised-button class="partner-btn equipment-btn" (click)="openBaselineGearhub()">
-                  <mat-icon>open_in_new</mat-icon>
-                  Shop Now
+                <button mat-raised-button class="platform-admin-btn" (click)="navigateTo('/admin/platform-overview')">
+                  <mat-icon>account_tree</mat-icon>
+                  View Overview
                 </button>
               </mat-card-actions>
             </mat-card>
 
-            <!-- PlaySquad Partner -->
-            <mat-card class="partner-card general-partner" (click)="openPlaySquadAutoLogin()">
+            <!-- Site Analytics -->
+            <mat-card class="action-card platform-admin-card" data-icon="analytics" data-title="Site Analytics" (click)="navigateTo('/admin/analytics')">
+              <!-- Mobile Icon -->
+              <div class="mobile-card-icon">
+                <mat-icon>analytics</mat-icon>
+              </div>
+              <div class="mobile-card-title">Site Analytics</div>
+
+              <!-- Desktop Content -->
               <mat-card-header>
-                <img src="playsquad-logo.png" alt="PlaySquad Logo" mat-card-avatar class="partner-logo-header playsquad-logo" loading="lazy">
-                <mat-card-title>PlaySquad</mat-card-title>
-                <mat-card-subtitle>Find teammates and organize sports activities</mat-card-subtitle>
+                <mat-icon mat-card-avatar class="action-icon platform-admin-icon">analytics</mat-icon>
+                <mat-card-title>Site Analytics</mat-card-title>
+                <mat-card-subtitle>Platform-wide usage statistics by club</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-                <div class="partner-content">
-                  <p>Connect with fellow sports enthusiasts and organize games effortlessly! Build your sports community and never play alone again.</p>
-                  <div class="partner-features">
-                    <div class="feature-item">
-                      <mat-icon>group</mat-icon>
-                      <span>Team Building</span>
-                    </div>
-                    <div class="feature-item">
-                      <mat-icon>event</mat-icon>
-                      <span>Event Organization</span>
-                    </div>
-                    <div class="feature-item">
-                      <mat-icon>sports</mat-icon>
-                      <span>Sports Community</span>
-                    </div>
-                  </div>
-                </div>
+                <p>Monitor page views, user activity, and engagement metrics across all clubs.</p>
               </mat-card-content>
               <mat-card-actions>
-                <button mat-raised-button class="partner-btn general-btn" (click)="openPlaySquadAutoLogin(); $event.stopPropagation()">
-                  <mat-icon>open_in_new</mat-icon>
-                  Join Now
+                <button mat-raised-button class="platform-admin-btn" (click)="navigateTo('/admin/analytics')">
+                  <mat-icon>analytics</mat-icon>
+                  View Analytics
                 </button>
               </mat-card-actions>
             </mat-card>
@@ -982,7 +637,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   hasFinancialAccess = false;
   private apiUrl = environment.apiUrl;
   private subscriptions: Subscription[] = [];
-  databaseName: string = 'Loading...';
   unreadFeedbackCount: number = 0;
   private feedbackCountInterval: any;
 
@@ -1016,11 +670,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(userSub);
 
-    // Fetch database name for admin users or treasurers
-    if (this.isAdmin || this.isTreasurer) {
-      this.fetchDatabaseInfo();
-    }
-
     // Fetch unread feedback count for admins
     if (this.isAdmin) {
       this.fetchUnreadFeedbackCount();
@@ -1037,23 +686,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.pwaNotificationService.checkAndShowPendingNotification();
   }
 
-  private fetchDatabaseInfo(): void {
-    this.http.get<any>(`${this.apiUrl}/health`).subscribe({
-      next: (response) => {
-        if (response && response.database) {
-          this.databaseName = response.database;
-        } else {
-          this.databaseName = 'Unknown';
-        }
-      },
-      error: (error) => {
-        console.error('Error fetching database info:', error);
-        this.databaseName = 'Error';
-      }
-    });
-  }
-
   private fetchUnreadFeedbackCount(): void {
+    // Only fetch if a club is selected
+    if (!this.authService.selectedClub) {
+      this.unreadFeedbackCount = 0;
+      return;
+    }
+
     this.http.get<any>(`${this.apiUrl}/suggestions/unread-count`).subscribe({
       next: (response) => {
         if (response && response.success && response.data) {
@@ -1065,16 +704,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.unreadFeedbackCount = 0;
       }
     });
-  }
-
-  getDatabaseClass(): string {
-    if (this.databaseName.toLowerCase().includes('test')) {
-      return 'database-test';
-    } else if (this.databaseName.toLowerCase().includes('prod') ||
-               !this.databaseName.toLowerCase().includes('test')) {
-      return 'database-production';
-    }
-    return 'database-unknown';
   }
 
   testNavigation(): void {
@@ -1106,113 +735,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       if (action === 'testNavigation') {
         this.testNavigation();
-      } else if (action === 'openTennisAppStore') {
-        this.openTennisAppStore();
       } else if (action === 'ball-machine') {
         this.openTennisBallMachineDialog();
-      } else if (action === 'open-play-squad') {
-        this.openPlaySquadAutoLogin();
-      } else if (action === 'developer-contact') {
-        this.openDeveloperContactDialog();
       } else {
         this.navigateTo(action);
       }
     }
   }
 
-  openHelensKitchen(): void {
-    // Track partner click analytics
-    this.analyticsService.trackUserActivity('partner_click', 'dashboard', {
-      partnerName: "Helen's Kitchen",
-      partnerUrl: 'https://helens-kitchen.netlify.app/',
-      partnerType: 'food',
-      clickSource: 'partner_card'
-    });
-
-    window.open('https://helens-kitchen.netlify.app/', '_blank');
-  }
-
-  openBaselineGearhub(): void {
-    // Track partner click analytics
-    this.analyticsService.trackUserActivity('partner_click', 'dashboard', {
-      partnerName: 'Baseline Gearhub',
-      partnerUrl: 'https://tennis-marketplace.netlify.app/',
-      partnerType: 'equipment',
-      clickSource: 'partner_card'
-    });
-
-    window.open('https://tennis-marketplace.netlify.app/', '_blank');
-  }
-
-  openTennisAppStore(): void {
-    // Track partner click analytics
-    this.analyticsService.trackUserActivity('partner_click', 'dashboard', {
-      partnerName: 'Official Tennis App Store',
-      partnerUrl: 'https://tennis-marketplace.netlify.app/browse',
-      partnerType: 'app_store',
-      clickSource: 'partner_card'
-    });
-
-    window.open('https://tennis-marketplace.netlify.app/browse', '_blank');
-  }
-
-  openPlaySquad(): void {
-    // Track partner click analytics
-    this.analyticsService.trackUserActivity('partner_click', 'dashboard', {
-      partnerName: 'PlaySquad',
-      partnerUrl: 'https://play-squad.netlify.app/',
-      partnerType: 'general',
-      clickSource: 'partner_card'
-    });
-
-    window.open('https://play-squad.netlify.app/', '_blank');
-  }
-
-  /**
-   * Open PlaySquad with auto-login (from action card)
-   */
-  openPlaySquadAutoLogin(): void {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    // Get current user data for auto-login
-    const currentUser = this.authService.currentUser;
-    if (!currentUser) {
-      console.error('❌ No user logged in, cannot open Play Squad');
-      return;
-    }
-
-    // Prepare auth data for Play Squad auto-login
-    const authData = {
-      username: currentUser.username,
-      email: currentUser.email,
-      fullName: currentUser.fullName,
-      userId: currentUser._id,
-      role: currentUser.role,
-      gender: currentUser.gender || 'other'
-    };
-
-    // Encode auth data as base64 for URL parameter
-    const authToken = btoa(JSON.stringify(authData));
-    // PRODUCTION: Use production URL
-    const playSquadUrl = `https://play-squad.netlify.app/?auth=${encodeURIComponent(authToken)}`;
-    // LOCAL TESTING: Use localhost URL for local development
-    // const playSquadUrl = `http://localhost:4201/?auth=${encodeURIComponent(authToken)}`;
-
-    // Track button click with analytics
-    this.analyticsService.trackUserActivity('click_button', 'dashboard', {
-      button: 'open_play_card',
-      action: 'auto_login_playsquad',
-      platform: isMobile ? 'mobile' : 'desktop',
-      userId: currentUser._id
-    });
-
-    // Open Play Squad in new tab (desktop) or same window (mobile)
-    if (isMobile) {
-      window.location.href = playSquadUrl;
-    } else {
-      window.open(playSquadUrl, '_blank');
-    }
-  }
 
   /**
    * Opens the Tennis Ball Machine rental dialog
@@ -1235,38 +765,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       maxWidth: '90vw',
       maxHeight: '85vh',
       panelClass: 'ball-machine-dialog-container',
-      autoFocus: true
-    });
-  }
-
-  /**
-   * Opens the Developer Contact dialog
-   */
-  openDeveloperContactDialog(): void {
-    // 1. SITE ANALYTICS - Track in historical analytics database
-    this.analyticsService.trackUserActivity('click_button', 'dashboard', {
-      button: 'developer_card',
-      action: 'view_details',
-      cardTitle: 'Developer Resources',
-      cardSection: 'developer_contact'
-    });
-
-    // 2. MEMBER ACTIVITY - Emit real-time event for admin monitoring
-    this.activityMonitorService.emitUserActivity(
-      'View Developer Resources',
-      'Dashboard',
-      {
-        cardType: 'developer_resources',
-        section: 'developer_contact'
-      }
-    );
-
-    // 3. Open the dialog
-    this.dialog.open(DeveloperContactDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      maxHeight: '85vh',
-      panelClass: 'developer-contact-dialog-container',
       autoFocus: true
     });
   }

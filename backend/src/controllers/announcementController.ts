@@ -17,7 +17,10 @@ export const getActiveAnnouncements = async (req: AuthenticatedRequest, res: Res
     }
 
     // Get all active announcements (no dismissal filtering - recurring announcements)
-    const activeAnnouncements = await Announcement.find({ isActive: true })
+    const activeAnnouncements = await Announcement.find({
+      isActive: true,
+      clubId: req.clubId
+    })
       .sort({ createdAt: -1 })
       .populate('createdBy', 'username firstName lastName');
 
@@ -51,6 +54,7 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
       title,
       content,
       createdBy,
+      clubId: req.clubId,
       isActive: true
     });
 
@@ -110,6 +114,14 @@ export const dismissAnnouncement = async (req: AuthenticatedRequest, res: Respon
       });
     }
 
+    // Verify clubId matches
+    if (announcement.clubId?.toString() !== req.clubId?.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Announcement not found'
+      });
+    }
+
     // Log dismissal for analytics (optional - doesn't affect future displays)
     await AnnouncementRead.findOneAndUpdate(
       { announcementId: id, userId },
@@ -140,11 +152,7 @@ export const stopAnnouncement = async (req: AuthenticatedRequest, res: Response)
   try {
     const { id } = req.params;
 
-    const announcement = await Announcement.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    );
+    const announcement = await Announcement.findById(id);
 
     if (!announcement) {
       return res.status(404).json({
@@ -152,6 +160,17 @@ export const stopAnnouncement = async (req: AuthenticatedRequest, res: Response)
         message: 'Announcement not found'
       });
     }
+
+    // Verify clubId matches
+    if (announcement.clubId?.toString() !== req.clubId?.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Announcement not found'
+      });
+    }
+
+    announcement.isActive = false;
+    await announcement.save();
 
     res.json({
       success: true,
@@ -172,11 +191,7 @@ export const activateAnnouncement = async (req: AuthenticatedRequest, res: Respo
   try {
     const { id } = req.params;
 
-    const announcement = await Announcement.findByIdAndUpdate(
-      id,
-      { isActive: true },
-      { new: true }
-    ).populate('createdBy', 'username firstName lastName');
+    const announcement = await Announcement.findById(id);
 
     if (!announcement) {
       return res.status(404).json({
@@ -184,6 +199,18 @@ export const activateAnnouncement = async (req: AuthenticatedRequest, res: Respo
         message: 'Announcement not found'
       });
     }
+
+    // Verify clubId matches
+    if (announcement.clubId?.toString() !== req.clubId?.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Announcement not found'
+      });
+    }
+
+    announcement.isActive = true;
+    await announcement.save();
+    await announcement.populate('createdBy', 'username firstName lastName');
 
     // Emit WebSocket event to all connected clients
     webSocketService.emitAnnouncement({
@@ -214,11 +241,7 @@ export const updateAnnouncement = async (req: AuthenticatedRequest, res: Respons
     const { id } = req.params;
     const { title, content } = req.body;
 
-    const announcement = await Announcement.findByIdAndUpdate(
-      id,
-      { title, content },
-      { new: true, runValidators: true }
-    ).populate('createdBy', 'username firstName lastName');
+    const announcement = await Announcement.findById(id);
 
     if (!announcement) {
       return res.status(404).json({
@@ -226,6 +249,19 @@ export const updateAnnouncement = async (req: AuthenticatedRequest, res: Respons
         message: 'Announcement not found'
       });
     }
+
+    // Verify clubId matches
+    if (announcement.clubId?.toString() !== req.clubId?.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Announcement not found'
+      });
+    }
+
+    announcement.title = title;
+    announcement.content = content;
+    await announcement.save();
+    await announcement.populate('createdBy', 'username firstName lastName');
 
     // If announcement is active, broadcast the update to all connected clients
     if (announcement.isActive) {
@@ -268,12 +304,12 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
     const skip = (page - 1) * limit;
 
     const [announcements, total] = await Promise.all([
-      Announcement.find()
+      Announcement.find({ clubId: req.clubId })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate('createdBy', 'username firstName lastName'),
-      Announcement.countDocuments()
+      Announcement.countDocuments({ clubId: req.clubId })
     ]);
 
     res.json({
@@ -302,7 +338,7 @@ export const deleteAnnouncement = async (req: AuthenticatedRequest, res: Respons
   try {
     const { id } = req.params;
 
-    const announcement = await Announcement.findByIdAndDelete(id);
+    const announcement = await Announcement.findById(id);
 
     if (!announcement) {
       return res.status(404).json({
@@ -310,6 +346,16 @@ export const deleteAnnouncement = async (req: AuthenticatedRequest, res: Respons
         message: 'Announcement not found'
       });
     }
+
+    // Verify clubId matches
+    if (announcement.clubId?.toString() !== req.clubId?.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Announcement not found'
+      });
+    }
+
+    await Announcement.findByIdAndDelete(id);
 
     // Also delete all read records for this announcement
     await AnnouncementRead.deleteMany({ announcementId: id });

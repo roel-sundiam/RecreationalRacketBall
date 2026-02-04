@@ -1,9 +1,14 @@
 import { Router, Response } from 'express';
-import { requireApprovedUser, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
+import { requireApprovedUser, requireAdmin, AuthenticatedRequest, authenticateToken } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 import SeedingService from '../services/seedingService';
 import { body, param, query, validationResult } from 'express-validator';
 
 const router = Router();
+
+// Apply auth and club context to all routes
+router.use(authenticateToken);
+router.use(extractClubContext);
 
 // Get current player rankings
 router.get('/rankings', 

@@ -31,6 +31,7 @@ export interface ITournament extends Document {
   name: string;
   date: Date;
   createdBy: string; // Admin user ID
+  clubId: mongoose.Types.ObjectId;
   matches: ITournamentMatch[];
   status: 'draft' | 'completed';
   totalMatches: number;
@@ -164,6 +165,12 @@ const tournamentSchema = new Schema<ITournament>({
     required: [true, 'Created by is required'],
     index: true
   },
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: [true, 'Club ID is required'],
+    index: true
+  },
   matches: {
     type: [tournamentMatchSchema],
     default: []
@@ -189,9 +196,9 @@ const tournamentSchema = new Schema<ITournament>({
 });
 
 // Compound indexes for better query performance
-tournamentSchema.index({ date: -1, status: 1 });
-tournamentSchema.index({ createdBy: 1, date: -1 });
-tournamentSchema.index({ status: 1, date: -1 });
+tournamentSchema.index({ clubId: 1, date: -1, status: 1 });
+tournamentSchema.index({ clubId: 1, createdBy: 1, date: -1 });
+tournamentSchema.index({ clubId: 1, status: 1, date: -1 });
 
 // Pre-save middleware to calculate game scores from score string
 tournamentSchema.pre('save', function(next) {

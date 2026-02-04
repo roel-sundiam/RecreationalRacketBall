@@ -17,7 +17,9 @@ export const getPolls = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   const skip = (page - 1) * limit;
 
   // Build filter query
-  const filter: any = {};
+  const filter: any = {
+    clubId: req.clubId
+  };
 
   if (req.query.status) {
     filter.status = req.query.status;
@@ -53,7 +55,8 @@ export const getPolls = asyncHandler(async (req: AuthenticatedRequest, res: Resp
         const uniquePlayerIds = [...new Set(allPlayerIds)];
         const mongoose = require('mongoose');
         const players = await User.find({
-          _id: { $in: uniquePlayerIds.map((id: string) => new mongoose.Types.ObjectId(id)) }
+          _id: { $in: uniquePlayerIds.map((id: string) => new mongoose.Types.ObjectId(id)) },
+          clubId: req.clubId
         }).select('username fullName _id');
         
         const playerMap: Record<string, any> = {};
@@ -119,8 +122,16 @@ export const getPoll = asyncHandler(async (req: AuthenticatedRequest, res: Respo
   const includeVoters = req.query.includeVoters === 'true' && req.user?.role !== 'member';
 
   const poll = await (Poll as any).getPollResults(id, includeVoters);
-  
+
   if (!poll) {
+    return res.status(404).json({
+      success: false,
+      error: 'Poll not found'
+    });
+  }
+
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       error: 'Poll not found'
@@ -199,7 +210,8 @@ export const createPoll = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const allMembers = await User.find({
       isActive: true,
       isApproved: true,
-      role: { $in: ['member', 'admin'] }
+      role: { $in: ['member', 'admin'] },
+      clubId: req.clubId
     }).select('_id');
     voters = allMembers.map(member => member._id.toString());
   }
@@ -215,7 +227,8 @@ export const createPoll = asyncHandler(async (req: AuthenticatedRequest, res: Re
     endDate: endDate ? new Date(endDate) : undefined,
     eligibleVoters: voters,
     metadata,
-    status: 'draft'
+    status: 'draft',
+    clubId: req.clubId
   });
 
   await poll.save();
@@ -242,8 +255,16 @@ export const updatePoll = asyncHandler(async (req: AuthenticatedRequest, res: Re
   } = req.body;
 
   const poll = await Poll.findById(id);
-  
+
   if (!poll) {
+    return res.status(404).json({
+      success: false,
+      error: 'Poll not found'
+    });
+  }
+
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       error: 'Poll not found'
@@ -282,8 +303,16 @@ export const activatePoll = asyncHandler(async (req: AuthenticatedRequest, res: 
   const { id } = req.params;
 
   const poll = await Poll.findById(id);
-  
+
   if (!poll) {
+    return res.status(404).json({
+      success: false,
+      error: 'Poll not found'
+    });
+  }
+
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       error: 'Poll not found'
@@ -312,8 +341,16 @@ export const closePoll = asyncHandler(async (req: AuthenticatedRequest, res: Res
   const { id } = req.params;
 
   const poll = await Poll.findById(id);
-  
+
   if (!poll) {
+    return res.status(404).json({
+      success: false,
+      error: 'Poll not found'
+    });
+  }
+
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       error: 'Poll not found'
@@ -395,20 +432,23 @@ export const vote = asyncHandler(async (req: AuthenticatedRequest, res: Response
 // Get poll statistics (admin only)
 export const getPollStats = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { startDate, endDate } = req.query;
-  
+
   const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const end = endDate ? new Date(endDate as string) : new Date();
-  
+
   if (end) {
     end.setHours(23, 59, 59, 999);
   }
 
   const stats = await Promise.all([
     // Total polls
-    Poll.countDocuments({}),
-    
+    Poll.countDocuments({ clubId: req.clubId }),
+
     // Polls by status
     Poll.aggregate([
+      {
+        $match: { clubId: new mongoose.Types.ObjectId(req.clubId) }
+      },
       {
         $group: {
           _id: '$status',
@@ -416,16 +456,18 @@ export const getPollStats = asyncHandler(async (req: AuthenticatedRequest, res: 
         }
       }
     ]),
-    
+
     // Recent polls
     Poll.countDocuments({
+      clubId: req.clubId,
       createdAt: { $gte: start, $lte: end }
     }),
-    
+
     // Average participation rate
     Poll.aggregate([
       {
         $match: {
+          clubId: new mongoose.Types.ObjectId(req.clubId),
           status: { $in: ['active', 'closed'] },
           totalVotes: { $gt: 0 }
         }
@@ -450,6 +492,9 @@ export const getPollStats = asyncHandler(async (req: AuthenticatedRequest, res: 
     
     // Polls by category
     Poll.aggregate([
+      {
+        $match: { clubId: new mongoose.Types.ObjectId(req.clubId) }
+      },
       {
         $group: {
           _id: '$metadata.category',
@@ -505,6 +550,14 @@ export const addAdminVote = asyncHandler(async (req: AuthenticatedRequest, res: 
     });
   }
 
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
+    return res.status(404).json({
+      success: false,
+      message: 'Poll not found'
+    });
+  }
+
   // Find the option to vote on
   const option = poll.options.find(opt => opt.text === optionText);
   if (!option) {
@@ -531,7 +584,7 @@ export const addAdminVote = asyncHandler(async (req: AuthenticatedRequest, res: 
   if (poll.metadata?.category === 'open_play' && poll.openPlayEvent && optionText.toLowerCase() === 'yes') {
     const dueDate = new Date(poll.openPlayEvent.eventDate);
     dueDate.setHours(poll.openPlayEvent.startTime - 1, 0, 0, 0); // 1 hour before event
-    
+
     await Payment.create({
       pollId: (poll._id as any).toString(),
       userId: userId,
@@ -545,7 +598,8 @@ export const addAdminVote = asyncHandler(async (req: AuthenticatedRequest, res: 
         openPlayEventTitle: poll.title,
         openPlayEventDate: poll.openPlayEvent.eventDate,
         discounts: [] // Initialize empty discounts array to prevent length error
-      }
+      },
+      clubId: req.clubId
     });
   }
 
@@ -585,6 +639,14 @@ export const removeAdminVote = asyncHandler(async (req: AuthenticatedRequest, re
     });
   }
 
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
+    return res.status(404).json({
+      success: false,
+      message: 'Poll not found'
+    });
+  }
+
   // Find the option
   const option = poll.options.find(opt => opt.text === optionText);
   if (!option) {
@@ -612,7 +674,8 @@ export const removeAdminVote = asyncHandler(async (req: AuthenticatedRequest, re
     await Payment.deleteOne({
       pollId: (poll._id as any).toString(),
       userId: userId,
-      status: 'pending'
+      status: 'pending',
+      clubId: req.clubId
     });
   }
 
@@ -673,13 +736,14 @@ export const createOpenPlay = asyncHandler(async (req: AuthenticatedRequest, res
   const allMembers = await User.find({
     isActive: true,
     isApproved: true,
-    role: { $in: ['member', 'admin'] }
+    role: { $in: ['member', 'admin'] },
+    clubId: req.clubId
   }).select('_id');
-  
+
   const voters = allMembers.map(member => member._id.toString());
 
   const timeRangeText = `${startTime}:00 - ${endTime}:00`;
-  
+
   const openPlayPoll = new Poll({
     title: title || `Open Play - ${new Date(eventDate).toLocaleDateString()} ${timeRangeText}`,
     description: description || `Join us for Open Play from ${timeRangeText}! Fee: ₱150 per player. Maximum 12 players. Random doubles matches will be generated.`,
@@ -708,7 +772,8 @@ export const createOpenPlay = asyncHandler(async (req: AuthenticatedRequest, res
       blockedTimeSlots: [], // Will be calculated by pre-save middleware
       tournamentTier: tournamentTier || '100'
     },
-    status: 'active'
+    status: 'active',
+    clubId: req.clubId
   });
 
   await openPlayPoll.save();
@@ -779,8 +844,16 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
   }
 
   const poll = await Poll.findById(id);
-  
+
   if (!poll || !poll.openPlayEvent) {
+    return res.status(404).json({
+      success: false,
+      error: 'Open Play event not found'
+    });
+  }
+
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       error: 'Open Play event not found'
@@ -1022,7 +1095,8 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
 // Get Open Play events
 export const getOpenPlayEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const filter: any = {
-    'metadata.category': 'open_play'
+    'metadata.category': 'open_play',
+    clubId: req.clubId
   };
 
   // Show only active/closed for members
@@ -1052,7 +1126,8 @@ export const getOpenPlayEvents = asyncHandler(async (req: AuthenticatedRequest, 
         const uniquePlayerIds = [...new Set(allPlayerIds)];
         console.log('🔍 getOpenPlayEvents: Looking up players:', uniquePlayerIds);
         const players = await User.find({
-          _id: { $in: uniquePlayerIds.map((id: string) => new mongoose.Types.ObjectId(id)) }
+          _id: { $in: uniquePlayerIds.map((id: string) => new mongoose.Types.ObjectId(id)) },
+          clubId: req.clubId
         }).select('username fullName _id');
         console.log('🔍 getOpenPlayEvents: Found', players.length, 'players:', players.map(p => p.fullName || p.username));
         
@@ -1096,8 +1171,16 @@ export const updateMatchOrder = asyncHandler(async (req: AuthenticatedRequest, r
   }
 
   const poll = await Poll.findById(id);
-  
+
   if (!poll || !poll.openPlayEvent) {
+    return res.status(404).json({
+      success: false,
+      error: 'Open Play event not found'
+    });
+  }
+
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       error: 'Open Play event not found'
@@ -1186,8 +1269,16 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
   }
 
   const poll = await Poll.findById(id);
-  
+
   if (!poll || !poll.openPlayEvent) {
+    return res.status(404).json({
+      success: false,
+      error: 'Open Play event not found'
+    });
+  }
+
+  // Verify clubId
+  if (poll.clubId?.toString() !== req.clubId?.toString()) {
     return res.status(404).json({
       success: false,
       error: 'Open Play event not found'
@@ -1290,7 +1381,8 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
         const existingPayment = await Payment.findOne({
           pollId: (poll._id as any).toString(),
           userId: playerId,
-          status: { $in: ['pending', 'completed'] }
+          status: { $in: ['pending', 'completed'] },
+          clubId: req.clubId
         });
         
         if (existingPayment) {

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,12 +23,14 @@ import { Subscription, interval } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { AnalyticsService } from '../../services/analytics.service';
 import { AnalyticsStats } from '../../../../../shared/types';
+import { environment } from '../../../environments/environment';
 
 interface ActivityHistoryItem {
   _id: string;
   userId: {
     fullName: string;
     username: string;
+    clubName?: string;
   };
   action: string;
   component: string;
@@ -57,85 +60,92 @@ interface ActivityHistoryItem {
     MatSnackBarModule,
     MatChipsModule,
     MatTooltipModule,
-    MatDividerModule
+    MatDividerModule,
   ],
   template: `
     <div class="admin-analytics-container">
-      <div class="admin-header">
-        <button mat-icon-button (click)="goBack()" class="back-button">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h1>
-          <mat-icon>analytics</mat-icon>
-          Site Analytics Dashboard
-        </h1>
-        <div class="header-actions">
-          <button mat-raised-button color="accent" (click)="openMarketingPage()" class="marketing-button">
-            <mat-icon>campaign</mat-icon>
-            Marketing Page
-          </button>
-          <button mat-raised-button color="warn" (click)="openVideoDemo()" class="video-demo-button">
-            <mat-icon>play_circle_filled</mat-icon>
-            Video Demo
-          </button>
-          <button mat-raised-button color="primary" (click)="refreshData()" [disabled]="loading">
-            <mat-icon>refresh</mat-icon>
-            Refresh
-          </button>
+      <!-- Modern Gradient Header -->
+      <div class="modern-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="icon-wrapper">
+              <mat-icon>analytics</mat-icon>
+            </div>
+            <div class="title-group">
+              <h1>Site Analytics Dashboard</h1>
+              <p class="subtitle">Comprehensive platform analytics and usage insights</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button (click)="openMarketingPage()" class="marketing-button">
+              <mat-icon>campaign</mat-icon>
+              Marketing Page
+            </button>
+            <button (click)="openVideoDemo()" class="video-demo-button">
+              <mat-icon>play_circle_filled</mat-icon>
+              Video Demo
+            </button>
+            <button (click)="refreshData()" [disabled]="loading">
+              <mat-icon>refresh</mat-icon>
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Date Range Selector -->
-      <mat-card class="filter-card">
-        <mat-card-content>
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Date Range Selector -->
+        <div class="filter-card">
           <div class="date-filters">
-            <mat-form-field appearance="outline">
-              <mat-label>Time Period</mat-label>
-              <mat-select [(value)]="selectedPeriod" (selectionChange)="onPeriodChange()">
-                <mat-option value="1d">Last 24 Hours</mat-option>
-                <mat-option value="7d">Last 7 Days</mat-option>
-                <mat-option value="30d">Last 30 Days</mat-option>
-                <mat-option value="90d">Last 90 Days</mat-option>
-                <mat-option value="custom">Custom Range</mat-option>
-              </mat-select>
-            </mat-form-field>
+            <div class="filter-group">
+              <label for="clubFilter">Club Filter</label>
+              <select id="clubFilter" [(ngModel)]="selectedClubId" (change)="onClubFilterChange()">
+                <option value="">All Clubs</option>
+                <option *ngFor="let club of clubs" [value]="club._id">
+                  {{ club.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="periodSelect">Time Period</label>
+              <select id="periodSelect" [(ngModel)]="selectedPeriod" (change)="onPeriodChange()">
+                <option value="1d">Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
 
             <div *ngIf="selectedPeriod === 'custom'" class="custom-date-range">
-              <mat-form-field appearance="outline">
-                <mat-label>From Date</mat-label>
-                <input matInput [matDatepicker]="fromDatePicker" [(ngModel)]="customDateFrom">
-                <mat-datepicker-toggle matSuffix [for]="fromDatePicker"></mat-datepicker-toggle>
-                <mat-datepicker #fromDatePicker></mat-datepicker>
-              </mat-form-field>
+              <div class="filter-group">
+                <label for="fromDate">From Date</label>
+                <input type="date" id="fromDate" [(ngModel)]="customDateFrom" />
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>To Date</mat-label>
-                <input matInput [matDatepicker]="toDatePicker" [(ngModel)]="customDateTo">
-                <mat-datepicker-toggle matSuffix [for]="toDatePicker"></mat-datepicker-toggle>
-                <mat-datepicker #toDatePicker></mat-datepicker>
-              </mat-form-field>
+              <div class="filter-group">
+                <label for="toDate">To Date</label>
+                <input type="date" id="toDate" [(ngModel)]="customDateTo" />
+              </div>
 
-              <button mat-raised-button color="primary" (click)="applyCustomRange()">
-                Apply Range
-              </button>
+              <button class="apply-button" (click)="applyCustomRange()">Apply Range</button>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
 
-      <!-- Loading State -->
-      <div *ngIf="loading" class="loading-container">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading analytics data...</p>
-      </div>
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Loading analytics data...</p>
+        </div>
 
-      <!-- Analytics Dashboard -->
-      <div *ngIf="!loading && analyticsData" class="analytics-dashboard">
-        
-        <!-- Overview Cards -->
-        <div class="overview-stats">
-          <mat-card class="stat-card page-views">
-            <mat-card-content>
+        <!-- Analytics Dashboard -->
+        <div *ngIf="!loading && analyticsData" class="analytics-dashboard">
+          <!-- Overview Cards -->
+          <div class="overview-stats">
+            <div class="stat-card page-views">
               <div class="stat-content">
                 <div class="stat-icon">
                   <mat-icon>visibility</mat-icon>
@@ -146,11 +156,9 @@ interface ActivityHistoryItem {
                   <small>{{ analyticsData.pageViews.uniqueUsers }} unique users</small>
                 </div>
               </div>
-            </mat-card-content>
-          </mat-card>
+            </div>
 
-          <mat-card class="stat-card sessions">
-            <mat-card-content>
+            <div class="stat-card sessions">
               <div class="stat-content">
                 <div class="stat-icon">
                   <mat-icon>schedule</mat-icon>
@@ -158,14 +166,14 @@ interface ActivityHistoryItem {
                 <div class="stat-info">
                   <h3>{{ analyticsData.engagement.totalSessions | number }}</h3>
                   <p>Total Sessions</p>
-                  <small>{{ formatDuration(analyticsData.engagement.avgDuration) }} avg duration</small>
+                  <small
+                    >{{ formatDuration(analyticsData.engagement.avgDuration) }} avg duration</small
+                  >
                 </div>
               </div>
-            </mat-card-content>
-          </mat-card>
+            </div>
 
-          <mat-card class="stat-card bounce-rate">
-            <mat-card-content>
+            <div class="stat-card bounce-rate">
               <div class="stat-content">
                 <div class="stat-icon">
                   <mat-icon>bounce</mat-icon>
@@ -176,11 +184,9 @@ interface ActivityHistoryItem {
                   <small>{{ analyticsData.engagement.avgPageViews }} pages per session</small>
                 </div>
               </div>
-            </mat-card-content>
-          </mat-card>
+            </div>
 
-          <mat-card class="stat-card avg-time">
-            <mat-card-content>
+            <div class="stat-card avg-time">
               <div class="stat-content">
                 <div class="stat-icon">
                   <mat-icon>timer</mat-icon>
@@ -191,484 +197,571 @@ interface ActivityHistoryItem {
                   <small>{{ analyticsData.engagement.avgActions }} actions per session</small>
                 </div>
               </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
+            </div>
+          </div>
 
-        <mat-tab-group [(selectedIndex)]="selectedTab">
+          <mat-tab-group [(selectedIndex)]="selectedTab">
+            <!-- User Site Visits Tab -->
+            <mat-tab label="User Site Visits">
+              <div class="tab-content">
+                <mat-card class="stat-card">
+                  <mat-card-header>
+                    <mat-card-title>
+                      <mat-icon class="title-icon">people</mat-icon>
+                      Top Users by Site Visits
+                    </mat-card-title>
+                    <mat-card-subtitle>
+                      Users ranked by total page views
+                      <strong *ngIf="selectedPeriod === '1d'">in the last 24 hours</strong>
+                      <strong *ngIf="selectedPeriod === '7d'">in the last 7 days</strong>
+                      <strong *ngIf="selectedPeriod === '30d'">in the last 30 days</strong>
+                      <strong *ngIf="selectedPeriod === '90d'">in the last 90 days</strong>
+                      <strong *ngIf="selectedPeriod === 'custom' && customDateFrom && customDateTo">
+                        from {{ formatDate(customDateFrom) }} to {{ formatDate(customDateTo) }}
+                      </strong>
+                    </mat-card-subtitle>
+                  </mat-card-header>
 
-          <!-- User Site Visits Tab -->
-          <mat-tab label="User Site Visits">
-            <div class="tab-content">
-              <mat-card class="stat-card">
-                <mat-card-header>
-                  <mat-card-title>
-                    <mat-icon class="title-icon">people</mat-icon>
-                    Top Users by Site Visits
-                  </mat-card-title>
-                  <mat-card-subtitle>
-                    Users ranked by total page views
-                    <strong *ngIf="selectedPeriod === '1d'">in the last 24 hours</strong>
-                    <strong *ngIf="selectedPeriod === '7d'">in the last 7 days</strong>
-                    <strong *ngIf="selectedPeriod === '30d'">in the last 30 days</strong>
-                    <strong *ngIf="selectedPeriod === '90d'">in the last 90 days</strong>
-                    <strong *ngIf="selectedPeriod === 'custom' && customDateFrom && customDateTo">
-                      from {{ formatDate(customDateFrom) }} to {{ formatDate(customDateTo) }}
-                    </strong>
-                  </mat-card-subtitle>
-                </mat-card-header>
-
-                <mat-card-content>
-                  <div class="user-visits-chart" *ngIf="analyticsData?.userVisitCounts && analyticsData.userVisitCounts.length > 0">
-                    <div class="chart-container">
-                      <div class="chart-bars">
-                        <div class="bar-item" *ngFor="let user of analyticsData.userVisitCounts; let i = index">
-                          <div class="bar-wrapper">
-                            <div class="bar-value">{{ user.pageViewCount }}</div>
-                            <div class="bar-column">
-                              <div class="bar-fill"
-                                   [style.height.%]="(user.pageViewCount / analyticsData.userVisitCounts[0].pageViewCount) * 100"
-                                   [matTooltip]="user.pageViewCount + ' visits'">
+                  <mat-card-content>
+                    <div
+                      class="user-visits-chart"
+                      *ngIf="
+                        analyticsData?.userVisitCounts && analyticsData.userVisitCounts.length > 0
+                      "
+                    >
+                      <div class="chart-container">
+                        <div class="chart-bars">
+                          <div
+                            class="bar-item"
+                            *ngFor="let user of analyticsData.userVisitCounts; let i = index"
+                          >
+                            <div class="bar-wrapper">
+                              <div class="bar-value">{{ user.pageViewCount }}</div>
+                              <div class="bar-column">
+                                <div
+                                  class="bar-fill"
+                                  [style.height.%]="
+                                    (user.pageViewCount /
+                                      analyticsData.userVisitCounts[0].pageViewCount) *
+                                    100
+                                  "
+                                  [matTooltip]="
+                                    user.pageViewCount +
+                                    ' visits from ' +
+                                    (user.clubName || 'No Club')
+                                  "
+                                ></div>
+                              </div>
+                              <div class="bar-label">
+                                <div class="user-name">{{ user.fullName || user.username }}</div>
+                                <div class="club-name">{{ user.clubName || 'No Club' }}</div>
+                                <div class="user-rank">#{{ i + 1 }}</div>
                               </div>
                             </div>
-                            <div class="bar-label">
-                              <div class="user-name">{{ user.fullName || user.username }}</div>
-                              <div class="user-rank">#{{ i + 1 }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="no-data"
+                      *ngIf="
+                        !analyticsData?.userVisitCounts ||
+                        analyticsData.userVisitCounts.length === 0
+                      "
+                    >
+                      <mat-icon>info</mat-icon>
+                      <p>No user visit data available for the selected period</p>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </mat-tab>
+
+            <!-- User Activity Tab -->
+            <mat-tab label="User Activity">
+              <div class="tab-content">
+                <div class="activity-overview">
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Activity Breakdown</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="activity-grid">
+                        <div
+                          *ngFor="let activity of analyticsData.userActivity"
+                          class="activity-item"
+                        >
+                          <div class="activity-icon">
+                            <mat-icon>{{ getActivityIcon(activity.action) }}</mat-icon>
+                          </div>
+                          <div class="activity-info">
+                            <h4>{{ getActivityLabel(activity.action) }}</h4>
+                            <div class="activity-stats">
+                              <span class="count">{{ activity.count }} times</span>
+                              <span class="users">{{ activity.uniqueUsers }} users</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </mat-card-content>
+                  </mat-card>
 
-                  <div class="no-data" *ngIf="!analyticsData?.userVisitCounts || analyticsData.userVisitCounts.length === 0">
-                    <mat-icon>info</mat-icon>
-                    <p>No user visit data available for the selected period</p>
-                  </div>
-                </mat-card-content>
-              </mat-card>
-            </div>
-          </mat-tab>
+                  <!-- Activity History -->
+                  <mat-card class="activity-history">
+                    <mat-card-header>
+                      <mat-card-title>Recent Activity History</mat-card-title>
+                      <div class="activity-filters">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Action</mat-label>
+                          <mat-select
+                            [(value)]="activityFilters.action"
+                            (selectionChange)="loadActivityHistory()"
+                          >
+                            <mat-option value="">All Actions</mat-option>
+                            <mat-option value="login">Login</mat-option>
+                            <mat-option value="logout">Logout</mat-option>
+                            <mat-option value="book_court">Book Court</mat-option>
+                            <mat-option value="make_payment">Make Payment</mat-option>
+                            <mat-option value="view_schedule">View Schedule</mat-option>
+                            <mat-option value="submit_suggestion">Submit Suggestion</mat-option>
+                            <mat-option value="vote_poll">Vote Poll</mat-option>
+                            <mat-option value="partner_click">Partner Click</mat-option>
+                          </mat-select>
+                        </mat-form-field>
 
-          <!-- User Activity Tab -->
-          <mat-tab label="User Activity">
-            <div class="tab-content">
-              <div class="activity-overview">
-                <mat-card>
-                  <mat-card-header>
-                    <mat-card-title>Activity Breakdown</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="activity-grid">
-                      <div *ngFor="let activity of analyticsData.userActivity" class="activity-item">
-                        <div class="activity-icon">
-                          <mat-icon>{{ getActivityIcon(activity.action) }}</mat-icon>
-                        </div>
-                        <div class="activity-info">
-                          <h4>{{ getActivityLabel(activity.action) }}</h4>
-                          <div class="activity-stats">
-                            <span class="count">{{ activity.count }} times</span>
-                            <span class="users">{{ activity.uniqueUsers }} users</span>
-                          </div>
-                        </div>
+                        <mat-form-field appearance="outline">
+                          <mat-label>Component</mat-label>
+                          <mat-select
+                            [(value)]="activityFilters.component"
+                            (selectionChange)="loadActivityHistory()"
+                          >
+                            <mat-option value="">All Components</mat-option>
+                            <mat-option value="auth">Authentication</mat-option>
+                            <mat-option value="reservations">Reservations</mat-option>
+                            <mat-option value="payments">Payments</mat-option>
+                            <mat-option value="polls">Polls</mat-option>
+                            <mat-option value="suggestions">Suggestions</mat-option>
+                          </mat-select>
+                        </mat-form-field>
                       </div>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- Activity History -->
-                <mat-card class="activity-history">
-                  <mat-card-header>
-                    <mat-card-title>Recent Activity History</mat-card-title>
-                    <div class="activity-filters">
-                      <mat-form-field appearance="outline">
-                        <mat-label>Action</mat-label>
-                        <mat-select [(value)]="activityFilters.action" (selectionChange)="loadActivityHistory()">
-                          <mat-option value="">All Actions</mat-option>
-                          <mat-option value="login">Login</mat-option>
-                          <mat-option value="logout">Logout</mat-option>
-                          <mat-option value="book_court">Book Court</mat-option>
-                          <mat-option value="make_payment">Make Payment</mat-option>
-                          <mat-option value="view_schedule">View Schedule</mat-option>
-                          <mat-option value="submit_suggestion">Submit Suggestion</mat-option>
-                          <mat-option value="vote_poll">Vote Poll</mat-option>
-                          <mat-option value="partner_click">Partner Click</mat-option>
-                        </mat-select>
-                      </mat-form-field>
-
-                      <mat-form-field appearance="outline">
-                        <mat-label>Component</mat-label>
-                        <mat-select [(value)]="activityFilters.component" (selectionChange)="loadActivityHistory()">
-                          <mat-option value="">All Components</mat-option>
-                          <mat-option value="auth">Authentication</mat-option>
-                          <mat-option value="reservations">Reservations</mat-option>
-                          <mat-option value="payments">Payments</mat-option>
-                          <mat-option value="polls">Polls</mat-option>
-                          <mat-option value="suggestions">Suggestions</mat-option>
-                        </mat-select>
-                      </mat-form-field>
-                    </div>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div *ngIf="loadingActivity" class="loading-activity">
-                      <mat-spinner diameter="30"></mat-spinner>
-                      Loading activity history...
-                    </div>
-
-                    <div *ngIf="!loadingActivity" class="activity-table">
-                      <table mat-table [dataSource]="activityDataSource" class="activity-history-table">
-                        <ng-container matColumnDef="timestamp">
-                          <th mat-header-cell *matHeaderCellDef>Time</th>
-                          <td mat-cell *matCellDef="let activity">{{ formatDateTime(activity.timestamp) }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="user">
-                          <th mat-header-cell *matHeaderCellDef>User</th>
-                          <td mat-cell *matCellDef="let activity">
-                            {{ activity.userId.fullName }}
-                            <small>({{ activity.userId.username }})</small>
-                          </td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="action">
-                          <th mat-header-cell *matHeaderCellDef>Action</th>
-                          <td mat-cell *matCellDef="let activity">
-                            <mat-chip class="action-chip" [class]="activity.action">
-                              {{ getActivityLabel(activity.action) }}
-                            </mat-chip>
-                          </td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="component">
-                          <th mat-header-cell *matHeaderCellDef>Component</th>
-                          <td mat-cell *matCellDef="let activity">{{ activity.component }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="details">
-                          <th mat-header-cell *matHeaderCellDef>Details</th>
-                          <td mat-cell *matCellDef="let activity">
-                            <span *ngIf="activity.details" [matTooltip]="getDetailsTooltip(activity.details)">
-                              {{ getDetailsDisplay(activity.details) }}
-                            </span>
-                          </td>
-                        </ng-container>
-
-                        <tr mat-header-row *matHeaderRowDef="activityColumns"></tr>
-                        <tr mat-row *matRowDef="let row; columns: activityColumns;"></tr>
-                      </table>
-
-                      <mat-paginator
-                        [length]="activityPagination.totalCount"
-                        [pageSize]="activityPagination.pageSize"
-                        [pageSizeOptions]="[10, 25, 50, 100]"
-                        [pageIndex]="activityPagination.currentPage - 1"
-                        (page)="onActivityPageChange($event)"
-                        showFirstLastButtons>
-                      </mat-paginator>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-              </div>
-            </div>
-          </mat-tab>
-
-          <!-- Popular Pages Tab -->
-          <mat-tab label="Popular Pages">
-            <div class="tab-content">
-              <mat-card>
-                <mat-card-header>
-                  <mat-card-title>Most Visited Pages</mat-card-title>
-                  <mat-card-subtitle>Ranking by total page views</mat-card-subtitle>
-                </mat-card-header>
-                <mat-card-content>
-                  <div class="popular-pages-list">
-                    <div *ngFor="let page of analyticsData.popularPages; let i = index" 
-                         class="page-item">
-                      <div class="page-rank">{{ i + 1 }}</div>
-                      <div class="page-info">
-                        <h4>{{ page.page }}</h4>
-                        <div class="page-stats">
-                          <span class="views">{{ page.views }} views</span>
-                          <span class="users">{{ page.uniqueUsers }} unique users</span>
-                          <span class="duration">{{ formatDuration(page.avgDuration) }} avg time</span>
-                        </div>
-                        <small class="last-visit">Last visit: {{ formatDate(page.lastVisit) }}</small>
-                      </div>
-                      <div class="page-chart">
-                        <div class="bar" [style.width.%]="getPageViewPercentage(page.views)"></div>
-                      </div>
-                    </div>
-                  </div>
-                </mat-card-content>
-              </mat-card>
-            </div>
-          </mat-tab>
-
-          <!-- Device & Browser Analytics -->
-          <mat-tab label="Device & Browser">
-            <div class="tab-content">
-              <div class="device-analytics">
-                <mat-card>
-                  <mat-card-header>
-                    <mat-card-title>Device Breakdown</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="breakdown-grid">
-                      <div *ngFor="let device of getDeviceStats()" class="breakdown-item">
-                        <div class="breakdown-info">
-                          <h4>{{ device.name }}</h4>
-                          <div class="breakdown-stats">
-                            <span class="count">{{ device.count }} views</span>
-                            <span class="percentage">{{ device.percentage }}%</span>
-                          </div>
-                        </div>
-                        <div class="breakdown-bar">
-                          <div class="bar" [style.width.%]="device.percentage"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-
-                <mat-card>
-                  <mat-card-header>
-                    <mat-card-title>Browser Breakdown</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="breakdown-grid">
-                      <div *ngFor="let browser of getBrowserStats()" class="breakdown-item">
-                        <div class="breakdown-info">
-                          <h4>{{ browser.name }}</h4>
-                          <div class="breakdown-stats">
-                            <span class="count">{{ browser.count }} views</span>
-                            <span class="percentage">{{ browser.percentage }}%</span>
-                          </div>
-                        </div>
-                        <div class="breakdown-bar">
-                          <div class="bar" [style.width.%]="browser.percentage"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-              </div>
-            </div>
-          </mat-tab>
-
-          <!-- Partner Engagement Tab -->
-          <mat-tab label="Partner Engagement">
-            <div class="tab-content">
-              <!-- Header Section with Summary Stats -->
-              <div class="partner-engagement-header">
-                <mat-card class="engagement-summary-card">
-                  <mat-card-content>
-                    <div class="summary-header">
-                      <div class="summary-title">
-                        <mat-icon class="summary-icon">handshake</mat-icon>
-                        <div class="title-text">
-                          <h2>Partner Engagement Overview</h2>
-                          <p>Track user interaction with club partners and measure partnership effectiveness</p>
-                        </div>
-                      </div>
-                      <div class="summary-stats" *ngIf="getTotalPartnerStats() as stats">
-                        <div class="stat-item">
-                          <span class="stat-value">{{ stats.totalClicks }}</span>
-                          <span class="stat-label">Total Clicks</span>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat-item">
-                          <span class="stat-value">{{ stats.totalUsers }}</span>
-                          <span class="stat-label">Engaged Users</span>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat-item">
-                          <span class="stat-value">{{ stats.activePartners }}</span>
-                          <span class="stat-label">Active Partners</span>
-                        </div>
-                      </div>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-              </div>
-
-              <!-- Partner Analytics Cards -->
-              <div class="partner-analytics-section" *ngIf="getPartnerClickStats().length > 0; else noPartnerData">
-                <div class="partner-cards-grid">
-                  <mat-card *ngFor="let partner of getPartnerClickStats(); let i = index"
-                           class="partner-engagement-card"
-                           [class.top-performer]="i === 0">
-
-                    <!-- Card Header with Partner Info -->
-                    <mat-card-header class="partner-card-header">
-                      <div class="partner-avatar" [class]="'partner-' + partner.type">
-                        <mat-icon>{{ getPartnerTypeIcon(partner.type) }}</mat-icon>
-                      </div>
-                      <mat-card-title-group>
-                        <mat-card-title class="partner-name">
-                          {{ partner.name }}
-                          <mat-icon *ngIf="i === 0" class="top-badge" matTooltip="Top Performing Partner">star</mat-icon>
-                        </mat-card-title>
-                        <mat-card-subtitle class="partner-category">
-                          <mat-chip class="category-chip" [class]="'chip-' + partner.type">
-                            {{ getPartnerCategoryLabel(partner.type) }}
-                          </mat-chip>
-                        </mat-card-subtitle>
-                      </mat-card-title-group>
                     </mat-card-header>
-
-                    <!-- Metrics Section -->
-                    <mat-card-content class="partner-metrics-content">
-                      <div class="metrics-row">
-                        <div class="metric-card clicks-metric">
-                          <div class="metric-icon">
-                            <mat-icon>mouse</mat-icon>
-                          </div>
-                          <div class="metric-data">
-                            <span class="metric-value">{{ partner.clicks | number }}</span>
-                            <span class="metric-label">Total Clicks</span>
-                          </div>
-                        </div>
-
-                        <div class="metric-card users-metric">
-                          <div class="metric-icon">
-                            <mat-icon>people</mat-icon>
-                          </div>
-                          <div class="metric-data">
-                            <span class="metric-value">{{ partner.uniqueUsers | number }}</span>
-                            <span class="metric-label">Unique Users</span>
-                          </div>
-                        </div>
+                    <mat-card-content>
+                      <div *ngIf="loadingActivity" class="loading-activity">
+                        <mat-spinner diameter="30"></mat-spinner>
+                        Loading activity history...
                       </div>
 
-                      <!-- Engagement Rate Bar -->
-                      <div class="engagement-progress">
-                        <div class="progress-header">
-                          <span class="progress-label">Engagement Rate</span>
-                          <span class="progress-percentage">{{ getEngagementRate(partner) }}%</span>
-                        </div>
-                        <div class="progress-bar-container">
-                          <div class="progress-bar"
-                               [style.width.%]="getPartnerClickPercentage(partner.clicks)"
-                               [class]="'progress-' + partner.type">
-                          </div>
-                        </div>
-                      </div>
+                      <div *ngIf="!loadingActivity" class="activity-table">
+                        <table
+                          mat-table
+                          [dataSource]="activityDataSource"
+                          class="activity-history-table"
+                        >
+                          <ng-container matColumnDef="timestamp">
+                            <th mat-header-cell *matHeaderCellDef>Time</th>
+                            <td mat-cell *matCellDef="let activity">
+                              {{ formatDateTime(activity.timestamp) }}
+                            </td>
+                          </ng-container>
 
-                      <!-- Additional Insights -->
-                      <div class="partner-insights">
-                        <div class="insight-item">
-                          <mat-icon class="insight-icon">trending_up</mat-icon>
-                          <span class="insight-text">{{ getClicksPerUser(partner) }} avg clicks per user</span>
-                        </div>
+                          <ng-container matColumnDef="user">
+                            <th mat-header-cell *matHeaderCellDef>User</th>
+                            <td mat-cell *matCellDef="let activity">
+                              {{ activity.userId.fullName }}
+                              <small>({{ activity.userId.username }})</small>
+                            </td>
+                          </ng-container>
+
+                          <ng-container matColumnDef="club">
+                            <th mat-header-cell *matHeaderCellDef>Club</th>
+                            <td mat-cell *matCellDef="let activity">
+                              {{ activity.userId.clubName || 'No Club' }}
+                            </td>
+                          </ng-container>
+
+                          <ng-container matColumnDef="action">
+                            <th mat-header-cell *matHeaderCellDef>Action</th>
+                            <td mat-cell *matCellDef="let activity">
+                              <mat-chip class="action-chip" [class]="activity.action">
+                                {{ getActivityLabel(activity.action) }}
+                              </mat-chip>
+                            </td>
+                          </ng-container>
+
+                          <ng-container matColumnDef="component">
+                            <th mat-header-cell *matHeaderCellDef>Component</th>
+                            <td mat-cell *matCellDef="let activity">{{ activity.component }}</td>
+                          </ng-container>
+
+                          <ng-container matColumnDef="details">
+                            <th mat-header-cell *matHeaderCellDef>Details</th>
+                            <td mat-cell *matCellDef="let activity">
+                              <span
+                                *ngIf="activity.details"
+                                [matTooltip]="getDetailsTooltip(activity.details)"
+                              >
+                                {{ getDetailsDisplay(activity.details) }}
+                              </span>
+                            </td>
+                          </ng-container>
+
+                          <tr mat-header-row *matHeaderRowDef="activityColumns"></tr>
+                          <tr mat-row *matRowDef="let row; columns: activityColumns"></tr>
+                        </table>
+
+                        <mat-paginator
+                          [length]="activityPagination.totalCount"
+                          [pageSize]="activityPagination.pageSize"
+                          [pageSizeOptions]="[10, 25, 50, 100]"
+                          [pageIndex]="activityPagination.currentPage - 1"
+                          (page)="onActivityPageChange($event)"
+                          showFirstLastButtons
+                        >
+                        </mat-paginator>
                       </div>
                     </mat-card-content>
-
-                    <!-- Action Buttons -->
-                    <mat-card-actions class="partner-actions">
-                      <button mat-stroked-button color="primary" class="action-button">
-                        <mat-icon>analytics</mat-icon>
-                        View Details
-                      </button>
-                      <button mat-stroked-button color="accent" class="action-button">
-                        <mat-icon>open_in_new</mat-icon>
-                        Visit Partner
-                      </button>
-                    </mat-card-actions>
                   </mat-card>
                 </div>
               </div>
+            </mat-tab>
 
-              <!-- Empty State -->
-              <ng-template #noPartnerData>
-                <div class="no-partner-data">
-                  <mat-card class="empty-state-card">
+            <!-- Popular Pages Tab -->
+            <mat-tab label="Popular Pages">
+              <div class="tab-content">
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Most Visited Pages</mat-card-title>
+                    <mat-card-subtitle>Ranking by total page views</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="popular-pages-list">
+                      <div
+                        *ngFor="let page of analyticsData.popularPages; let i = index"
+                        class="page-item"
+                      >
+                        <div class="page-rank">{{ i + 1 }}</div>
+                        <div class="page-info">
+                          <h4>{{ page.page }}</h4>
+                          <div class="page-stats">
+                            <span class="views">{{ page.views }} views</span>
+                            <span class="users">{{ page.uniqueUsers }} unique users</span>
+                            <span class="duration"
+                              >{{ formatDuration(page.avgDuration) }} avg time</span
+                            >
+                          </div>
+                          <small class="last-visit"
+                            >Last visit: {{ formatDate(page.lastVisit) }}</small
+                          >
+                        </div>
+                        <div class="page-chart">
+                          <div
+                            class="bar"
+                            [style.width.%]="getPageViewPercentage(page.views)"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </mat-tab>
+
+            <!-- Device & Browser Analytics -->
+            <mat-tab label="Device & Browser">
+              <div class="tab-content">
+                <div class="device-analytics">
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Device Breakdown</mat-card-title>
+                    </mat-card-header>
                     <mat-card-content>
-                      <div class="empty-state-content">
-                        <div class="empty-state-icon">
-                          <mat-icon>handshake</mat-icon>
-                        </div>
-                        <h3>No Partner Engagement Data Yet</h3>
-                        <p>Start tracking partner engagement by having users click on partner links in the dashboard.</p>
-                        <div class="empty-state-features">
-                          <div class="feature-item">
-                            <mat-icon>analytics</mat-icon>
-                            <span>Real-time click tracking</span>
+                      <div class="breakdown-grid">
+                        <div *ngFor="let device of getDeviceStats()" class="breakdown-item">
+                          <div class="breakdown-info">
+                            <h4>{{ device.name }}</h4>
+                            <div class="breakdown-stats">
+                              <span class="count">{{ device.count }} views</span>
+                              <span class="percentage">{{ device.percentage }}%</span>
+                            </div>
                           </div>
-                          <div class="feature-item">
-                            <mat-icon>people</mat-icon>
-                            <span>User engagement metrics</span>
-                          </div>
-                          <div class="feature-item">
-                            <mat-icon>trending_up</mat-icon>
-                            <span>Performance insights</span>
+                          <div class="breakdown-bar">
+                            <div class="bar" [style.width.%]="device.percentage"></div>
                           </div>
                         </div>
-                        <button mat-raised-button color="primary" class="cta-button">
-                          <mat-icon>dashboard</mat-icon>
-                          Go to Dashboard
-                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Browser Breakdown</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="breakdown-grid">
+                        <div *ngFor="let browser of getBrowserStats()" class="breakdown-item">
+                          <div class="breakdown-info">
+                            <h4>{{ browser.name }}</h4>
+                            <div class="breakdown-stats">
+                              <span class="count">{{ browser.count }} views</span>
+                              <span class="percentage">{{ browser.percentage }}%</span>
+                            </div>
+                          </div>
+                          <div class="breakdown-bar">
+                            <div class="bar" [style.width.%]="browser.percentage"></div>
+                          </div>
+                        </div>
                       </div>
                     </mat-card-content>
                   </mat-card>
                 </div>
-              </ng-template>
-            </div>
-          </mat-tab>
-        </mat-tab-group>
+              </div>
+            </mat-tab>
+
+            <!-- Partner Engagement Tab -->
+            <mat-tab label="Partner Engagement">
+              <div class="tab-content">
+                <!-- Header Section with Summary Stats -->
+                <div class="partner-engagement-header">
+                  <mat-card class="engagement-summary-card">
+                    <mat-card-content>
+                      <div class="summary-header">
+                        <div class="summary-title">
+                          <mat-icon class="summary-icon">handshake</mat-icon>
+                          <div class="title-text">
+                            <h2>Partner Engagement Overview</h2>
+                            <p>
+                              Track user interaction with club partners and measure partnership
+                              effectiveness
+                            </p>
+                          </div>
+                        </div>
+                        <div class="summary-stats" *ngIf="getTotalPartnerStats() as stats">
+                          <div class="stat-item">
+                            <span class="stat-value">{{ stats.totalClicks }}</span>
+                            <span class="stat-label">Total Clicks</span>
+                          </div>
+                          <div class="stat-divider"></div>
+                          <div class="stat-item">
+                            <span class="stat-value">{{ stats.totalUsers }}</span>
+                            <span class="stat-label">Engaged Users</span>
+                          </div>
+                          <div class="stat-divider"></div>
+                          <div class="stat-item">
+                            <span class="stat-value">{{ stats.activePartners }}</span>
+                            <span class="stat-label">Active Partners</span>
+                          </div>
+                        </div>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+
+                <!-- Partner Analytics Cards -->
+                <div
+                  class="partner-analytics-section"
+                  *ngIf="getPartnerClickStats().length > 0; else noPartnerData"
+                >
+                  <div class="partner-cards-grid">
+                    <mat-card
+                      *ngFor="let partner of getPartnerClickStats(); let i = index"
+                      class="partner-engagement-card"
+                      [class.top-performer]="i === 0"
+                    >
+                      <!-- Card Header with Partner Info -->
+                      <mat-card-header class="partner-card-header">
+                        <div class="partner-avatar" [class]="'partner-' + partner.type">
+                          <mat-icon>{{ getPartnerTypeIcon(partner.type) }}</mat-icon>
+                        </div>
+                        <mat-card-title-group>
+                          <mat-card-title class="partner-name">
+                            {{ partner.name }}
+                            <mat-icon
+                              *ngIf="i === 0"
+                              class="top-badge"
+                              matTooltip="Top Performing Partner"
+                              >star</mat-icon
+                            >
+                          </mat-card-title>
+                          <mat-card-subtitle class="partner-category">
+                            <mat-chip class="category-chip" [class]="'chip-' + partner.type">
+                              {{ getPartnerCategoryLabel(partner.type) }}
+                            </mat-chip>
+                          </mat-card-subtitle>
+                        </mat-card-title-group>
+                      </mat-card-header>
+
+                      <!-- Metrics Section -->
+                      <mat-card-content class="partner-metrics-content">
+                        <div class="metrics-row">
+                          <div class="metric-card clicks-metric">
+                            <div class="metric-icon">
+                              <mat-icon>mouse</mat-icon>
+                            </div>
+                            <div class="metric-data">
+                              <span class="metric-value">{{ partner.clicks | number }}</span>
+                              <span class="metric-label">Total Clicks</span>
+                            </div>
+                          </div>
+
+                          <div class="metric-card users-metric">
+                            <div class="metric-icon">
+                              <mat-icon>people</mat-icon>
+                            </div>
+                            <div class="metric-data">
+                              <span class="metric-value">{{ partner.uniqueUsers | number }}</span>
+                              <span class="metric-label">Unique Users</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Engagement Rate Bar -->
+                        <div class="engagement-progress">
+                          <div class="progress-header">
+                            <span class="progress-label">Engagement Rate</span>
+                            <span class="progress-percentage"
+                              >{{ getEngagementRate(partner) }}%</span
+                            >
+                          </div>
+                          <div class="progress-bar-container">
+                            <div
+                              class="progress-bar"
+                              [style.width.%]="getPartnerClickPercentage(partner.clicks)"
+                              [class]="'progress-' + partner.type"
+                            ></div>
+                          </div>
+                        </div>
+
+                        <!-- Additional Insights -->
+                        <div class="partner-insights">
+                          <div class="insight-item">
+                            <mat-icon class="insight-icon">trending_up</mat-icon>
+                            <span class="insight-text"
+                              >{{ getClicksPerUser(partner) }} avg clicks per user</span
+                            >
+                          </div>
+                        </div>
+                      </mat-card-content>
+
+                      <!-- Action Buttons -->
+                      <mat-card-actions class="partner-actions">
+                        <button mat-stroked-button color="primary" class="action-button">
+                          <mat-icon>analytics</mat-icon>
+                          View Details
+                        </button>
+                        <button mat-stroked-button color="accent" class="action-button">
+                          <mat-icon>open_in_new</mat-icon>
+                          Visit Partner
+                        </button>
+                      </mat-card-actions>
+                    </mat-card>
+                  </div>
+                </div>
+
+                <!-- Empty State -->
+                <ng-template #noPartnerData>
+                  <div class="no-partner-data">
+                    <mat-card class="empty-state-card">
+                      <mat-card-content>
+                        <div class="empty-state-content">
+                          <div class="empty-state-icon">
+                            <mat-icon>handshake</mat-icon>
+                          </div>
+                          <h3>No Partner Engagement Data Yet</h3>
+                          <p>
+                            Start tracking partner engagement by having users click on partner links
+                            in the dashboard.
+                          </p>
+                          <div class="empty-state-features">
+                            <div class="feature-item">
+                              <mat-icon>analytics</mat-icon>
+                              <span>Real-time click tracking</span>
+                            </div>
+                            <div class="feature-item">
+                              <mat-icon>people</mat-icon>
+                              <span>User engagement metrics</span>
+                            </div>
+                            <div class="feature-item">
+                              <mat-icon>trending_up</mat-icon>
+                              <span>Performance insights</span>
+                            </div>
+                          </div>
+                          <button mat-raised-button color="primary" class="cta-button">
+                            <mat-icon>dashboard</mat-icon>
+                            Go to Dashboard
+                          </button>
+                        </div>
+                      </mat-card-content>
+                    </mat-card>
+                  </div>
+                </ng-template>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </div>
       </div>
     </div>
   `,
-  styleUrl: './admin-analytics.component.scss'
+  styleUrl: './admin-analytics.component.scss',
 })
 export class AdminAnalyticsComponent implements OnInit, OnDestroy {
   private subscription = new Subscription();
-  
+  private apiUrl = environment.apiUrl;
+
   loading = false;
   loadingActivity = false;
   selectedTab = 0;
-  
+
   analyticsData: AnalyticsStats | null = null;
   selectedPeriod = '7d';
   customDateFrom: Date | null = null;
   customDateTo: Date | null = null;
-  
+
+  // Club filtering
+  clubs: any[] = [];
+  selectedClubId: string = '';
+
   // Activity history
   activityHistory: ActivityHistoryItem[] = [];
   activityDataSource = new MatTableDataSource<ActivityHistoryItem>();
-  activityColumns = ['timestamp', 'user', 'action', 'component', 'details'];
+  activityColumns = ['timestamp', 'user', 'club', 'action', 'component', 'details'];
   activityFilters = {
     action: '',
-    component: ''
+    component: '',
   };
   activityPagination = {
     currentPage: 1,
     pageSize: 25,
     totalCount: 0,
-    totalPages: 0
+    totalPages: 0,
   };
 
   constructor(
     private router: Router,
     public authService: AuthService,
     private analyticsService: AnalyticsService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private http: HttpClient,
   ) {}
 
   ngOnInit(): void {
-    // Check admin access
-    if (!this.authService.currentUser || !['admin', 'superadmin'].includes(this.authService.currentUser.role)) {
+    // Check admin access using multi-tenant role system
+    // Site Analytics is for platform admins and superadmins only (full system view)
+    if (!this.authService.isSuperAdmin() && !this.authService.isPlatformAdmin()) {
+      this.snackBar.open('Access denied. Admin access required.', 'Close', { duration: 3000 });
       this.router.navigate(['/dashboard']);
       return;
     }
 
+    this.loadClubs();
     this.loadAnalyticsData();
     this.loadActivityHistory();
-    
+
     // Auto-refresh every 5 minutes
     this.subscription.add(
       interval(300000).subscribe(() => {
         this.refreshData();
-      })
+      }),
     );
   }
 
@@ -678,6 +771,24 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  loadClubs(): void {
+    this.subscription.add(
+      this.http.get<any>(`${this.apiUrl}/clubs/platform/all`).subscribe({
+        next: (response) => {
+          this.clubs = response.data || [];
+        },
+        error: (error) => {
+          console.error('Error loading clubs:', error);
+        },
+      }),
+    );
+  }
+
+  onClubFilterChange(): void {
+    this.loadAnalyticsData();
+    this.loadActivityHistory();
   }
 
   onPeriodChange(): void {
@@ -694,11 +805,11 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
 
   loadAnalyticsData(): void {
     this.loading = true;
-    
+
     let dateFrom: Date | undefined;
     let dateTo: Date | undefined;
     let period: string | undefined;
-    
+
     if (this.selectedPeriod === 'custom') {
       dateFrom = this.customDateFrom || undefined;
       dateTo = this.customDateTo || undefined;
@@ -714,31 +825,34 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading analytics data:', error);
-          
+
           if (error.status === 401) {
-            this.showMessage('Authentication required. Please refresh the page and try again.', 'error');
+            this.showMessage(
+              'Authentication required. Please refresh the page and try again.',
+              'error',
+            );
           } else if (error.status === 403) {
             this.showMessage('Access denied. Admin privileges required.', 'error');
           } else {
             this.showMessage('Failed to load analytics data', 'error');
           }
-          
+
           this.loading = false;
-        }
-      })
+        },
+      }),
     );
   }
 
   loadActivityHistory(): void {
     this.loadingActivity = true;
-    
+
     const filters = {
       page: this.activityPagination.currentPage,
       limit: this.activityPagination.pageSize,
       action: this.activityFilters.action || undefined,
       component: this.activityFilters.component || undefined,
       dateFrom: this.selectedPeriod === 'custom' ? this.customDateFrom || undefined : undefined,
-      dateTo: this.selectedPeriod === 'custom' ? this.customDateTo || undefined : undefined
+      dateTo: this.selectedPeriod === 'custom' ? this.customDateTo || undefined : undefined,
     };
 
     this.subscription.add(
@@ -750,24 +864,27 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
             currentPage: response.pagination.currentPage,
             pageSize: this.activityPagination.pageSize,
             totalCount: response.pagination.totalCount,
-            totalPages: response.pagination.totalPages
+            totalPages: response.pagination.totalPages,
           };
           this.loadingActivity = false;
         },
         error: (error) => {
           console.error('Error loading activity history:', error);
-          
+
           if (error.status === 401) {
-            this.showMessage('Authentication required. Please refresh the page and try again.', 'error');
+            this.showMessage(
+              'Authentication required. Please refresh the page and try again.',
+              'error',
+            );
           } else if (error.status === 403) {
             this.showMessage('Access denied. Admin privileges required.', 'error');
           } else {
             this.showMessage('Failed to load activity history', 'error');
           }
-          
+
           this.loadingActivity = false;
-        }
-      })
+        },
+      }),
     );
   }
 
@@ -786,11 +903,11 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
   // Utility methods
   formatDuration(milliseconds: number): string {
     if (!milliseconds) return '0s';
-    
+
     const seconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes % 60}m`;
     } else if (minutes > 0) {
@@ -805,7 +922,7 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
@@ -815,13 +932,13 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   }
 
   getPageViewPercentage(views: number): number {
     if (!this.analyticsData?.popularPages.length) return 0;
-    const maxViews = Math.max(...this.analyticsData.popularPages.map(p => p.views));
+    const maxViews = Math.max(...this.analyticsData.popularPages.map((p) => p.views));
     return (views / maxViews) * 100;
   }
 
@@ -844,7 +961,7 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
       click_button: 'mouse',
       form_submit: 'send',
       navigation: 'navigation',
-      partner_click: 'handshake'
+      partner_click: 'handshake',
     };
     return iconMap[action] || 'help';
   }
@@ -868,7 +985,7 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
       click_button: 'Button Click',
       form_submit: 'Form Submit',
       navigation: 'Navigate',
-      partner_click: 'Partner Click'
+      partner_click: 'Partner Click',
     };
     return labelMap[action] || action;
   }
@@ -890,37 +1007,45 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
     if (details.filterType) return `${details.filterType}: ${details.filterValue}`;
     if (details.from && details.to) return `${details.from} → ${details.to}`;
 
-    return JSON.stringify(details).substring(0, 50) + (JSON.stringify(details).length > 50 ? '...' : '');
+    return (
+      JSON.stringify(details).substring(0, 50) + (JSON.stringify(details).length > 50 ? '...' : '')
+    );
   }
 
   getDetailsTooltip(details: any): string {
     return JSON.stringify(details, null, 2);
   }
 
-  getDeviceStats(): Array<{name: string; count: number; percentage: number}> {
+  getDeviceStats(): Array<{ name: string; count: number; percentage: number }> {
     if (!this.analyticsData?.deviceBreakdown) return [];
-    
-    const total = Object.values(this.analyticsData.deviceBreakdown).reduce((sum, count) => sum + count, 0);
-    
+
+    const total = Object.values(this.analyticsData.deviceBreakdown).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
+
     return Object.entries(this.analyticsData.deviceBreakdown)
       .map(([name, count]) => ({
         name: name.charAt(0).toUpperCase() + name.slice(1),
         count,
-        percentage: Math.round((count / total) * 100)
+        percentage: Math.round((count / total) * 100),
       }))
       .sort((a, b) => b.count - a.count);
   }
 
-  getBrowserStats(): Array<{name: string; count: number; percentage: number}> {
+  getBrowserStats(): Array<{ name: string; count: number; percentage: number }> {
     if (!this.analyticsData?.browserBreakdown) return [];
-    
-    const total = Object.values(this.analyticsData.browserBreakdown).reduce((sum, count) => sum + count, 0);
-    
+
+    const total = Object.values(this.analyticsData.browserBreakdown).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
+
     return Object.entries(this.analyticsData.browserBreakdown)
       .map(([name, count]) => ({
         name,
         count,
-        percentage: Math.round((count / total) * 100)
+        percentage: Math.round((count / total) * 100),
       }))
       .sort((a, b) => b.count - a.count);
   }
@@ -948,30 +1073,37 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
     this.analyticsService.trackButtonClick('Video Demo', 'admin-analytics', {
       action: 'view_demo_video',
       component: 'admin_analytics',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     this.showMessage('Opening video demo in new tab', 'success');
   }
 
   // Partner engagement analytics methods
-  getPartnerClickStats(): Array<{name: string; type: string; clicks: number; uniqueUsers: number}> {
+  getPartnerClickStats(): Array<{
+    name: string;
+    type: string;
+    clicks: number;
+    uniqueUsers: number;
+  }> {
     if (!this.analyticsData?.partnerClickStats) return [];
 
     // Convert backend partner click stats to the format expected by the template
-    return this.analyticsData.partnerClickStats.map(stat => ({
-      name: stat.partnerName,
-      type: stat.partnerType,
-      clicks: stat.clicks,
-      uniqueUsers: stat.uniqueUsers
-    })).sort((a, b) => b.clicks - a.clicks);
+    return this.analyticsData.partnerClickStats
+      .map((stat) => ({
+        name: stat.partnerName,
+        type: stat.partnerType,
+        clicks: stat.clicks,
+        uniqueUsers: stat.uniqueUsers,
+      }))
+      .sort((a, b) => b.clicks - a.clicks);
   }
 
   getPartnerTypeIcon(type: string): string {
     const iconMap: Record<string, string> = {
       food: 'restaurant',
       equipment: 'sports_tennis',
-      general: 'handshake'
+      general: 'handshake',
     };
     return iconMap[type] || 'handshake';
   }
@@ -980,17 +1112,17 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
     const partnerStats = this.getPartnerClickStats();
     if (!partnerStats.length) return 0;
 
-    const maxClicks = Math.max(...partnerStats.map(p => p.clicks));
+    const maxClicks = Math.max(...partnerStats.map((p) => p.clicks));
     return maxClicks > 0 ? (clicks / maxClicks) * 100 : 0;
   }
 
   // New methods for enhanced partner engagement UI
-  getTotalPartnerStats(): {totalClicks: number; totalUsers: number; activePartners: number} {
+  getTotalPartnerStats(): { totalClicks: number; totalUsers: number; activePartners: number } {
     const partnerStats = this.getPartnerClickStats();
     return {
       totalClicks: partnerStats.reduce((sum, partner) => sum + partner.clicks, 0),
       totalUsers: partnerStats.reduce((sum, partner) => sum + partner.uniqueUsers, 0),
-      activePartners: partnerStats.length
+      activePartners: partnerStats.length,
     };
   }
 
@@ -998,19 +1130,19 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
     const categoryMap: Record<string, string> = {
       food: 'Food & Dining',
       equipment: 'Sports Equipment',
-      general: 'General Partner'
+      general: 'General Partner',
     };
     return categoryMap[type] || 'Partner';
   }
 
-  getEngagementRate(partner: {clicks: number; uniqueUsers: number}): number {
+  getEngagementRate(partner: { clicks: number; uniqueUsers: number }): number {
     // Calculate engagement rate as clicks per unique user, capped at 100%
     if (partner.uniqueUsers === 0) return 0;
     const rate = (partner.clicks / partner.uniqueUsers) * 20; // Scale factor for display
     return Math.min(Math.round(rate), 100);
   }
 
-  getClicksPerUser(partner: {clicks: number; uniqueUsers: number}): string {
+  getClicksPerUser(partner: { clicks: number; uniqueUsers: number }): string {
     if (partner.uniqueUsers === 0) return '0';
     const ratio = partner.clicks / partner.uniqueUsers;
     return ratio.toFixed(1);
@@ -1021,7 +1153,7 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
       duration: 4000,
       panelClass: [`snackbar-${type}`],
       horizontalPosition: 'center' as const,
-      verticalPosition: 'bottom' as const
+      verticalPosition: 'bottom' as const,
     };
 
     this.snackBar.open(message, 'Close', config);

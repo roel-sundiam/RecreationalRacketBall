@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -65,10 +65,10 @@ interface ManualCourtUsageSession {
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatDividerModule
+    MatDividerModule,
   ],
   templateUrl: './admin-manual-court-usage.component.html',
-  styleUrls: ['./admin-manual-court-usage.component.scss']
+  styleUrls: ['./admin-manual-court-usage.component.scss'],
 })
 export class AdminManualCourtUsageComponent implements OnInit {
   courtUsageForm: FormGroup;
@@ -85,23 +85,23 @@ export class AdminManualCourtUsageComponent implements OnInit {
 
   // Peak hours configuration (December 2025+ pricing)
   peakHours = [5, 18, 19, 20, 21]; // 5AM, 6PM, 7PM, 8PM, 9PM
-  peakHourBaseFee = 150;        // Base fee for peak hours
-  nonPeakHourBaseFee = 100;     // Base fee for non-peak hours
-  guestFeePerPerson = 70;       // Additional fee per guest
+  peakHourBaseFee = 150; // Base fee for peak hours
+  nonPeakHourBaseFee = 100; // Base fee for non-peak hours
+  guestFeePerPerson = 70; // Additional fee per guest
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private router: Router,
     private snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
     this.courtUsageForm = this.fb.group({
       date: ['', Validators.required],
       startTime: ['', Validators.required],
       endTime: ['', Validators.required],
       playerInput: [''],
-      description: ['']
+      description: [''],
     });
 
     // Initialize time slots (5 AM to 11 PM for start, 6 AM to 12 AM for end)
@@ -111,15 +111,27 @@ export class AdminManualCourtUsageComponent implements OnInit {
       this.timeSlots.push({
         value: hour,
         label: isPeak ? `${label} (Peak)` : label,
-        isPeak
+        isPeak,
       });
     }
   }
 
   ngOnInit(): void {
-    // Check if user is superadmin
-    if (!this.authService.isSuperAdmin()) {
-      this.snackBar.open('Access denied. Superadmin only.', 'Close', { duration: 3000 });
+    // Check admin access using multi-tenant role system
+    if (!this.authService.isClubAdmin() && !this.authService.isSuperAdmin()) {
+      this.snackBar.open('Access denied. Admin access required.', 'Close', { duration: 3000 });
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    // For regular club admins, require a selected club
+    // For superadmins, they can view all clubs without selecting one
+    if (!this.authService.selectedClub && !this.authService.isSuperAdmin()) {
+      this.snackBar.open(
+        'Please select a club from the top menu to record manual court usage.',
+        'Close',
+        { duration: 5000 },
+      );
       this.router.navigate(['/dashboard']);
       return;
     }
@@ -129,7 +141,7 @@ export class AdminManualCourtUsageComponent implements OnInit {
 
     // Set default date to today
     this.courtUsageForm.patchValue({
-      date: new Date()
+      date: new Date(),
     });
   }
 
@@ -160,12 +172,21 @@ export class AdminManualCourtUsageComponent implements OnInit {
   }
 
   loadMembers(): void {
+    // Build params with clubId if available
+    let params = new HttpParams();
+    const selectedClubId = this.authService.selectedClub?.clubId;
+    if (selectedClubId) {
+      params = params.set('clubId', selectedClubId);
+    }
+
     // Request all members - backend max limit is 100, so we'll need to paginate if there are more
-    this.http.get<any>(`${environment.apiUrl}/members?limit=100`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/members?limit=100`, { params }).subscribe({
       next: (response) => {
         this.members = response.data || response;
         this.filteredMembers = [...this.members]; // Show all members initially
-        console.log(`Loaded ${this.members.length} members out of ${response.pagination?.total || this.members.length} total`);
+        console.log(
+          `Loaded ${this.members.length} members out of ${response.pagination?.total || this.members.length} total`,
+        );
 
         // If there are more members, load them all
         if (response.pagination && response.pagination.total > this.members.length) {
@@ -175,7 +196,7 @@ export class AdminManualCourtUsageComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load members:', error);
         this.snackBar.open('Failed to load members', 'Close', { duration: 3000 });
-      }
+      },
     });
   }
 
@@ -184,14 +205,12 @@ export class AdminManualCourtUsageComponent implements OnInit {
     const requests = [];
 
     for (let page = 2; page <= pages; page++) {
-      requests.push(
-        this.http.get<any>(`${environment.apiUrl}/members?limit=100&page=${page}`)
-      );
+      requests.push(this.http.get<any>(`${environment.apiUrl}/members?limit=100&page=${page}`));
     }
 
     if (requests.length > 0) {
-      Promise.all(requests.map(req => req.toPromise())).then(responses => {
-        responses.forEach(response => {
+      Promise.all(requests.map((req) => req.toPromise())).then((responses) => {
+        responses.forEach((response) => {
           if (response && response.data) {
             this.members.push(...response.data);
           }
@@ -203,22 +222,34 @@ export class AdminManualCourtUsageComponent implements OnInit {
   }
 
   loadHistory(): void {
-    this.http.get<any>(`${environment.apiUrl}/manual-court-usage`).subscribe({
+    const params: any = {};
+
+    // For superadmins without selected club, request all clubs
+    if (this.authService.isSuperAdmin() && !this.authService.selectedClub) {
+      params.allClubs = 'true';
+    } else {
+      const selectedClubId = this.authService.selectedClub?.clubId;
+      if (selectedClubId) {
+        params.clubId = selectedClubId;
+      }
+    }
+
+    this.http.get<any>(`${environment.apiUrl}/manual-court-usage`, { params }).subscribe({
       next: (response) => {
         this.history = response.data?.sessions || [];
         console.log('📊 Loaded history sessions:', this.history.length);
       },
       error: (error) => {
         console.error('Failed to load history:', error);
-      }
+      },
     });
   }
 
   onPlayerInputChange(event: any): void {
     const value = event.target.value.toLowerCase().trim();
     if (value.length > 0) {
-      this.filteredMembers = this.members.filter(member =>
-        member.fullName.toLowerCase().includes(value)
+      this.filteredMembers = this.members.filter((member) =>
+        member.fullName.toLowerCase().includes(value),
       );
     } else {
       this.filteredMembers = [...this.members]; // Show all members when input is cleared
@@ -245,10 +276,10 @@ export class AdminManualCourtUsageComponent implements OnInit {
 
   removePlayer(playerName: string): void {
     // Remove from selected players
-    this.selectedPlayers = this.selectedPlayers.filter(p => p !== playerName);
+    this.selectedPlayers = this.selectedPlayers.filter((p) => p !== playerName);
 
     // Remove from player payments and trigger change detection
-    this.playerPayments = this.playerPayments.filter(p => p.playerName !== playerName);
+    this.playerPayments = this.playerPayments.filter((p) => p.playerName !== playerName);
   }
 
   calculateFees(): void {
@@ -276,9 +307,9 @@ export class AdminManualCourtUsageComponent implements OnInit {
     let memberCount = 0;
     let guestCount = 0;
 
-    const memberNames = this.members.map(m => m.fullName.toLowerCase().trim());
+    const memberNames = this.members.map((m) => m.fullName.toLowerCase().trim());
 
-    this.selectedPlayers.forEach(playerName => {
+    this.selectedPlayers.forEach((playerName) => {
       const cleanName = playerName.toLowerCase().trim();
       if (memberNames.includes(cleanName)) {
         memberCount++;
@@ -304,9 +335,9 @@ export class AdminManualCourtUsageComponent implements OnInit {
     const feePerPlayer = totalFee / this.selectedPlayers.length;
 
     // Create player payments
-    this.playerPayments = this.selectedPlayers.map(playerName => ({
+    this.playerPayments = this.selectedPlayers.map((playerName) => ({
       playerName,
-      amount: parseFloat(feePerPlayer.toFixed(2))
+      amount: parseFloat(feePerPlayer.toFixed(2)),
     }));
 
     this.calculating = false;
@@ -316,13 +347,13 @@ export class AdminManualCourtUsageComponent implements OnInit {
     this.snackBar.open(
       `Calculated: ₱${totalFee} total for ${hours} hour(s) | ${breakdown} | ₱${feePerPlayer.toFixed(2)} per player`,
       'Close',
-      { duration: 5000 }
+      { duration: 5000 },
     );
   }
 
   updatePlayerAmount(playerName: string, newAmount: string): void {
     // Create new array to trigger change detection
-    this.playerPayments = this.playerPayments.map(p => {
+    this.playerPayments = this.playerPayments.map((p) => {
       if (p.playerName === playerName) {
         return { ...p, amount: parseFloat(newAmount) || 0 };
       }
@@ -335,14 +366,18 @@ export class AdminManualCourtUsageComponent implements OnInit {
   }
 
   canSubmit(): boolean {
-    return this.courtUsageForm.valid &&
-           this.playerPayments.length > 0 &&
-           this.playerPayments.every(p => p.amount > 0);
+    return (
+      this.courtUsageForm.valid &&
+      this.playerPayments.length > 0 &&
+      this.playerPayments.every((p) => p.amount > 0)
+    );
   }
 
   submitCourtUsage(): void {
     if (!this.canSubmit()) {
-      this.snackBar.open('Please fill all required fields and calculate fees', 'Close', { duration: 3000 });
+      this.snackBar.open('Please fill all required fields and calculate fees', 'Close', {
+        duration: 3000,
+      });
       return;
     }
 
@@ -354,15 +389,22 @@ export class AdminManualCourtUsageComponent implements OnInit {
       startTime: formValue.startTime,
       endTime: formValue.endTime,
       players: this.playerPayments,
-      description: formValue.description || undefined
+      description: formValue.description || undefined,
     };
 
-    this.http.post<any>(`${environment.apiUrl}/manual-court-usage`, payload).subscribe({
+    // Build params with clubId if available
+    let params = new HttpParams();
+    const selectedClubId = this.authService.selectedClub?.clubId;
+    if (selectedClubId) {
+      params = params.set('clubId', selectedClubId);
+    }
+
+    this.http.post<any>(`${environment.apiUrl}/manual-court-usage`, payload, { params }).subscribe({
       next: (response) => {
         this.snackBar.open(
           `Successfully created ${response.data.totalPlayers} pending payment(s)`,
           'Close',
-          { duration: 4000 }
+          { duration: 4000 },
         );
         this.resetForm();
         this.loadHistory();
@@ -373,13 +415,13 @@ export class AdminManualCourtUsageComponent implements OnInit {
         const errorMsg = error.error?.error || 'Failed to create court usage';
         this.snackBar.open(errorMsg, 'Close', { duration: 5000 });
         this.loading = false;
-      }
+      },
     });
   }
 
   resetForm(): void {
     this.courtUsageForm.reset({
-      date: new Date()
+      date: new Date(),
     });
     this.selectedPlayers = [];
     this.playerPayments = [];
@@ -396,7 +438,7 @@ export class AdminManualCourtUsageComponent implements OnInit {
   getPlayersList(session: ManualCourtUsageSession | any[] | any): string {
     // Handle array of players (old format)
     if (Array.isArray(session)) {
-      return session.map(p => p.playerName).join(', ');
+      return session.map((p) => p.playerName).join(', ');
     }
 
     // Use playerNames array (populated by backend)
@@ -425,7 +467,7 @@ export class AdminManualCourtUsageComponent implements OnInit {
   // Get total number of unique players from history
   getTotalPlayers(): number {
     const uniquePlayers = new Set<string>();
-    this.history.forEach(session => {
+    this.history.forEach((session) => {
       session.players.forEach((player: any) => {
         uniquePlayers.add(player.playerName);
       });
@@ -439,4 +481,3 @@ export class AdminManualCourtUsageComponent implements OnInit {
     return total.toFixed(2);
   }
 }
-

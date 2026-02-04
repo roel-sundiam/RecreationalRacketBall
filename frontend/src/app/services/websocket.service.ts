@@ -139,10 +139,13 @@ export class WebSocketService implements OnDestroy {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('🚨 WebSocket connection error:', error);
+      // Only log in development mode, and only if it's not a timeout
+      if (!this.isProduction && error.message !== 'timeout') {
+        console.warn('⚠️ WebSocket connection issue:', error.message);
+      }
       this.connectionSubject.next(false);
       this.reconnectAttempts++;
-      
+
       if (this.isProduction && this.reconnectAttempts < this.maxReconnectAttempts) {
         this.scheduleReconnect();
       }

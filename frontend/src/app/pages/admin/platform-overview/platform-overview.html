@@ -1,0 +1,201 @@
+<div class="platform-overview-container">
+  <!-- Modern Gradient Header -->
+  <div class="modern-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="icon-wrapper">
+          <mat-icon>account_tree</mat-icon>
+        </div>
+        <div class="title-group">
+          <h1>Platform Overview</h1>
+          <p class="subtitle">
+            Complete view of all clubs, administrators, and members across the platform
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading platform data...</p>
+    </div>
+
+    <!-- Platform Stats -->
+    <div *ngIf="!loading" class="stats-grid">
+      <div class="stat-card clubs">
+        <div class="stat-content">
+          <div class="stat-icon">
+            <mat-icon>business</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ totalClubs }}</div>
+            <div class="stat-label">Total Clubs</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card members">
+        <div class="stat-content">
+          <div class="stat-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ totalMembers }}</div>
+            <div class="stat-label">Total Members</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card admins">
+        <div class="stat-content">
+          <div class="stat-icon">
+            <mat-icon>admin_panel_settings</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ totalAdmins }}</div>
+            <div class="stat-label">Total Admins</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clubs List -->
+    <div *ngIf="!loading && clubs.length > 0" class="clubs-container">
+      <h2 class="section-title">
+        <mat-icon>business</mat-icon>
+        All Clubs
+      </h2>
+      <mat-accordion>
+        <mat-expansion-panel *ngFor="let club of clubs" class="club-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="club-header">
+                <div class="club-info">
+                  <h3>{{ club.name }}</h3>
+                  <p class="location">
+                    <mat-icon>location_on</mat-icon>
+                    {{ club.address.city }}, {{ club.address.province }}
+                  </p>
+                </div>
+                <div class="club-stats">
+                  <div class="stat-badge status" [class]="club.status">
+                    <mat-icon>{{
+                      club.status === 'active'
+                        ? 'check_circle'
+                        : club.status === 'trial'
+                          ? 'schedule'
+                          : 'block'
+                    }}</mat-icon>
+                    <span>{{ club.status | titlecase }}</span>
+                  </div>
+                  <div class="stat-badge members">
+                    <mat-icon>people</mat-icon>
+                    <span
+                      >{{ club.memberCount }}
+                      {{ club.memberCount === 1 ? 'member' : 'members' }}</span
+                    >
+                  </div>
+                  <div class="stat-badge admins">
+                    <mat-icon>admin_panel_settings</mat-icon>
+                    <span
+                      >{{ club.adminCount }} {{ club.adminCount === 1 ? 'admin' : 'admins' }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <!-- Club Details -->
+          <div class="club-details">
+            <!-- Admins Section -->
+            <div class="section">
+              <h4>
+                <mat-icon>admin_panel_settings</mat-icon>
+                Administrators ({{ club.adminCount }})
+              </h4>
+              <div class="members-list">
+                <mat-card
+                  *ngFor="let member of club.members"
+                  class="member-card"
+                  [class.admin-member]="member.role === 'admin' || member.role === 'treasurer'"
+                >
+                  <mat-card-content
+                    *ngIf="
+                      member.userId && (member.role === 'admin' || member.role === 'treasurer')
+                    "
+                  >
+                    <div class="member-info">
+                      <div class="member-avatar">
+                        <mat-icon>person</mat-icon>
+                      </div>
+                      <div class="member-details">
+                        <div class="member-name">{{ member.userId.fullName }}</div>
+                        <div class="member-username">@{{ member.userId.username }}</div>
+                        <div class="member-email">{{ member.userId.email }}</div>
+                      </div>
+                      <div class="member-badges">
+                        <mat-chip [color]="getRoleColor(member.role)" highlighted>
+                          <mat-icon>{{
+                            member.role === 'admin' ? 'shield' : 'account_balance'
+                          }}</mat-icon>
+                          {{ member.role | titlecase }}
+                        </mat-chip>
+                        <mat-chip
+                          [color]="getMemberStatusColor(member.status)"
+                          highlighted
+                          size="small"
+                        >
+                          {{ member.status | titlecase }}
+                        </mat-chip>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+
+            <!-- Members Section -->
+            <div class="section">
+              <h4>
+                <mat-icon>people</mat-icon>
+                All Members ({{ club.memberCount }})
+              </h4>
+              <div class="members-grid">
+                <mat-card *ngFor="let member of club.members" class="member-card compact">
+                  <mat-card-content *ngIf="member.userId">
+                    <div class="compact-member-info">
+                      <div class="compact-member-avatar">
+                        <mat-icon>person</mat-icon>
+                      </div>
+                      <div class="compact-member-details">
+                        <div class="compact-member-name">{{ member.userId.fullName }}</div>
+                        <div class="compact-member-username">@{{ member.userId.username }}</div>
+                      </div>
+                      <div class="compact-member-badges">
+                        <mat-chip [color]="getRoleColor(member.role)" size="small">
+                          {{ member.role | titlecase }}
+                        </mat-chip>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && clubs.length === 0" class="empty-state">
+      <mat-icon>business_center</mat-icon>
+      <h2>No Clubs Found</h2>
+      <p>There are no clubs registered in the platform yet.</p>
+    </div>
+  </div>
+</div>

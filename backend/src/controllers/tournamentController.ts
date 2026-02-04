@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { body, validationResult } from 'express-validator';
+import mongoose from 'mongoose';
 import Tournament from '../models/Tournament';
 import User from '../models/User';
 import Player from '../models/Player';
@@ -9,7 +10,7 @@ import { AuthenticatedRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 
 // Helper function to populate player names in matches
-async function populateMatchPlayers(tournaments: any[]) {
+async function populateMatchPlayers(tournaments: any[], clubId?: mongoose.Types.ObjectId) {
   const allPlayerIds = new Set<string>();
 
   // Collect all player IDs from all tournaments (filter out empty/falsy values)
@@ -36,8 +37,12 @@ async function populateMatchPlayers(tournaments: any[]) {
     });
   });
 
-  // Fetch all players at once
-  const players = await Player.find({ _id: { $in: Array.from(allPlayerIds) } })
+  // Fetch all players at once with clubId filter
+  const playerQuery: any = { _id: { $in: Array.from(allPlayerIds) } };
+  if (clubId) {
+    playerQuery.clubId = clubId;
+  }
+  const players = await Player.find(playerQuery)
     .select('_id fullName')
     .lean();
 
@@ -87,7 +92,9 @@ export const getTournaments = asyncHandler(async (req: AuthenticatedRequest, res
   const skip = (page - 1) * limit;
 
   // Build filter query
-  const filter: any = {};
+  const filter: any = {
+    clubId: req.clubId
+  };
 
   if (req.query.status) {
     filter.status = req.query.status;
@@ -113,7 +120,7 @@ export const getTournaments = asyncHandler(async (req: AuthenticatedRequest, res
     .lean();
 
   // Manually populate player data
-  tournaments = await populateMatchPlayers(tournaments);
+  tournaments = await populateMatchPlayers(tournaments, req.clubId);
 
   res.status(200).json({
     success: true,
@@ -144,6 +151,15 @@ export const getTournament = asyncHandler(async (req: AuthenticatedRequest, res:
     .populate('matches.winner', 'username fullName');
 
   if (!tournament) {
+    res.status(404).json({
+      success: false,
+      error: 'Tournament not found'
+    });
+    return;
+  }
+
+  // Verify clubId matches
+  if (tournament.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Tournament not found'
@@ -189,7 +205,7 @@ export const createTournament = asyncHandler(async (req: AuthenticatedRequest, r
 
         // Verify players exist if IDs are provided
         if (match.player1 && match.player1.trim()) {
-          const player1 = await Player.findById(match.player1.trim());
+          const player1 = await Player.findOne({ _id: match.player1.trim(), clubId: req.clubId });
           if (!player1) {
             res.status(400).json({
               success: false,
@@ -200,7 +216,7 @@ export const createTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.player2 && match.player2.trim()) {
-          const player2 = await Player.findById(match.player2.trim());
+          const player2 = await Player.findOne({ _id: match.player2.trim(), clubId: req.clubId });
           if (!player2) {
             res.status(400).json({
               success: false,
@@ -262,7 +278,7 @@ export const createTournament = asyncHandler(async (req: AuthenticatedRequest, r
 
         // Verify players exist if IDs are provided
         if (match.team1Player1 && match.team1Player1.trim()) {
-          const t1p1 = await Player.findById(match.team1Player1.trim());
+          const t1p1 = await Player.findOne({ _id: match.team1Player1.trim(), clubId: req.clubId });
           if (!t1p1) {
             res.status(400).json({ success: false, error: 'Team 1 Player 1 not found' });
             return;
@@ -270,7 +286,7 @@ export const createTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.team1Player2 && match.team1Player2.trim()) {
-          const t1p2 = await Player.findById(match.team1Player2.trim());
+          const t1p2 = await Player.findOne({ _id: match.team1Player2.trim(), clubId: req.clubId });
           if (!t1p2) {
             res.status(400).json({ success: false, error: 'Team 1 Player 2 not found' });
             return;
@@ -278,7 +294,7 @@ export const createTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.team2Player1 && match.team2Player1.trim()) {
-          const t2p1 = await Player.findById(match.team2Player1.trim());
+          const t2p1 = await Player.findOne({ _id: match.team2Player1.trim(), clubId: req.clubId });
           if (!t2p1) {
             res.status(400).json({ success: false, error: 'Team 2 Player 1 not found' });
             return;
@@ -286,7 +302,7 @@ export const createTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.team2Player2 && match.team2Player2.trim()) {
-          const t2p2 = await Player.findById(match.team2Player2.trim());
+          const t2p2 = await Player.findOne({ _id: match.team2Player2.trim(), clubId: req.clubId });
           if (!t2p2) {
             res.status(400).json({ success: false, error: 'Team 2 Player 2 not found' });
             return;
@@ -309,6 +325,7 @@ export const createTournament = asyncHandler(async (req: AuthenticatedRequest, r
     name,
     date: new Date(date),
     createdBy: req.user._id,
+    clubId: req.clubId,
     matches: matches || [],
     status: 'completed'
   });
@@ -333,6 +350,15 @@ export const updateTournament = asyncHandler(async (req: AuthenticatedRequest, r
   const tournament = await Tournament.findById(id);
 
   if (!tournament) {
+    res.status(404).json({
+      success: false,
+      error: 'Tournament not found'
+    });
+    return;
+  }
+
+  // Verify clubId matches
+  if (tournament.clubId?.toString() !== req.clubId?.toString()) {
     res.status(404).json({
       success: false,
       error: 'Tournament not found'
@@ -365,7 +391,7 @@ export const updateTournament = asyncHandler(async (req: AuthenticatedRequest, r
 
         // Verify players exist if IDs are provided
         if (match.player1 && match.player1.trim()) {
-          const player1 = await Player.findById(match.player1.trim());
+          const player1 = await Player.findOne({ _id: match.player1.trim(), clubId: req.clubId });
           if (!player1) {
             res.status(400).json({ success: false, error: 'Player 1 not found' });
             return;
@@ -373,7 +399,7 @@ export const updateTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.player2 && match.player2.trim()) {
-          const player2 = await Player.findById(match.player2.trim());
+          const player2 = await Player.findOne({ _id: match.player2.trim(), clubId: req.clubId });
           if (!player2) {
             res.status(400).json({ success: false, error: 'Player 2 not found' });
             return;
@@ -432,7 +458,7 @@ export const updateTournament = asyncHandler(async (req: AuthenticatedRequest, r
 
         // Verify players exist if IDs are provided
         if (match.team1Player1 && match.team1Player1.trim()) {
-          const t1p1 = await Player.findById(match.team1Player1.trim());
+          const t1p1 = await Player.findOne({ _id: match.team1Player1.trim(), clubId: req.clubId });
           if (!t1p1) {
             res.status(400).json({ success: false, error: 'Team 1 Player 1 not found' });
             return;
@@ -440,7 +466,7 @@ export const updateTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.team1Player2 && match.team1Player2.trim()) {
-          const t1p2 = await Player.findById(match.team1Player2.trim());
+          const t1p2 = await Player.findOne({ _id: match.team1Player2.trim(), clubId: req.clubId });
           if (!t1p2) {
             res.status(400).json({ success: false, error: 'Team 1 Player 2 not found' });
             return;
@@ -448,7 +474,7 @@ export const updateTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.team2Player1 && match.team2Player1.trim()) {
-          const t2p1 = await Player.findById(match.team2Player1.trim());
+          const t2p1 = await Player.findOne({ _id: match.team2Player1.trim(), clubId: req.clubId });
           if (!t2p1) {
             res.status(400).json({ success: false, error: 'Team 2 Player 1 not found' });
             return;
@@ -456,7 +482,7 @@ export const updateTournament = asyncHandler(async (req: AuthenticatedRequest, r
         }
 
         if (match.team2Player2 && match.team2Player2.trim()) {
-          const t2p2 = await Player.findById(match.team2Player2.trim());
+          const t2p2 = await Player.findOne({ _id: match.team2Player2.trim(), clubId: req.clubId });
           if (!t2p2) {
             res.status(400).json({ success: false, error: 'Team 2 Player 2 not found' });
             return;
@@ -547,6 +573,15 @@ export const deleteTournament = asyncHandler(async (req: AuthenticatedRequest, r
     return;
   }
 
+  // Verify clubId matches
+  if (tournament.clubId?.toString() !== req.clubId?.toString()) {
+    res.status(404).json({
+      success: false,
+      error: 'Tournament not found'
+    });
+    return;
+  }
+
   // Check if points have been processed - if so, reverse them first
   const hasProcessedMatches = tournament.matches.some(m => m.pointsProcessed);
   if (hasProcessedMatches) {
@@ -601,6 +636,15 @@ export const processTournamentPoints = asyncHandler(async (req: AuthenticatedReq
     return;
   }
 
+  // Verify clubId matches
+  if (tournament.clubId?.toString() !== req.clubId?.toString()) {
+    res.status(404).json({
+      success: false,
+      error: 'Tournament not found'
+    });
+    return;
+  }
+
   if (tournament.matches.length === 0) {
     res.status(400).json({
       success: false,
@@ -627,19 +671,21 @@ export const processTournamentPoints = asyncHandler(async (req: AuthenticatedReq
 
 // Get tournament statistics
 export const getTournamentStats = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const totalTournaments = await Tournament.countDocuments();
-  const completedTournaments = await Tournament.countDocuments({ status: 'completed' });
-  const draftTournaments = await Tournament.countDocuments({ status: 'draft' });
+  const clubFilter = { clubId: req.clubId };
+
+  const totalTournaments = await Tournament.countDocuments(clubFilter);
+  const completedTournaments = await Tournament.countDocuments({ ...clubFilter, status: 'completed' });
+  const draftTournaments = await Tournament.countDocuments({ ...clubFilter, status: 'draft' });
 
   // Get total matches across all tournaments
-  const tournaments = await Tournament.find();
+  const tournaments = await Tournament.find(clubFilter);
   const totalMatches = tournaments.reduce((sum, t) => sum + t.totalMatches, 0);
   const processedMatches = tournaments.reduce((sum, t) =>
     sum + t.matches.filter(m => m.pointsProcessed).length, 0
   );
 
   // Get recent tournaments
-  const recentTournaments = await Tournament.find()
+  const recentTournaments = await Tournament.find(clubFilter)
     .populate('createdBy', 'username fullName')
     .sort({ date: -1 })
     .limit(5)

@@ -25,6 +25,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { CloseEventModalComponent, CloseEventModalData } from '../close-event-modal/close-event-modal.component';
 import { environment } from '../../../environments/environment';
+import { DialogService } from '../../services/dialog.service';
 
 interface OpenPlayEvent {
   _id: string;
@@ -2999,7 +3000,8 @@ export class AdminPollManagementComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private authService: AuthService,
     private notificationService: NotificationService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogService: DialogService
   ) {
     this.openPlayForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(5)]],
@@ -3989,7 +3991,13 @@ export class AdminPollManagementComponent implements OnInit, OnDestroy {
   }
 
   deletePoll(poll: any): void {
-    if (confirm(`Are you sure you want to delete the poll "${poll.title}"? This action cannot be undone.`)) {
+    this.dialogService.delete({
+      title: 'Delete Poll',
+      message: 'This action cannot be undone.',
+      itemName: poll.title
+    }).subscribe(confirmed => {
+      if (!confirmed) return;
+
       this.http.delete(`${this.apiUrl}/polls/${poll._id}`).subscribe({
         next: (response) => {
           this.snackBar.open('Poll deleted successfully', 'Close', { duration: 3000 });
@@ -4000,7 +4008,7 @@ export class AdminPollManagementComponent implements OnInit, OnDestroy {
           this.snackBar.open('Error deleting poll', 'Close', { duration: 3000 });
         }
       });
-    }
+    });
   }
 
   private showMessage(message: string, type: 'success' | 'error' | 'warning'): void {

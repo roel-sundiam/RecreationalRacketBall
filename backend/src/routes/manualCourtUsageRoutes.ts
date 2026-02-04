@@ -4,19 +4,21 @@ import {
   getManualCourtUsageHistory,
   createManualCourtUsageValidation
 } from '../controllers/manualCourtUsageController';
-import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
+import { extractClubContext, requireClubAdminOrTreasurer } from '../middleware/club';
 
 const router = Router();
 
 /**
  * @route POST /api/manual-court-usage
  * @desc Create manual court usage record and generate pending payments
- * @access Private (Superadmin only)
+ * @access Private (Club Admin/Treasurer)
  */
 router.post(
   '/',
   authenticateToken,
-  requireSuperAdmin,
+  extractClubContext,
+  requireClubAdminOrTreasurer,
   createManualCourtUsageValidation,
   createManualCourtUsage
 );
@@ -24,12 +26,13 @@ router.post(
 /**
  * @route GET /api/manual-court-usage
  * @desc Get manual court usage history
- * @access Private (Superadmin only)
+ * @access Private (Club Admin/Treasurer)
  */
 router.get(
   '/',
   authenticateToken,
-  requireSuperAdmin,
+  extractClubContext,
+  requireClubAdminOrTreasurer,
   getManualCourtUsageHistory
 );
 

@@ -23,22 +23,130 @@
   }
 }
 
+:host {
+  --primary-gradient-start: #6366f1;
+  --primary-gradient-mid: #4f46e5;
+  --primary-gradient-end: #7c3aed;
+  --primary-color: #4f46e5;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --surface-bg: rgba(255, 255, 255, 0.9);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.1);
+  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.16);
+}
+
 // Modern Page Container following design system
 .page-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e0 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #ddd6fe 100%);
+}
+
+// Club Selection Warning Banner
+.club-warning-banner {
+  max-width: 1400px;
+  margin: -1rem auto 2rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #fca5a5;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);
+  animation: slideDown 0.3s ease-out;
+
+  @media (max-width: 768px) {
+    margin: -1rem 1rem 1rem;
+    padding: 1rem;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  > mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: #dc2626;
+    flex-shrink: 0;
+  }
+
+  .warning-content {
+    flex: 1;
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #991b1b;
+      margin: 0 0 0.5rem 0;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #7f1d1d;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+
+  .warning-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+
+    button {
+      flex-shrink: 0;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+
+      mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 // Modern Header
 .page-header {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #2563eb 100%);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+  background: linear-gradient(
+    135deg,
+    var(--primary-gradient-start) 0%,
+    var(--primary-gradient-mid) 50%,
+    var(--primary-gradient-end) 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: var(--shadow-lg);
   color: white;
-  padding: 1rem 0;
+  padding: 1.5rem 0 2rem;
   margin-bottom: 2rem;
-  
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
   .header-content {
     max-width: 1400px;
     margin: 0 auto;
@@ -46,38 +154,43 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    
+    position: relative;
+    z-index: 1;
+
     @media (max-width: 768px) {
       padding: 0 1rem;
     }
   }
-  
+
   .back-button {
     color: white;
-    
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.2);
     }
   }
-  
+
   .title-section {
     .page-title {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      font-size: 1.75rem;
+      font-size: 2rem;
       font-weight: 700;
       margin: 0;
-      
+      letter-spacing: -0.02em;
+
       mat-icon {
         font-size: 2rem;
         width: 2rem;
         height: 2rem;
       }
-      
+
       @media (max-width: 768px) {
         font-size: 1.5rem;
-        
+
         mat-icon {
           font-size: 1.75rem;
           width: 1.75rem;
@@ -85,14 +198,31 @@
         }
       }
     }
-    
+
     .page-subtitle {
-      font-size: 0.875rem;
-      margin: 0.25rem 0 0 0;
+      font-size: 0.9rem;
+      margin: 0.35rem 0 0 0;
       opacity: 0.9;
-      font-weight: 300;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .subtitle-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        vertical-align: middle;
+      }
     }
   }
+}
+
+// Club name styling in table
+.club-name {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
 // Page Content
@@ -100,7 +230,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
-  
+
   @media (max-width: 768px) {
     padding: 0 1rem;
   }
@@ -108,29 +238,35 @@
 
 // Management Tabs
 .management-tabs {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
+  background: var(--surface-bg);
+  backdrop-filter: blur(18px);
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
-  
+
   ::ng-deep .mat-mdc-tab-header {
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.6);
+    border-bottom: 1px solid rgba(79, 70, 229, 0.12);
   }
-  
+
   ::ng-deep .mat-mdc-tab-label {
-    min-width: 140px; // Reduced from 160px
-    font-size: 0.963rem; // Added explicit size
+    min-width: 140px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+
+    &.mdc-tab--active {
+      color: var(--primary-color);
+    }
 
     .count-chip {
       margin-left: 0.4rem;
       background: #ef4444;
       color: white;
-      font-size: 0.757rem; // Reduced from 0.75rem
-      padding: 0.2rem 0.4rem; // Reduced padding
-      border-radius: 10px;
+      font-size: 0.72rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 12px;
     }
   }
 }
@@ -146,29 +282,36 @@
 
 // Nested Sub-tabs
 .sub-tabs {
-  background: rgba(248, 250, 252, 0.5);
+  background: rgba(248, 250, 252, 0.7);
   border-radius: 12px;
   overflow: hidden;
+  border: 1px solid rgba(79, 70, 229, 0.08);
 
   ::ng-deep .mat-mdc-tab-header {
-    background: rgba(255, 255, 255, 0.8);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid rgba(79, 70, 229, 0.08);
   }
 
   ::ng-deep .mat-mdc-tab-label {
-    min-width: 120px; // Reduced from 140px
-    font-size: 0.894rem; // Added explicit size
+    min-width: 120px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+
+    &.mdc-tab--active {
+      color: var(--primary-color);
+    }
 
     .count-chip {
       margin-left: 0.4rem;
-      background: #3b82f6;
+      background: var(--primary-color);
       color: white;
-      font-size: 0.715rem; // Reduced from 0.7rem
-      padding: 0.15rem 0.35rem; // Reduced padding
-      border-radius: 8px;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 10px;
 
       &.homeowner-count {
-        background: #2563eb;
+        background: #4338ca;
       }
     }
   }
@@ -186,7 +329,7 @@
   justify-content: center;
   padding: 3rem;
   gap: 1rem;
-  
+
   p {
     color: #6b7280;
     font-size: 1rem;
@@ -198,7 +341,7 @@
   text-align: center;
   padding: 3rem;
   color: #6b7280;
-  
+
   .empty-icon {
     font-size: 4rem;
     width: 4rem;
@@ -206,13 +349,13 @@
     color: #10b981;
     margin-bottom: 1rem;
   }
-  
+
   h3 {
     font-size: 1.5rem;
     margin: 0 0 0.5rem 0;
     color: #374151;
   }
-  
+
   p {
     font-size: 1rem;
     margin: 0;
@@ -224,7 +367,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 1.5rem;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -232,26 +375,25 @@
 }
 
 .member-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: var(--card-bg);
+  border-radius: 18px;
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-lg);
   }
-  
+
   &.pending-card {
     border-left: 4px solid #f59e0b;
   }
-  
+
   .member-avatar {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
     color: white;
-    
+
     mat-icon {
       font-size: 1.5rem;
       width: 1.5rem;
@@ -262,7 +404,7 @@
 
 .member-details {
   margin: 1rem 0;
-  
+
   .detail-row {
     display: flex;
     align-items: center;
@@ -360,16 +502,16 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   padding: 1rem;
-  
+
   button {
     flex: 1;
     min-width: 80px;
-    
+
     &:disabled {
       opacity: 0.6;
     }
   }
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
   }
@@ -377,29 +519,34 @@
 
 // Members Table
 .members-table {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
+  background: var(--card-bg);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .members-data-table {
   width: 100%;
-  font-size: 0.894rem !important; // Reduced base font size
+  font-size: 0.894rem !important;
 
   ::ng-deep .mat-mdc-table {
     font-size: 0.894rem !important;
+    background: transparent;
   }
 
   ::ng-deep .mat-mdc-cell,
   ::ng-deep .mat-mdc-header-cell {
     font-size: 0.825rem !important;
-    padding: 0.5rem 0.75rem !important;
+    padding: 0.65rem 0.75rem !important;
   }
 
   ::ng-deep .mat-mdc-header-cell {
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+    background: rgba(79, 70, 229, 0.06);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .member-info {
@@ -408,13 +555,13 @@
 
     strong {
       font-weight: 600;
-      color: #374151;
-      font-size: 0.825rem !important; // Reduced from default
+      color: var(--text-primary);
+      font-size: 0.825rem !important;
     }
 
     .username {
-      font-size: 0.757rem !important; // Reduced from 0.875rem
-      color: #6b7280;
+      font-size: 0.757rem !important;
+      color: var(--text-secondary);
       margin-top: 0.25rem;
     }
   }
@@ -424,8 +571,8 @@
     flex-direction: column;
 
     .phone {
-      font-size: 0.757rem !important; // Reduced from 0.875rem
-      color: #6b7280;
+      font-size: 0.757rem !important;
+      color: var(--text-secondary);
       margin-top: 0.25rem;
     }
   }
@@ -438,8 +585,8 @@
 
   .coin-balance {
     font-weight: 600;
-    color: #f59e0b;
-    font-size: 0.825rem !important; // Added explicit size
+    color: var(--primary-color);
+    font-size: 0.825rem !important;
 
     &::after {
       content: ' 🪙';
@@ -462,13 +609,13 @@
 @media (max-width: 768px) {
   .members-data-table {
     font-size: 0.875rem;
-    
+
     .mat-column-contact,
     .mat-column-coins {
       display: none;
     }
   }
-  
+
   .member-actions {
     button {
       font-size: 0.875rem;
@@ -526,11 +673,11 @@
   }
 
   &.role-treasurer {
-    color: #4CAF50;
-    border-color: #4CAF50;
+    color: #4caf50;
+    border-color: #4caf50;
 
     ::ng-deep .mat-mdc-select-value {
-      color: #4CAF50;
+      color: #4caf50;
     }
   }
 
@@ -571,7 +718,7 @@
   }
 
   &.treasurer-icon {
-    color: #4CAF50;
+    color: #4caf50;
   }
 
   &.admin-icon {
@@ -625,7 +772,7 @@
 
   &.role-treasurer {
     background: rgba(76, 175, 80, 0.1);
-    color: #4CAF50;
+    color: #4caf50;
     border: 1px solid rgba(76, 175, 80, 0.3);
   }
 
@@ -880,6 +1027,224 @@
 
     .role-chip {
       align-self: flex-start;
+    }
+  }
+}
+
+// Debug Panel Styles
+.debug-panel {
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.98);
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+
+  &.mat-expansion-panel {
+    ::ng-deep .mat-expansion-panel-header {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      padding: 1rem 1.5rem;
+      border-radius: 12px 12px 0 0;
+
+      &:hover {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      }
+    }
+
+    ::ng-deep .mat-expansion-panel-body {
+      padding: 1.5rem;
+    }
+  }
+
+  .error-icon {
+    color: #ef4444;
+    margin-right: 0.5rem;
+  }
+
+  .success-icon {
+    color: #10b981;
+    margin-right: 0.5rem;
+  }
+
+  .debug-content {
+    font-family: 'Roboto Mono', 'Courier New', monospace;
+    font-size: 0.875rem;
+
+    h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 1.5rem 0 0.75rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &.error-header {
+        color: #ef4444;
+        border-bottom-color: #fecaca;
+      }
+
+      &.success-header {
+        color: #10b981;
+        border-bottom-color: #a7f3d0;
+      }
+    }
+
+    .debug-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      background: #f8fafc;
+      border-radius: 6px;
+      align-items: flex-start;
+
+      strong {
+        min-width: 150px;
+        font-weight: 600;
+        color: #475569;
+        flex-shrink: 0;
+      }
+
+      span {
+        flex: 1;
+        color: #1e293b;
+        word-break: break-all;
+      }
+
+      .monospace {
+        font-family: 'Roboto Mono', 'Courier New', monospace;
+        background: #ffffff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.813rem;
+      }
+
+      .json-display {
+        flex: 1;
+        background: #ffffff;
+        padding: 0.75rem;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        font-size: 0.813rem;
+        margin: 0;
+        max-height: 300px;
+        overflow-y: auto;
+
+        &.error-text {
+          border-color: #fecaca;
+          background: #fef2f2;
+        }
+      }
+
+      .error-text {
+        color: #ef4444;
+        font-weight: 600;
+      }
+    }
+
+    .error-section,
+    .success-section {
+      background: #fef2f2;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+
+    .success-section {
+      background: #f0fdf4;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .debug-content {
+      .debug-row {
+        flex-direction: column;
+        gap: 0.5rem;
+
+        strong {
+          min-width: auto;
+        }
+      }
+    }
+  }
+}
+// Diagnostic Panel Styles
+.diagnostic-panel {
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.98);
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+
+  .diagnostic-icon {
+    color: #3b82f6;
+    margin-right: 0.5rem;
+  }
+
+  .diagnostic-content {
+    h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 1.5rem 0 0.75rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .recommendations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+
+      .recommendation-item {
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        border-radius: 4px;
+        font-size: 0.938rem;
+        line-height: 1.5;
+      }
+    }
+
+    .diagnostic-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      background: #f8fafc;
+      border-radius: 6px;
+
+      strong {
+        min-width: 200px;
+        font-weight: 600;
+        color: #475569;
+      }
+
+      .json-display {
+        flex: 1;
+        background: #ffffff;
+        padding: 0.75rem;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        font-size: 0.813rem;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: 'Roboto Mono', 'Courier New', monospace;
+      }
+
+      .error-text {
+        color: #ef4444;
+        font-weight: 600;
+      }
     }
   }
 }

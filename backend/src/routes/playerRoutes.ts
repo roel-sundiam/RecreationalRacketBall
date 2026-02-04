@@ -11,13 +11,18 @@ import {
   editPlayerMedal
 } from '../controllers/playerController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { extractClubContext, requireClubRole } from '../middleware/club';
 
 const router = express.Router();
 
-// Public/Member routes (require authentication)
-router.get('/', authenticateToken, getPlayers);
-router.get('/:id/stats', authenticateToken, getPlayerStats);
-router.get('/:id', authenticateToken, getPlayer);
+// Apply auth and club context to all routes
+router.use(authenticateToken);
+router.use(extractClubContext);
+
+// Member routes
+router.get('/', getPlayers);
+router.get('/:id/stats', getPlayerStats);
+router.get('/:id', getPlayer);
 
 // Admin routes (require admin privileges)
 router.post('/', authenticateToken, requireAdmin, createPlayer);

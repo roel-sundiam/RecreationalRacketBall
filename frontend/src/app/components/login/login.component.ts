@@ -253,12 +253,8 @@ export class LoginComponent implements OnInit {
 
 
   ngOnInit(): void {
-    console.log('LoginComponent ngOnInit called');
-    console.log('Auth service authenticated:', this.authService.isAuthenticated());
-    
     // Redirect if already authenticated
     if (this.authService.isAuthenticated()) {
-      console.log('Already authenticated, redirecting to calendar');
       this.router.navigate(['/calendar']);
     }
     
@@ -269,11 +265,6 @@ export class LoginComponent implements OnInit {
       event.preventDefault();
       event.stopPropagation();
     }
-    
-    console.log('onSubmit called');
-    console.log('Form valid:', this.loginForm.valid);
-    console.log('Form value:', this.loginForm.value);
-    console.log('Loading:', this.loading);
     
     // Clear any previous errors
     this.loginError = '';
@@ -289,11 +280,9 @@ export class LoginComponent implements OnInit {
     
     if (!this.loading) {
       this.loading = true;
-      console.log('Making login request...');
       
       this.authService.login(this.loginForm.value).subscribe({
         next: (response: any) => {
-          console.log('Login successful, response:', response);
           this.loading = false;
 
           // Track successful login
@@ -306,32 +295,23 @@ export class LoginComponent implements OnInit {
           const user = response.data?.user || response.user;
           const isSuperAdmin = user?.role === 'superadmin' || user?.platformRole === 'platform_admin';
 
-          console.log('Login response - clubs:', clubs);
-          console.log('Login response - hasApprovedClubs:', hasApprovedClubs);
-          console.log('Login response - isSuperAdmin:', isSuperAdmin);
-
           // Check for intended route
           const intendedRoute = this.authService.getIntendedRoute();
           if (intendedRoute) {
-            console.log('Redirecting to intended route:', intendedRoute);
             this.authService.clearIntendedRoute();
             this.router.navigate([intendedRoute]);
           } else if (isSuperAdmin && !hasApprovedClubs) {
             // Superadmin with no clubs - redirect to platform admin page
-            console.log('Superadmin detected, redirecting to pending clubs...');
             this.router.navigate(['/admin/pending-clubs']);
           } else if (!hasApprovedClubs) {
             // Regular user with no clubs - redirect to browse clubs
-            console.log('No approved clubs found, redirecting to browse clubs...');
             this.router.navigate(['/browse-clubs']);
           } else {
             // User has clubs - navigate to calendar
-            console.log('User has approved clubs, navigating to calendar...');
             this.router.navigate(['/calendar']);
           }
         },
         error: (error: any) => {
-          console.log('Login error:', error);
           this.loading = false;
           
           // Set custom error message for modern error display (no more toast)
@@ -348,12 +328,7 @@ export class LoginComponent implements OnInit {
         }
       });
     } else {
-      console.log('Form validation failed or already loading');
-      if (!this.loginForm.valid) {
-        console.log('Form errors:', this.loginForm.errors);
-        console.log('Username errors:', this.loginForm.get('username')?.errors);
-        console.log('Password errors:', this.loginForm.get('password')?.errors);
-      }
+      // No-op: already loading
     }
   }
 }

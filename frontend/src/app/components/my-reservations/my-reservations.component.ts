@@ -111,7 +111,7 @@ interface AvatarInfo {
                 <p>Loading all reservations...</p>
               </div>
 
-              <div *ngIf="!loading && allReservations.length === 0" class="no-reservations">
+              <div *ngIf="!loading && allReservations !== null && allReservations.length === 0" class="no-reservations">
                 <mat-icon class="large-icon">event_note</mat-icon>
                 <h2>No Reservations Found</h2>
                 <p>No court reservations have been made by any members yet.</p>
@@ -122,7 +122,7 @@ interface AvatarInfo {
               </div>
 
               <!-- Mobile View: New Design -->
-              <div *ngIf="!loading && allReservations.length > 0 && isMobileView" class="reservations-list mobile-schedule">
+              <div *ngIf="!loading && allReservations !== null && allReservations.length > 0 && isMobileView" class="reservations-list mobile-schedule">
                 <div *ngFor="let group of groupedAllReservations" class="date-group">
                   <!-- Sticky Date Header -->
                   <div class="date-header">{{group.date}}</div>
@@ -220,7 +220,7 @@ interface AvatarInfo {
               </div>
 
               <!-- Desktop View: Original Design -->
-              <div *ngIf="!loading && allReservations.length > 0 && !isMobileView" class="reservations-list">
+              <div *ngIf="!loading && allReservations !== null && allReservations.length > 0 && !isMobileView" class="reservations-list">
                 <!-- Original Desktop Design -->
                 <div *ngFor="let reservation of allReservations"
                      class="reservation-card-compact all-reservations"
@@ -824,7 +824,7 @@ interface AvatarInfo {
 export class MyReservationsComponent implements OnInit, OnDestroy {
   upcomingReservations: Reservation[] = [];
   pastReservations: Reservation[] = [];
-  allReservations: Reservation[] = [];
+  allReservations: Reservation[] | null = null;
   adminReservations: Reservation[] = [];
   sortedAdminReservations: Reservation[] = [];
   pendingAdminReservations: Reservation[] = [];
@@ -1150,6 +1150,7 @@ click "Try Again" below to reconnect.
   loadReservations(): void {
     console.log('📡 Starting loadReservations...');
     this.loading = true;
+    this.allReservations = null; // Reset to null while loading
     
     console.log('📡 Making HTTP request to:', `${this.apiUrl}/reservations/my-upcoming`);
     console.log('📡 Auth token available:', !!this.authService.token);

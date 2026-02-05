@@ -60,16 +60,19 @@ export const treasurerGuard = () => {
     return false;
   }
 
-  const user = authService.currentUser;
-  const role = user?.role;
-
   // Platform admins and superadmins can access without club selection
   if (authService.isPlatformAdmin() || authService.isSuperAdmin()) {
     return true;
   }
 
-  // For non-platform admins, check if they have financial access role in their club
-  if (user && (role === 'treasurer' || role === 'admin')) {
+  // For non-platform admins, require a selected club
+  if (!authService.selectedClub) {
+    router.navigate(['/club-selector']);
+    return false;
+  }
+
+  // Check if user has financial access in selected club (admin/treasurer)
+  if (authService.hasFinancialAccess()) {
     return true;
   }
 

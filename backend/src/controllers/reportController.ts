@@ -307,6 +307,15 @@ export const getFinancialAnalysisReport = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { startDate, endDate, groupBy } = req.query;
 
+    console.log('📊 FINANCIAL ANALYSIS REPORT REQUEST:', {
+      clubId: req.clubId,
+      userRole: req.user?.role,
+      userId: req.user?._id,
+      startDate,
+      endDate,
+      groupBy,
+    });
+
     const start = startDate
       ? new Date(startDate as string)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

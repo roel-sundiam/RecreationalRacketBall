@@ -154,7 +154,7 @@ interface ExpenseResponse {
                 <p>Loading expenses...</p>
               </div>
 
-              <!-- Expense Table -->
+              <!-- Expense Table (Desktop) -->
               <div *ngIf="!loading" class="table-container">
                 <table mat-table [dataSource]="expenses" class="expense-table" matSort>
                   <!-- Date Column -->
@@ -216,6 +216,24 @@ interface ExpenseResponse {
                 </mat-paginator>
               </div>
 
+              <!-- Expense Cards (Mobile) -->
+              <div *ngIf="!loading" class="cards-container">
+                <div class="expense-card" *ngFor="let expense of expenses">
+                  <div class="card-header">
+                    <div class="card-date">{{ formatDate(expense.date) }}</div>
+                    <div class="card-amount">₱{{ expense.amount | number:'1.2-2' }}</div>
+                  </div>
+                  <div class="card-body">
+                    <div class="card-details">{{ expense.details }}</div>
+                    <div class="card-category">{{ expense.category }}</div>
+                  </div>
+                  <div class="card-actions">
+                    <button mat-stroked-button (click)="editExpense(expense)">Edit</button>
+                    <button mat-stroked-button color="warn" (click)="deleteExpense(expense)">Delete</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- No Data State -->
               <div *ngIf="!loading && expenses.length === 0" class="no-data">
                 <mat-icon>receipt_long</mat-icon>
@@ -247,53 +265,69 @@ interface ExpenseResponse {
 
                 <mat-card-content>
                   <form [formGroup]="expenseForm" (ngSubmit)="onSubmitExpense()" class="expense-form">
-                    <!-- Date Field -->
-                    <mat-form-field appearance="outline" class="form-field">
-                      <mat-label>Date</mat-label>
-                      <input matInput [matDatepicker]="datePicker" formControlName="date" required>
-                      <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
-                      <mat-datepicker #datePicker></mat-datepicker>
-                      <mat-error *ngIf="expenseForm.get('date')?.hasError('required')">
-                        Date is required
-                      </mat-error>
-                    </mat-form-field>
+                    <div class="form-grid">
+                      <label class="form-field">
+                        <span class="field-label">Date</span>
+                        <input
+                          class="field-input"
+                          type="date"
+                          formControlName="date"
+                          required
+                        />
+                        <span class="field-error" *ngIf="expenseForm.get('date')?.hasError('required')">
+                          Date is required
+                        </span>
+                      </label>
 
-                    <!-- Amount Field -->
-                    <mat-form-field appearance="outline" class="form-field">
-                      <mat-label>Amount (₱)</mat-label>
-                      <input matInput type="number" formControlName="amount" placeholder="0.00" min="0.01" step="0.01" required>
-                      <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
-                        Amount is required
-                      </mat-error>
-                      <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
-                        Amount must be greater than 0
-                      </mat-error>
-                    </mat-form-field>
+                      <label class="form-field">
+                        <span class="field-label">Amount (₱)</span>
+                        <input
+                          class="field-input"
+                          type="number"
+                          formControlName="amount"
+                          placeholder="0.00"
+                          min="0.01"
+                          step="0.01"
+                          required
+                        />
+                        <span class="field-error" *ngIf="expenseForm.get('amount')?.hasError('required')">
+                          Amount is required
+                        </span>
+                        <span class="field-error" *ngIf="expenseForm.get('amount')?.hasError('min')">
+                          Amount must be greater than 0
+                        </span>
+                      </label>
 
-                    <!-- Category Field -->
-                    <mat-form-field appearance="outline" class="form-field">
-                      <mat-label>Category</mat-label>
-                      <mat-select formControlName="category" required>
-                        <mat-option *ngFor="let category of expenseCategories" [value]="category">
-                          {{category}}
-                        </mat-option>
-                      </mat-select>
-                      <mat-error *ngIf="expenseForm.get('category')?.hasError('required')">
-                        Category is required
-                      </mat-error>
-                    </mat-form-field>
+                      <label class="form-field">
+                        <span class="field-label">Category</span>
+                        <select class="field-input" formControlName="category" required>
+                          <option value="" disabled>Select category</option>
+                          <option *ngFor="let category of expenseCategories" [value]="category">
+                            {{ category }}
+                          </option>
+                        </select>
+                        <span class="field-error" *ngIf="expenseForm.get('category')?.hasError('required')">
+                          Category is required
+                        </span>
+                      </label>
 
-                    <!-- Details Field -->
-                    <mat-form-field appearance="outline" class="form-field full-width">
-                      <mat-label>Details</mat-label>
-                      <textarea matInput formControlName="details" rows="3" placeholder="Expense description" required></textarea>
-                      <mat-error *ngIf="expenseForm.get('details')?.hasError('required')">
-                        Details are required
-                      </mat-error>
-                      <mat-error *ngIf="expenseForm.get('details')?.hasError('minlength')">
-                        Details must be at least 3 characters
-                      </mat-error>
-                    </mat-form-field>
+                      <label class="form-field full-width">
+                        <span class="field-label">Details</span>
+                        <textarea
+                          class="field-input"
+                          formControlName="details"
+                          rows="3"
+                          placeholder="Expense description"
+                          required
+                        ></textarea>
+                        <span class="field-error" *ngIf="expenseForm.get('details')?.hasError('required')">
+                          Details are required
+                        </span>
+                        <span class="field-error" *ngIf="expenseForm.get('details')?.hasError('minlength')">
+                          Details must be at least 3 characters
+                        </span>
+                      </label>
+                    </div>
                   </form>
                 </mat-card-content>
 
@@ -349,7 +383,7 @@ export class ExpenseReportComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.expenseForm = this.fb.group({
-      date: [new Date(), [Validators.required]],
+      date: [this.formatDateInput(new Date()), [Validators.required]],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       details: ['', [Validators.required, Validators.minLength(3)]],
       category: ['', [Validators.required]]
@@ -423,7 +457,7 @@ export class ExpenseReportComponent implements OnInit {
   editExpense(expense: Expense) {
     this.editingExpense = expense;
     this.expenseForm.patchValue({
-      date: new Date(expense.date),
+      date: this.formatDateInput(new Date(expense.date)),
       amount: expense.amount,
       details: expense.details,
       category: expense.category
@@ -495,12 +529,19 @@ export class ExpenseReportComponent implements OnInit {
     this.editingExpense = null;
     this.expenseForm.reset();
     this.expenseForm.patchValue({
-      date: new Date(),
+      date: this.formatDateInput(new Date()),
       amount: '',
       details: '',
       category: ''
     });
     this.selectedTabIndex = 0; // Return to list tab
+  }
+
+  private formatDateInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   formatDate(date: Date | string): string {

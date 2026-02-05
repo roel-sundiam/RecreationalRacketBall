@@ -224,38 +224,116 @@
   }
 
   .form-container {
-    max-width: 600px;
+    max-width: 720px;
     margin: 0 auto;
 
     h3 {
       margin: 0 0 24px 0;
       font-size: 20px;
-      font-weight: 500;
-      color: #333;
+      font-weight: 600;
+      color: #1f2937;
     }
 
-    form {
+    .native-form {
       display: flex;
       flex-direction: column;
       gap: 16px;
 
-      .full-width {
-        width: 100%;
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+
+        @media (min-width: 768px) {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        &.full-width {
+          grid-column: 1 / -1;
+        }
+      }
+
+      .field-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #2b2f33;
+      }
+
+      .field-input {
+        border: 1px solid #d6dbe1;
+        border-radius: 10px;
+        padding: 0.75rem 0.9rem;
+        font-size: 0.95rem;
+        background: #fff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #1976d2;
+          box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+        }
+      }
+
+      .color-input {
+        height: 42px;
+        padding: 0.25rem;
+      }
+
+      .field-error {
+        color: #d32f2f;
+        font-size: 0.75rem;
       }
 
       .form-actions {
         display: flex;
         gap: 12px;
-        margin-top: 16px;
+        margin-top: 8px;
+        flex-wrap: wrap;
 
         button {
-          min-width: 140px;
+          min-width: 160px;
         }
       }
 
       .form-spinner {
         margin: 20px auto;
       }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .header h2 {
+      font-size: 22px;
+    }
+
+    .summary-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .filter-buttons {
+      flex-direction: column;
+      align-items: stretch;
+
+      button {
+        width: 100%;
+      }
+    }
+
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-content {
+      padding: 16px;
     }
   }
 }

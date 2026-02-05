@@ -192,76 +192,80 @@
           <div class="form-container">
             <h3>{{ isEditMode ? 'Edit Category' : 'Add New Category' }}</h3>
 
-            <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
-              <!-- Name Field -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Category Name *</mat-label>
-                <input matInput
-                       formControlName="name"
-                       placeholder="Enter category name"
-                       required>
-                <mat-error *ngIf="categoryForm.get('name')?.hasError('required')">
-                  Name is required
-                </mat-error>
-                <mat-error *ngIf="categoryForm.get('name')?.hasError('minlength')">
-                  Name must be at least 3 characters
-                </mat-error>
-                <mat-error *ngIf="categoryForm.get('name')?.hasError('maxlength')">
-                  Name must not exceed 100 characters
-                </mat-error>
-              </mat-form-field>
+            <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="native-form">
+              <div class="form-grid">
+                <label class="form-field">
+                  <span class="field-label">Category Name *</span>
+                  <input
+                    class="field-input"
+                    formControlName="name"
+                    placeholder="Enter category name"
+                    required
+                  >
+                  <span class="field-error" *ngIf="categoryForm.get('name')?.hasError('required')">
+                    Name is required
+                  </span>
+                  <span class="field-error" *ngIf="categoryForm.get('name')?.hasError('minlength')">
+                    Name must be at least 3 characters
+                  </span>
+                  <span class="field-error" *ngIf="categoryForm.get('name')?.hasError('maxlength')">
+                    Name must not exceed 100 characters
+                  </span>
+                </label>
 
-              <!-- Description Field -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Description</mat-label>
-                <textarea matInput
-                          formControlName="description"
-                          placeholder="Enter category description"
-                          rows="3"></textarea>
-                <mat-error *ngIf="categoryForm.get('description')?.hasError('maxlength')">
-                  Description must not exceed 500 characters
-                </mat-error>
-              </mat-form-field>
+                <label class="form-field">
+                  <span class="field-label">Color</span>
+                  <input
+                    class="field-input color-input"
+                    formControlName="color"
+                    type="color"
+                  >
+                  <span class="field-error" *ngIf="categoryForm.get('color')?.hasError('pattern')">
+                    Color must be in hex format (#RRGGBB)
+                  </span>
+                </label>
 
-              <!-- Color Field -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Color (Hex Format)</mat-label>
-                <input matInput
-                       formControlName="color"
-                       placeholder="#FF5733"
-                       type="color">
-                <mat-hint>Format: #RRGGBB</mat-hint>
-                <mat-error *ngIf="categoryForm.get('color')?.hasError('pattern')">
-                  Color must be in hex format (#RRGGBB)
-                </mat-error>
-              </mat-form-field>
+                <label class="form-field full-width">
+                  <span class="field-label">Description</span>
+                  <textarea
+                    class="field-input"
+                    formControlName="description"
+                    placeholder="Enter category description"
+                    rows="3"
+                  ></textarea>
+                  <span class="field-error" *ngIf="categoryForm.get('description')?.hasError('maxlength')">
+                    Description must not exceed 500 characters
+                  </span>
+                </label>
 
-              <!-- Icon Field -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Icon</mat-label>
-                <mat-select formControlName="icon" placeholder="Select icon">
-                  <mat-option [value]="''">None</mat-option>
-                  <mat-option *ngFor="let icon of materialIcons" [value]="icon">
-                    <mat-icon>{{ icon }}</mat-icon>
-                    {{ icon }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
+                <label class="form-field">
+                  <span class="field-label">Icon</span>
+                  <select class="field-input" formControlName="icon">
+                    <option value="">None</option>
+                    <option *ngFor="let icon of materialIcons" [value]="icon">
+                      {{ icon }}
+                    </option>
+                  </select>
+                </label>
+              </div>
 
-              <!-- Action Buttons -->
               <div class="form-actions">
-                <button mat-raised-button
-                        color="primary"
-                        type="submit"
-                        [disabled]="categoryForm.invalid || isSaving">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="submit"
+                  [disabled]="categoryForm.invalid || isSaving"
+                >
                   <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
                   {{ isEditMode ? 'Update Category' : 'Create Category' }}
                 </button>
 
-                <button mat-stroked-button
-                        type="button"
-                        (click)="cancelEdit()"
-                        [disabled]="isSaving">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="cancelEdit()"
+                  [disabled]="isSaving"
+                >
                   Cancel
                 </button>
               </div>

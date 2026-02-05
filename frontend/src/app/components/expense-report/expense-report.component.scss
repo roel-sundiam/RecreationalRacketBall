@@ -152,9 +152,70 @@
 
 .table-container {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.cards-container {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.expense-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid #eef1f5;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .card-date {
+    font-size: 0.9rem;
+    color: #64748b;
+  }
+
+  .card-amount {
+    color: #d32f2f;
+    font-size: 1rem;
+  }
+
+  .card-body {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .card-details {
+    font-size: 0.95rem;
+    color: #111827;
+  }
+
+  .card-category {
+    align-self: flex-start;
+    background: #eef5ff;
+    color: #1d4ed8;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .card-actions {
+    margin-top: 0.8rem;
+    display: flex;
+    gap: 0.5rem;
+  }
 }
 
 .expense-table {
@@ -321,27 +382,50 @@
 }
 
 .expense-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  
-  .form-field {
-    width: 100%;
-    
-    &.full-width {
-      width: 100%;
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    @media (min-width: 768px) {
+      grid-template-columns: 1fr 1fr;
     }
   }
-  
-  // Two column layout for desktop
-  @media (min-width: 768px) {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    
-    .full-width {
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    &.full-width {
       grid-column: 1 / -1;
     }
+  }
+
+  .field-label {
+    font-weight: 600;
+    color: #2b2f33;
+    font-size: 0.9rem;
+  }
+
+  .field-input {
+    border: 1px solid #d6dbe1;
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+    }
+  }
+
+  .field-error {
+    color: #d32f2f;
+    font-size: 0.75rem;
   }
 }
 
@@ -397,67 +481,12 @@
     }
   }
   
-  // Add horizontal scroll for expense table on mobile
   .table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: #ccc transparent;
-
-    &::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #ccc;
-      border-radius: 3px;
-
-      &:hover {
-        background: #999;
-      }
-    }
+    display: none;
   }
-  
-  .expense-table {
-    min-width: 800px; // Ensure table doesn't collapse on mobile
-    
-    // Adjust column widths for mobile scroll
-    .mat-column-date {
-      width: 100px;
-    }
-    
-    .mat-column-details {
-      min-width: 250px;
-    }
-    
-    .mat-column-category {
-      width: 150px;
-    }
-    
-    .amount-column {
-      width: 120px;
-    }
-    
-    .actions-column {
-      width: 80px;
-    }
-    
-    // Remove the display: none so all columns remain visible with scroll
-    .details-column, .category-column {
-      display: table-cell !important;
-    }
-  }
-  
-  .displayedColumns {
-    // Keep all columns visible on mobile with horizontal scroll
-    .details-column, .category-column {
-      display: block;
-    }
+
+  .cards-container {
+    display: flex;
   }
 }
 

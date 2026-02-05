@@ -142,128 +142,100 @@ interface CourtUsageData {
               Financial Statement
             </ng-template>
 
-            <!-- Nested tabs for Current and Archive -->
-            <mat-tab-group class="nested-tabs">
-              <!-- Current Financial Statement -->
-              <mat-tab label="Current">
-                <div class="statement-content">
-                  <div class="statement-body">
-                    <!-- Beginning Balance -->
+            <div class="statement-content">
+              <div class="statement-body">
+                <!-- Beginning Balance -->
+                <div
+                  class="statement-section beginning-balance"
+                  *ngIf="financialData.beginningBalance"
+                >
+                  <div class="balance-row">
+                    <div class="balance-title">
+                      BEGINNING BALANCE: {{ financialData.beginningBalance?.date }}
+                    </div>
+                    <div class="balance-amount">
+                      {{ formatCurrency(financialData.beginningBalance?.amount || 0) }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Receipts/Collections -->
+                <div class="statement-section receipts-section">
+                  <div class="section-header">
+                    <div class="section-title">RECEIPTS/COLLECTIONS</div>
+                  </div>
+                  <div class="section-items">
                     <div
-                      class="statement-section beginning-balance"
-                      *ngIf="financialData.beginningBalance"
+                      class="line-item"
+                      *ngFor="let item of getReceiptsWithoutTournament(); let last = last"
+                      [class.highlighted]="item.highlighted"
                     >
-                      <div class="balance-row">
-                        <div class="balance-title">
-                          BEGINNING BALANCE: {{ financialData.beginningBalance?.date }}
-                        </div>
-                        <div class="balance-amount">
-                          {{ formatCurrency(financialData.beginningBalance?.amount || 0) }}
-                        </div>
+                      <div class="item-description">{{ item.description }}</div>
+                      <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
+                      <div class="total-amount" *ngIf="last">
+                        {{ formatCurrency(financialData.totalReceipts) }}
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    <!-- Receipts/Collections -->
-                    <div class="statement-section receipts-section">
-                      <div class="section-header">
-                        <div class="section-title">RECEIPTS/COLLECTIONS</div>
-                      </div>
-                      <div class="section-items">
-                        <div
-                          class="line-item"
-                          *ngFor="let item of getReceiptsWithoutTournament(); let last = last"
-                          [class.highlighted]="item.highlighted"
-                        >
-                          <div class="item-description">{{ item.description }}</div>
-                          <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
-                          <div class="total-amount" *ngIf="last">
-                            {{ formatCurrency(financialData.totalReceipts) }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Disbursements/Expenses -->
-                    <div class="statement-section disbursements-section">
-                      <div class="section-header">
-                        <div class="section-title">DISBURSEMENTS/EXPENSES</div>
-                      </div>
-                      <div class="section-items">
-                        <div
-                          class="line-item"
-                          *ngFor="let item of financialData.disbursementsExpenses; let last = last"
-                        >
-                          <div class="item-description">{{ item.description }}</div>
-                          <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
-                          <div class="disbursement-totals" *ngIf="last">
-                            <div class="total-disbursements">
-                              ({{ formatCurrency(financialData.totalDisbursements) }})
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Liabilities Section -->
+                <!-- Disbursements/Expenses -->
+                <div class="statement-section disbursements-section">
+                  <div class="section-header">
+                    <div class="section-title">DISBURSEMENTS/EXPENSES</div>
+                  </div>
+                  <div class="section-items">
                     <div
-                      class="statement-section liabilities-section"
-                      *ngIf="
-                        financialData.liabilities?.appServiceFee &&
-                        financialData.liabilities.appServiceFee.remainingLiability > 0
-                      "
+                      class="line-item"
+                      *ngFor="let item of financialData.disbursementsExpenses; let last = last"
                     >
-                      <div class="section-header">
-                        <div class="section-title">LIABILITIES</div>
-                      </div>
-                      <div class="section-items">
-                        <div class="line-item liability-item">
-                          <div class="item-description">Accrued App Service Fee</div>
-                          <div class="item-amount">
-                            {{
-                              formatCurrency(
-                                financialData.liabilities.appServiceFee.remainingLiability
-                              )
-                            }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Fund Balance -->
-                    <div class="statement-section fund-balance">
-                      <div class="balance-row final-balance">
-                        <div class="balance-title">FUND BALANCE</div>
-                        <div class="balance-amount">
-                          {{ formatCurrency(financialData.fundBalance) }}
+                      <div class="item-description">{{ item.description }}</div>
+                      <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
+                      <div class="disbursement-totals" *ngIf="last">
+                        <div class="total-disbursements">
+                          ({{ formatCurrency(financialData.totalDisbursements) }})
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </mat-tab>
 
-              <!-- 2025 Archive Tab -->
-              <mat-tab *ngIf="show2025Archive">
-                <ng-template mat-tab-label>
-                  2025 Archive
-                  <span class="archive-badge">Read-Only</span>
-                </ng-template>
-
-                <div class="archive-container">
-                  <!-- Static HTML content -->
-                  <div class="archive-content" [innerHTML]="archive2025HTML"></div>
-
-                  <!-- Fallback message if no content -->
-                  <div
-                    class="no-content-message"
-                    *ngIf="!archiveDebugInfo.loaded && !archiveDebugInfo.error"
-                  >
-                    <mat-icon>hourglass_empty</mat-icon>
-                    <p>Loading archive...</p>
+                <!-- Liabilities Section -->
+                <div
+                  class="statement-section liabilities-section"
+                  *ngIf="
+                    financialData.liabilities?.appServiceFee &&
+                    financialData.liabilities.appServiceFee.remainingLiability > 0
+                  "
+                >
+                  <div class="section-header">
+                    <div class="section-title">LIABILITIES</div>
+                  </div>
+                  <div class="section-items">
+                    <div class="line-item liability-item">
+                      <div class="item-description">Accrued App Service Fee</div>
+                      <div class="item-amount">
+                        {{
+                          formatCurrency(
+                            financialData.liabilities.appServiceFee.remainingLiability
+                          )
+                        }}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </mat-tab>
-            </mat-tab-group>
+
+                <!-- Fund Balance -->
+                <div class="statement-section fund-balance">
+                  <div class="balance-row final-balance">
+                    <div class="balance-title">FUND BALANCE</div>
+                    <div class="balance-amount">
+                      {{ formatCurrency(financialData.fundBalance) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </mat-tab>
 
           <!-- Expense Report Tab -->
@@ -327,16 +299,6 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   private socket: Socket | null = null;
   public socketConnected = false;
 
-  // 2025 Archive properties
-  archive2025HTML: string = ''; // Store as plain string for innerHTML binding
-  show2025Archive: boolean = true;
-  archiveDebugInfo: {
-    loaded: boolean;
-    error: string | null;
-  } = {
-    loaded: false,
-    error: null,
-  };
 
   constructor(
     private http: HttpClient,
@@ -345,22 +307,6 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Load 2025 archive HTML
-    this.http.get('/2025-financial-archive.html', { responseType: 'text' }).subscribe({
-      next: (html) => {
-        this.archive2025HTML = html;
-        this.archiveDebugInfo.loaded = true;
-        this.archiveDebugInfo.error = null;
-        console.log('✅ 2025 Archive HTML loaded successfully');
-      },
-      error: (err) => {
-        console.error('❌ Failed to load 2025 archive:', err);
-        this.archiveDebugInfo.error = err.message || 'Failed to load archive';
-        this.archiveDebugInfo.loaded = false;
-        this.show2025Archive = false;
-      },
-    });
-
     this.loadFinancialStatement();
     this.initializeWebSocket();
     this.startAutoRefresh();

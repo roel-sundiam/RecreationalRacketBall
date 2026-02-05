@@ -89,9 +89,6 @@ backend/revert-*.js
 backend/test-*.js
 backend/verify-*.js
 
-# Frontend temporary files
-frontend/public/_redirects
-
 # Backend data and exports
 backend/backups/
 backend/exports/

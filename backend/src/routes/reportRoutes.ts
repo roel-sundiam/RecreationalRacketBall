@@ -257,7 +257,7 @@ specialRouter.post('/fix-financial-report', async (req: any, res: any) => {
           
           // Recalculate net income and fund balance
           financialData.netIncome = financialData.totalReceipts - financialData.totalDisbursements;
-          financialData.fundBalance = financialData.beginningBalance.amount + financialData.netIncome;
+          financialData.fundBalance = (financialData.beginningBalance?.amount || 0) + financialData.netIncome;
           financialData.lastUpdated = new Date().toISOString();
           
           // Save updated report

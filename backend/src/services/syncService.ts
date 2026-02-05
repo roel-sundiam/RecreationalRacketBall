@@ -180,7 +180,7 @@ export class SyncService {
       
       // Recalculate net income and fund balance
       data.netIncome = data.totalReceipts - data.totalDisbursements;
-      data.fundBalance = data.beginningBalance.amount + data.netIncome;
+      data.fundBalance = (data.beginningBalance?.amount || 0) + data.netIncome;
       
       // Write formatted JSON
       fs.writeFileSync(this.JSON_FILE_PATH, JSON.stringify(data, null, 2), 'utf8');

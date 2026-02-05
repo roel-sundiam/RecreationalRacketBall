@@ -1191,11 +1191,13 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
       console.warn('⚠️ Could not calculate credit balances for financial report:', error);
     }
 
-    // Calculate membership fees from database and update Annual Membership Fees line items
+    // Calculate membership fees from database (per club) and update Annual Membership Fees line items
     try {
-      // Get membership payments PAID in the current year (cash-basis accounting)
+      // Get recorded membership payments for this club in the statement year (cash-basis accounting)
       const membershipPayments = await Payment.find({
+        clubId: req.clubId,
         paymentType: 'membership_fee',
+        status: 'record',
         paymentDate: { $gte: yearStart, $lte: yearEnd }
       });
 
@@ -1211,39 +1213,34 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
 
       console.log(`💳 Membership fees by year from database:`, membershipByYear);
 
-      // Update or add membership fees ONLY for the current financial statement year
-      for (const [year, amount] of Object.entries(membershipByYear)) {
-        // Only include membership fees for the current statement year
-        if (parseInt(year) !== parseInt(beginningYear)) {
-          console.log(`⏭️  Skipping ${year} membership fees (not for year ${beginningYear})`);
-          continue;
-        }
+      // Force per-club membership fees for the statement year
+      const membershipDescription = `Annual Membership Fees ${beginningYear}`;
+      const membershipAmount = membershipByYear[beginningYear] || 0;
 
-        const membershipDescription = `Annual Membership Fees ${year}`;
-        const membershipIndex = financialData.receiptsCollections.findIndex((item: any) =>
-          item.description === membershipDescription
-        );
+      const membershipIndex = financialData.receiptsCollections.findIndex((item: any) =>
+        item.description === membershipDescription
+      );
 
-        if (membershipIndex !== -1) {
-          // Update existing line item with database total
-          financialData.receiptsCollections[membershipIndex].amount = amount as number;
-          console.log(`🔄 Updated ${membershipDescription}: ₱${amount} (from database)`);
-        } else {
-          // Add new line item for this year
-          financialData.receiptsCollections.push({
-            description: membershipDescription,
-            amount: amount as number
-          });
-          console.log(`➕ Added ${membershipDescription}: ₱${amount} (from database)`);
-        }
+      if (membershipIndex !== -1) {
+        financialData.receiptsCollections[membershipIndex].amount = membershipAmount as number;
+        console.log(`🔄 Updated ${membershipDescription}: ₱${membershipAmount} (from database)`);
+      } else {
+        financialData.receiptsCollections.push({
+          description: membershipDescription,
+          amount: membershipAmount as number
+        });
+        console.log(`➕ Added ${membershipDescription}: ₱${membershipAmount} (from database)`);
       }
 
-      // Keep all Annual Membership Fees line items from JSON file
-      // Only update them if there are database payments, don't remove them
-      console.log(`ℹ️  Preserving all Annual Membership Fees line items from financial report JSON`);
+      // Zero out other Annual Membership Fees lines so data is per-club
+      financialData.receiptsCollections.forEach((item: any) => {
+        if (item.description?.startsWith('Annual Membership Fees ') && item.description !== membershipDescription) {
+          item.amount = 0;
+        }
+      });
 
       if (Object.keys(membershipByYear).length === 0) {
-        console.log(`ℹ️ No membership payments found in database`);
+        console.log(`ℹ️ No recorded membership payments found in database for this club`);
       }
 
       // Recalculate totals with updated membership fees

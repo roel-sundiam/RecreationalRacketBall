@@ -15,7 +15,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { MemberService } from '../../services/member.service';
 import {
@@ -1163,7 +1163,10 @@ export class AdminMemberManagementComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
-        const headers = { Authorization: `Bearer ${this.authService.token}` };
+        const headers = new HttpHeaders({
+          'Authorization': `Bearer ${this.authService.token}`,
+          'X-Club-Id': this.authService.selectedClub?.clubId || ''
+        });
 
         this.http
           .put<any>(`${this.apiUrl}/members/${member._id}/role`, { role: newRole }, { headers })

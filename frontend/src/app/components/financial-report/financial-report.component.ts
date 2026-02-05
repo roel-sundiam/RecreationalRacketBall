@@ -38,7 +38,7 @@ interface FinancialStatementData {
   location: string;
   statementTitle: string;
   period: string;
-  beginningBalance: {
+  beginningBalance?: {
     date: string;
     amount: number;
   };
@@ -96,14 +96,14 @@ interface CourtUsageData {
     MatTabsModule,
     MatTooltipModule,
     ExpenseReportComponent,
-    ExpenseCategoryManagementComponent
+    ExpenseCategoryManagementComponent,
   ],
   template: `
     <div class="financial-statement-container">
       <!-- Header with Club Logo and Title -->
       <div class="statement-header" *ngIf="!loading && financialData">
         <div class="club-logo">
-          <img src="/images/rt2-logo.png" alt="Rich Town 2 Tennis Club" class="club-logo-img">
+          <img src="/images/rt2-logo.png" alt="Rich Town 2 Tennis Club" class="club-logo-img" />
         </div>
         <div class="header-content">
           <h1 class="club-name">{{ financialData.clubName }}</h1>
@@ -147,67 +147,98 @@ interface CourtUsageData {
               <!-- Current Financial Statement -->
               <mat-tab label="Current">
                 <div class="statement-content">
-        <div class="statement-body">
-          <!-- Beginning Balance -->
-          <div class="statement-section beginning-balance" *ngIf="financialData.beginningBalance">
-            <div class="balance-row">
-              <div class="balance-title">BEGINNING BALANCE: {{ financialData.beginningBalance.date }}</div>
-              <div class="balance-amount">{{ formatCurrency(financialData.beginningBalance.amount) }}</div>
-            </div>
-          </div>
+                  <div class="statement-body">
+                    <!-- Beginning Balance -->
+                    <div
+                      class="statement-section beginning-balance"
+                      *ngIf="financialData.beginningBalance"
+                    >
+                      <div class="balance-row">
+                        <div class="balance-title">
+                          BEGINNING BALANCE: {{ financialData.beginningBalance?.date }}
+                        </div>
+                        <div class="balance-amount">
+                          {{ formatCurrency(financialData.beginningBalance?.amount || 0) }}
+                        </div>
+                      </div>
+                    </div>
 
-          <!-- Receipts/Collections -->
-          <div class="statement-section receipts-section">
-            <div class="section-header">
-              <div class="section-title">RECEIPTS/COLLECTIONS</div>
-            </div>
-            <div class="section-items">
-              <div class="line-item" *ngFor="let item of getReceiptsWithoutTournament(); let last = last" 
-                   [class.highlighted]="item.highlighted">
-                <div class="item-description">{{ item.description }}</div>
-                <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
-                <div class="total-amount" *ngIf="last">{{ formatCurrency(financialData.totalReceipts) }}</div>
-              </div>
-            </div>
-          </div>
+                    <!-- Receipts/Collections -->
+                    <div class="statement-section receipts-section">
+                      <div class="section-header">
+                        <div class="section-title">RECEIPTS/COLLECTIONS</div>
+                      </div>
+                      <div class="section-items">
+                        <div
+                          class="line-item"
+                          *ngFor="let item of getReceiptsWithoutTournament(); let last = last"
+                          [class.highlighted]="item.highlighted"
+                        >
+                          <div class="item-description">{{ item.description }}</div>
+                          <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
+                          <div class="total-amount" *ngIf="last">
+                            {{ formatCurrency(financialData.totalReceipts) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-          <!-- Disbursements/Expenses -->
-          <div class="statement-section disbursements-section">
-            <div class="section-header">
-              <div class="section-title">DISBURSEMENTS/EXPENSES</div>
-            </div>
-            <div class="section-items">
-              <div class="line-item" *ngFor="let item of financialData.disbursementsExpenses; let last = last">
-                <div class="item-description">{{ item.description }}</div>
-                <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
-                <div class="disbursement-totals" *ngIf="last">
-                  <div class="total-disbursements">({{ formatCurrency(financialData.totalDisbursements) }})</div>
-                </div>
-              </div>
-            </div>
-          </div>
+                    <!-- Disbursements/Expenses -->
+                    <div class="statement-section disbursements-section">
+                      <div class="section-header">
+                        <div class="section-title">DISBURSEMENTS/EXPENSES</div>
+                      </div>
+                      <div class="section-items">
+                        <div
+                          class="line-item"
+                          *ngFor="let item of financialData.disbursementsExpenses; let last = last"
+                        >
+                          <div class="item-description">{{ item.description }}</div>
+                          <div class="item-amount">{{ formatCurrency(item.amount) }}</div>
+                          <div class="disbursement-totals" *ngIf="last">
+                            <div class="total-disbursements">
+                              ({{ formatCurrency(financialData.totalDisbursements) }})
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-          <!-- Liabilities Section -->
-          <div class="statement-section liabilities-section" *ngIf="financialData.liabilities?.appServiceFee && financialData.liabilities.appServiceFee.remainingLiability > 0">
-            <div class="section-header">
-              <div class="section-title">LIABILITIES</div>
-            </div>
-            <div class="section-items">
-              <div class="line-item liability-item">
-                <div class="item-description">Accrued App Service Fee</div>
-                <div class="item-amount">{{ formatCurrency(financialData.liabilities.appServiceFee.remainingLiability) }}</div>
-              </div>
-            </div>
-          </div>
+                    <!-- Liabilities Section -->
+                    <div
+                      class="statement-section liabilities-section"
+                      *ngIf="
+                        financialData.liabilities?.appServiceFee &&
+                        financialData.liabilities.appServiceFee.remainingLiability > 0
+                      "
+                    >
+                      <div class="section-header">
+                        <div class="section-title">LIABILITIES</div>
+                      </div>
+                      <div class="section-items">
+                        <div class="line-item liability-item">
+                          <div class="item-description">Accrued App Service Fee</div>
+                          <div class="item-amount">
+                            {{
+                              formatCurrency(
+                                financialData.liabilities.appServiceFee.remainingLiability
+                              )
+                            }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-          <!-- Fund Balance -->
-          <div class="statement-section fund-balance">
-            <div class="balance-row final-balance">
-              <div class="balance-title">FUND BALANCE</div>
-              <div class="balance-amount">{{ formatCurrency(financialData.fundBalance) }}</div>
-            </div>
-          </div>
-        </div>
+                    <!-- Fund Balance -->
+                    <div class="statement-section fund-balance">
+                      <div class="balance-row final-balance">
+                        <div class="balance-title">FUND BALANCE</div>
+                        <div class="balance-amount">
+                          {{ formatCurrency(financialData.fundBalance) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </mat-tab>
 
@@ -223,7 +254,10 @@ interface CourtUsageData {
                   <div class="archive-content" [innerHTML]="archive2025HTML"></div>
 
                   <!-- Fallback message if no content -->
-                  <div class="no-content-message" *ngIf="!archiveDebugInfo.loaded && !archiveDebugInfo.error">
+                  <div
+                    class="no-content-message"
+                    *ngIf="!archiveDebugInfo.loaded && !archiveDebugInfo.error"
+                  >
                     <mat-icon>hourglass_empty</mat-icon>
                     <p>Loading archive...</p>
                   </div>
@@ -274,7 +308,7 @@ interface CourtUsageData {
       </div>
     </div>
   `,
-  styleUrls: ['./financial-report.component.scss']
+  styleUrls: ['./financial-report.component.scss'],
 })
 export class FinancialReportComponent implements OnInit, OnDestroy {
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
@@ -301,32 +335,31 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
     error: string | null;
   } = {
     loaded: false,
-    error: null
+    error: null,
   };
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
     // Load 2025 archive HTML
-    this.http.get('/2025-financial-archive.html', { responseType: 'text' })
-      .subscribe({
-        next: (html) => {
-          this.archive2025HTML = html;
-          this.archiveDebugInfo.loaded = true;
-          this.archiveDebugInfo.error = null;
-          console.log('✅ 2025 Archive HTML loaded successfully');
-        },
-        error: (err) => {
-          console.error('❌ Failed to load 2025 archive:', err);
-          this.archiveDebugInfo.error = err.message || 'Failed to load archive';
-          this.archiveDebugInfo.loaded = false;
-          this.show2025Archive = false;
-        }
-      });
+    this.http.get('/2025-financial-archive.html', { responseType: 'text' }).subscribe({
+      next: (html) => {
+        this.archive2025HTML = html;
+        this.archiveDebugInfo.loaded = true;
+        this.archiveDebugInfo.error = null;
+        console.log('✅ 2025 Archive HTML loaded successfully');
+      },
+      error: (err) => {
+        console.error('❌ Failed to load 2025 archive:', err);
+        this.archiveDebugInfo.error = err.message || 'Failed to load archive';
+        this.archiveDebugInfo.loaded = false;
+        this.show2025Archive = false;
+      },
+    });
 
     this.loadFinancialStatement();
     this.initializeWebSocket();
@@ -343,41 +376,45 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
     this.error = null;
 
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${this.authService.token}`
+      Authorization: `Bearer ${this.authService.token}`,
     });
 
     // Load financial statement only (2026 uses database-filtered court receipts)
     // Static court usage is only for 2025 archive
     const financialRequest = this.http.get<FinancialAPIResponse>(
       `${this.apiUrl}/reports/financial-sheet`,
-      { headers }
+      { headers },
     );
 
-    financialRequest.toPromise().then((financialResult) => {
-      if (financialResult?.success) {
-        // Use financial data directly without merging static court usage
-        this.financialData = financialResult.data;
-        this.lastUpdated = financialResult.metadata?.lastModified || financialResult.data.lastUpdated;
+    financialRequest
+      .toPromise()
+      .then((financialResult) => {
+        if (financialResult?.success) {
+          // Use financial data directly without merging static court usage
+          this.financialData = financialResult.data;
+          this.lastUpdated =
+            financialResult.metadata?.lastModified || financialResult.data.lastUpdated;
 
-        console.log('✅ Financial statement loaded for 2026');
-        console.log('💰 Beginning Balance:', this.financialData?.beginningBalance?.amount);
-        console.log('💵 Total Receipts:', this.financialData?.totalReceipts);
-        console.log('💸 Total Disbursements:', this.financialData?.totalDisbursements);
-        console.log('💰 Fund Balance:', this.financialData?.fundBalance);
+          console.log('✅ Financial statement loaded for 2026');
+          console.log('💰 Beginning Balance:', this.financialData?.beginningBalance?.amount);
+          console.log('💵 Total Receipts:', this.financialData?.totalReceipts);
+          console.log('💸 Total Disbursements:', this.financialData?.totalDisbursements);
+          console.log('💰 Fund Balance:', this.financialData?.fundBalance);
 
+          this.loading = false;
+        } else {
+          this.error = 'Failed to load financial statement';
+          this.loading = false;
+        }
+      })
+      .catch((error) => {
+        console.error('Error loading financial data:', error);
+        this.error = error.error?.message || 'Failed to load financial data';
         this.loading = false;
-      } else {
-        this.error = 'Failed to load financial statement';
-        this.loading = false;
-      }
-    }).catch((error) => {
-      console.error('Error loading financial data:', error);
-      this.error = error.error?.message || 'Failed to load financial data';
-      this.loading = false;
-      this.snackBar.open('Error loading financial data', 'Close', {
-        duration: 5000
+        this.snackBar.open('Error loading financial data', 'Close', {
+          duration: 5000,
+        });
       });
-    });
   }
 
   refreshData(): void {
@@ -403,16 +440,18 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   }
 
   private updateCourtReceiptsFromUsageData(
-    financialData: FinancialStatementData, 
-    courtUsageData: CourtUsageData
+    financialData: FinancialStatementData,
+    courtUsageData: CourtUsageData,
   ): FinancialStatementData {
     try {
       // Parse the total revenue from court usage (e.g., "₱70,700.00" -> 70700)
       const courtReceiptsAmount = parseFloat(
-        courtUsageData.summary.totalRevenue.replace('₱', '').replace(',', '')
+        courtUsageData.summary.totalRevenue.replace('₱', '').replace(',', ''),
       );
 
-      console.log(`💰 Updating Tennis Court Usage Receipts: ${courtUsageData.summary.totalRevenue} (${courtReceiptsAmount})`);
+      console.log(
+        `💰 Updating Tennis Court Usage Receipts: ${courtUsageData.summary.totalRevenue} (${courtReceiptsAmount})`,
+      );
 
       // Create a copy of the financial data
       const updatedData = { ...financialData };
@@ -420,7 +459,7 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
 
       // Find and update Tennis Court Usage Receipts
       const courtReceiptsIndex = updatedData.receiptsCollections.findIndex(
-        item => item.description === 'Tennis Court Usage Receipts'
+        (item) => item.description === 'Tennis Court Usage Receipts',
       );
 
       if (courtReceiptsIndex !== -1) {
@@ -428,20 +467,21 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
         updatedData.receiptsCollections[courtReceiptsIndex] = {
           ...updatedData.receiptsCollections[courtReceiptsIndex],
           amount: courtReceiptsAmount,
-          highlighted: true // Highlight to show it's live data
+          highlighted: true, // Highlight to show it's live data
         };
       } else {
         // Add new entry if it doesn't exist
         updatedData.receiptsCollections.push({
           description: 'Tennis Court Usage Receipts',
           amount: courtReceiptsAmount,
-          highlighted: true
+          highlighted: true,
         });
       }
 
       // Recalculate total receipts
       updatedData.totalReceipts = updatedData.receiptsCollections.reduce(
-        (sum, item) => sum + item.amount, 0
+        (sum, item) => sum + item.amount,
+        0,
       );
 
       // Recalculate net income and fund balance
@@ -451,7 +491,9 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
       // Update timestamp
       updatedData.lastUpdated = new Date().toISOString();
 
-      console.log(`💰 Updated totals - Receipts: ₱${updatedData.totalReceipts.toLocaleString()}, Fund Balance: ₱${updatedData.fundBalance.toLocaleString()}`);
+      console.log(
+        `💰 Updated totals - Receipts: ₱${updatedData.totalReceipts.toLocaleString()}, Fund Balance: ₱${updatedData.fundBalance.toLocaleString()}`,
+      );
 
       return updatedData;
     } catch (error) {
@@ -469,32 +511,33 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
           switchMap(() => {
             if (!this.loading) {
               const headers = new HttpHeaders({
-                'Authorization': `Bearer ${this.authService.token}`
+                Authorization: `Bearer ${this.authService.token}`,
               });
 
               // Auto-refresh financial data only (2026 uses database-filtered court receipts)
               const financialRequest = this.http.get<FinancialAPIResponse>(
                 `${this.apiUrl}/reports/financial-sheet`,
-                { headers }
+                { headers },
               );
 
               return financialRequest.toPromise();
             }
             return Promise.resolve(null);
-          })
+          }),
         )
         .subscribe({
           next: (financialResult: any) => {
             if (financialResult?.success) {
               const isDataChanged = this.hasDataChanged(financialResult.data);
               this.financialData = financialResult.data;
-              this.lastUpdated = financialResult.metadata?.lastModified || financialResult.data.lastUpdated;
+              this.lastUpdated =
+                financialResult.metadata?.lastModified || financialResult.data.lastUpdated;
 
               if (isDataChanged) {
                 console.log('🔄 Data refreshed automatically');
                 this.snackBar.open('📊 Data refreshed automatically', 'Close', {
                   duration: 2000,
-                  panelClass: ['info-snack']
+                  panelClass: ['info-snack'],
                 });
               }
             } else {
@@ -503,7 +546,7 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Auto-refresh error:', error);
-          }
+          },
         });
 
       this.startCountdown();
@@ -526,12 +569,11 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
     this.countdownSubscription?.unsubscribe();
   }
 
-
   getTimeAgo(dateString: string): string {
     const now = new Date().getTime();
     const updated = new Date(dateString).getTime();
     const diffSeconds = Math.floor((now - updated) / 1000);
-    
+
     if (diffSeconds < 60) return `${diffSeconds}s ago`;
     if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
     if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
@@ -544,9 +586,8 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   getReceiptsWithoutTournament(): any[] {
     if (!this.financialData?.receiptsCollections) return [];
 
-    return this.financialData.receiptsCollections.filter(item =>
-      !item.description.toLowerCase().includes('tournament entries') &&
-      item.amount > 0 // Hide items with zero amounts
+    return this.financialData.receiptsCollections.filter(
+      (item) => !item.description.toLowerCase().includes('tournament entries') && item.amount > 0, // Hide items with zero amounts
     );
   }
 
@@ -563,8 +604,8 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
         reconnectionDelayMax: 5000,
         reconnectionAttempts: 3,
         auth: {
-          token: this.authService.token
-        }
+          token: this.authService.token,
+        },
       });
 
       // Connection events
@@ -594,23 +635,23 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
         console.log('📊 Subscribed to financial updates:', data);
         this.snackBar.open('🔄 Real-time updates enabled', 'Close', {
           duration: 3000,
-          panelClass: ['success-snack']
+          panelClass: ['success-snack'],
         });
       });
 
       // Financial data update events
       this.socket.on('financial_update', (updateEvent) => {
         console.log('📊 Received real-time financial update:', updateEvent);
-        
+
         if (updateEvent.data) {
           const isDataChanged = this.hasDataChanged(updateEvent.data);
           if (isDataChanged) {
             this.financialData = updateEvent.data;
             this.lastUpdated = updateEvent.timestamp;
-            
+
             this.snackBar.open('💰 Financial data updated in real-time!', 'Close', {
               duration: 5000,
-              panelClass: ['success-snack']
+              panelClass: ['success-snack'],
             });
           }
         }
@@ -619,12 +660,15 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
       // Fallback for general financial data change events
       this.socket.on('financial_data_changed', (data) => {
         console.log('📊 Financial data change notification:', data);
-        this.snackBar.open(`🔄 ${data.message}`, 'Refresh', {
-          duration: 6000,
-          panelClass: ['info-snack']
-        }).onAction().subscribe(() => {
-          this.refreshData();
-        });
+        this.snackBar
+          .open(`🔄 ${data.message}`, 'Refresh', {
+            duration: 6000,
+            panelClass: ['info-snack'],
+          })
+          .onAction()
+          .subscribe(() => {
+            this.refreshData();
+          });
       });
 
       // Handle connection errors
@@ -632,7 +676,6 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
         console.error('🔌 WebSocket connection error:', error);
         this.socketConnected = false;
       });
-
     } catch (error) {
       console.error('🔌 Failed to initialize WebSocket:', error);
     }
@@ -650,5 +693,4 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
       console.log('🔌 WebSocket disconnected');
     }
   }
-
 }

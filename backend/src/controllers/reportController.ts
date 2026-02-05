@@ -1142,7 +1142,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
             (sum: number, item: any) => sum + item.amount, 0
           );
           financialData.netIncome = financialData.totalReceipts - financialData.totalDisbursements;
-          financialData.fundBalance = financialData.beginningBalance.amount + financialData.netIncome;
+          financialData.fundBalance = (financialData.beginningBalance?.amount || 0) + financialData.netIncome;
 
           console.log(`📊 Updated totals: receipts ₱${financialData.totalReceipts}, net income ₱${financialData.netIncome}, fund balance ₱${financialData.fundBalance}`);
         }
@@ -1183,7 +1183,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
           (sum: number, item: any) => sum + item.amount, 0
         );
         financialData.netIncome = financialData.totalReceipts - financialData.totalDisbursements;
-        financialData.fundBalance = financialData.beginningBalance.amount + financialData.netIncome;
+        financialData.fundBalance = (financialData.beginningBalance?.amount || 0) + financialData.netIncome;
 
         console.log(`📊 Updated totals with credit balances: receipts ₱${financialData.totalReceipts}, net income ₱${financialData.netIncome}, fund balance ₱${financialData.fundBalance}`);
       }
@@ -1249,7 +1249,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
         (sum: number, item: any) => sum + item.amount, 0
       );
       financialData.netIncome = financialData.totalReceipts - financialData.totalDisbursements;
-      financialData.fundBalance = financialData.beginningBalance.amount + financialData.netIncome;
+      financialData.fundBalance = (financialData.beginningBalance?.amount || 0) + financialData.netIncome;
 
       console.log(`📊 Updated totals with membership fees: receipts ₱${financialData.totalReceipts}, net income ₱${financialData.netIncome}, fund balance ₱${financialData.fundBalance}`);
 
@@ -1265,7 +1265,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
 
     // Debug: Log financial statement loaded
     console.log('📊 Financial statement loaded for:', financialData.clubName);
-    console.log('💰 Beginning Balance:', `₱${financialData.beginningBalance.amount.toLocaleString()}`);
+    console.log('💰 Beginning Balance:', `₱${(financialData.beginningBalance?.amount || 0).toLocaleString()}`);
     console.log('💵 Fund Balance:', `₱${financialData.fundBalance.toLocaleString()}`);
     console.log('🕒 Last Updated:', financialData.lastUpdated);
 

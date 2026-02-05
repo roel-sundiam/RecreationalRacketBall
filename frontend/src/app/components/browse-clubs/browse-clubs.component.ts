@@ -40,10 +40,10 @@ interface ClubDetails {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatChipsModule
+    MatChipsModule,
   ],
   templateUrl: './browse-clubs.component.html',
-  styleUrls: ['./browse-clubs.component.scss']
+  styleUrls: ['./browse-clubs.component.scss'],
 })
 export class BrowseClubsComponent implements OnInit {
   clubs: ClubDetails[] = [];
@@ -57,7 +57,7 @@ export class BrowseClubsComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     private dialogService: DialogService,
-    private snackbarService: SnackbarService
+    private snackbarService: SnackbarService,
   ) {}
 
   ngOnInit(): void {
@@ -74,7 +74,7 @@ export class BrowseClubsComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load clubs:', error);
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -86,11 +86,12 @@ export class BrowseClubsComponent implements OnInit {
     }
 
     const lowerQuery = query.toLowerCase();
-    this.filteredClubs = this.clubs.filter(club =>
-      club.name.toLowerCase().includes(lowerQuery) ||
-      club.address.city.toLowerCase().includes(lowerQuery) ||
-      club.address.province.toLowerCase().includes(lowerQuery) ||
-      club.address.street.toLowerCase().includes(lowerQuery)
+    this.filteredClubs = this.clubs.filter(
+      (club) =>
+        club.name.toLowerCase().includes(lowerQuery) ||
+        club.address.city.toLowerCase().includes(lowerQuery) ||
+        club.address.province.toLowerCase().includes(lowerQuery) ||
+        club.address.street.toLowerCase().includes(lowerQuery),
     );
   }
 
@@ -100,20 +101,22 @@ export class BrowseClubsComponent implements OnInit {
 
     this.http.post<any>(`${environment.apiUrl}/members/request`, { clubId }).subscribe({
       next: (response) => {
-        this.dialogService.alert({
-          title: 'Success',
-          message: response.message,
-          type: 'info',
-          icon: 'check_circle'
-        }).subscribe(() => {
-          this.router.navigate(['/my-requests']);
-        });
+        this.dialogService
+          .alert({
+            title: 'Success',
+            message: response.message,
+            type: 'info',
+            icon: 'check_circle',
+          })
+          .subscribe(() => {
+            this.router.navigate(['/my-requests']);
+          });
       },
       error: (error) => {
         this.snackbarService.error(error.error?.error || 'Failed to submit request');
         this.requesting = false;
         this.selectedClubId = null;
-      }
+      },
     });
   }
 

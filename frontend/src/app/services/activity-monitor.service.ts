@@ -38,7 +38,7 @@ export interface DebugInfo {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ActivityMonitorService {
   private activitySubject = new Subject<ActivityBroadcast>();
@@ -65,7 +65,7 @@ export class ActivityMonitorService {
     recentActivities: [],
     recentEmissions: [],
     debugLogs: [],
-    queuedActivities: 0
+    queuedActivities: 0,
   });
   public debug$ = this.debugSubject.asObservable();
 
@@ -94,13 +94,13 @@ export class ActivityMonitorService {
     '/admin/financial-report': 'Admin - Financial Report',
     '/admin/polls': 'Admin - Polls Management',
     '/admin/gallery-upload': 'Admin - Gallery Upload',
-    '/admin/manual-court-usage': 'Admin - Manual Court Usage'
+    '/admin/manual-court-usage': 'Admin - Manual Court Usage',
   };
 
   constructor(
     private authService: AuthService,
     private webSocketService: WebSocketService,
-    private router: Router
+    private router: Router,
   ) {}
 
   /**
@@ -115,7 +115,7 @@ export class ActivityMonitorService {
 
     // Track route changes
     this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
+      .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.emitPageNavigation(event.urlAfterRedirects);
       });
@@ -126,12 +126,12 @@ export class ActivityMonitorService {
    * This allows backend to auto-join admins to admin_monitor room
    */
   private authenticateUserWhenConnected(): void {
-    this.webSocketService.isConnected$.subscribe(isConnected => {
+    this.webSocketService.isConnected$.subscribe((isConnected) => {
       this.updateDebug({
         websocketConnected: isConnected,
-        socketId: this.webSocketService.socket?.id
+        socketId: this.webSocketService.socket?.id,
       });
-      
+
       // Reduce logging spam
       if (isConnected) {
         this.addDebugLog(`WebSocket connected (ID: ${this.webSocketService.socket?.id || 'none'})`);
@@ -146,12 +146,12 @@ export class ActivityMonitorService {
               user._id,
               user.username,
               user.fullName,
-              user.role
+              user.role,
             );
 
             this.updateDebug({
               userAuthenticated: true,
-              isAdmin: this.authService.isAdmin()
+              isAdmin: this.authService.isAdmin(),
             });
 
             this.addDebugLog(`User authenticated. IsAdmin: ${this.authService.isAdmin()}`);
@@ -173,13 +173,15 @@ export class ActivityMonitorService {
               this.flushPendingActivities();
             }, 1000);
           } else {
-            this.addDebugLog(`ERROR: User or socket missing. User: ${!!user}, Socket: ${!!this.webSocketService.socket}`);
+            this.addDebugLog(
+              `ERROR: User or socket missing. User: ${!!user}, Socket: ${!!this.webSocketService.socket}`,
+            );
           }
         }, 500);
       } else {
         this.updateDebug({
           userAuthenticated: false,
-          adminSubscribed: false
+          adminSubscribed: false,
         });
         // Suppress disconnect logging to reduce console spam
       }
@@ -268,7 +270,10 @@ export class ActivityMonitorService {
     // Check if user is authenticated on WebSocket
     const debugInfo = this.debugSubject.value;
     if (!debugInfo.userAuthenticated) {
-      console.warn('📊 ActivityMonitor: User not authenticated on WebSocket, queueing activity:', action);
+      console.warn(
+        '📊 ActivityMonitor: User not authenticated on WebSocket, queueing activity:',
+        action,
+      );
       this.queueActivity(action, component, details);
       return;
     }
@@ -280,13 +285,18 @@ export class ActivityMonitorService {
   /**
    * Actually emit the activity to WebSocket (extracted for reuse)
    */
-  private doEmitActivity(action: string, component: string, details: any | undefined, user: any): void {
+  private doEmitActivity(
+    action: string,
+    component: string,
+    details: any | undefined,
+    user: any,
+  ): void {
     const selectedClub = this.authService.selectedClub;
     const clubName = selectedClub?.club?.name || selectedClub?.clubName || null;
-    
+
     console.log('🏢 Activity emission - Selected Club:', selectedClub);
     console.log('🏢 Activity emission - Club Name:', clubName);
-    
+
     this.webSocketService.socket?.emit('user_activity', {
       type: 'user_activity',
       data: {
@@ -299,8 +309,8 @@ export class ActivityMonitorService {
         action: action,
         component: component,
         details: details,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
 
     console.log(`🎯 ActivityMonitor: Emitted activity ${action} on ${component}`);
@@ -316,7 +326,7 @@ export class ActivityMonitorService {
       action,
       component,
       details,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.pendingActivities.push(activity);
@@ -398,7 +408,7 @@ export class ActivityMonitorService {
     let flushedCount = 0;
     let droppedCount = 0;
 
-    toFlush.forEach(activity => {
+    toFlush.forEach((activity) => {
       // Drop activities older than MAX_RETRY_AGE_MS
       if (now - activity.timestamp > this.MAX_RETRY_AGE_MS) {
         console.warn('📊 ActivityMonitor: Dropping stale activity:', activity.action);
@@ -411,7 +421,9 @@ export class ActivityMonitorService {
       flushedCount++;
     });
 
-    this.addDebugLog(`Flushed ${flushedCount} activities, dropped ${droppedCount} stale activities`);
+    this.addDebugLog(
+      `Flushed ${flushedCount} activities, dropped ${droppedCount} stale activities`,
+    );
     this.updateDebug({ queuedActivities: 0 });
     this.stopFlushInterval();
   }
@@ -433,7 +445,7 @@ export class ActivityMonitorService {
 
     // Allow anonymous tracking for specific public pages
     const publicPages = ['/register', '/login'];
-    const isPublicPage = publicPages.some(p => path.startsWith(p));
+    const isPublicPage = publicPages.some((p) => path.startsWith(p));
 
     if (!user && !isPublicPage) {
       console.log('📊 ActivityMonitor: No user logged in, skipping page navigation emit');
@@ -441,7 +453,12 @@ export class ActivityMonitorService {
     }
 
     // Emit page navigation event (with anonymous data if not logged in)
-    console.log('🔴 Emitting page_navigation:', { page: pageName, path, user: user?.username, club: selectedClub?.clubName });
+    console.log('🔴 Emitting page_navigation:', {
+      page: pageName,
+      path,
+      user: user?.username,
+      club: selectedClub?.clubName,
+    });
     this.webSocketService.socket?.emit('page_navigation', {
       type: 'page_navigation',
       data: {
@@ -453,8 +470,8 @@ export class ActivityMonitorService {
         clubName: selectedClub?.club?.name || selectedClub?.clubName || null,
         page: pageName,
         path: path,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
 
     console.log(`📍 ActivityMonitor: Emitted navigation to ${pageName}`);
@@ -496,7 +513,9 @@ export class ActivityMonitorService {
       console.log('🔴 Received activity broadcast:', data);
       this.addDebugLog(`Received activity broadcast from ${data.data.fullName}`);
       this.activitySubject.next(data);
-      this.addRecentActivity(`${new Date().toLocaleTimeString()}: ${data.data.fullName} → ${data.data.page}`);
+      this.addRecentActivity(
+        `${new Date().toLocaleTimeString()}: ${data.data.fullName} → ${data.data.page}`,
+      );
     });
 
     console.log('🔴 Set up listeners for subscription_confirmed and activity_broadcast');

@@ -23,12 +23,14 @@ This guide explains how to deploy the RecreationalRacketBall project to Render.
 **Name:** recreational-racketball-backend
 
 **Settings:**
+
 - Root Directory: `backend`
 - Build Command: `npm install && npm run build`
 - Start Command: `npm start`
 - Instance Type: Standard (4GB RAM minimum recommended)
 
 **Environment Variables (add all of these):**
+
 ```
 NODE_ENV = production
 PORT = 3000
@@ -45,6 +47,7 @@ FRONTEND_URL = https://your-frontend-url.onrender.com
 ```
 
 **Health Check:**
+
 - Path: `/health`
 - This enables Render to monitor your service
 
@@ -53,24 +56,30 @@ FRONTEND_URL = https://your-frontend-url.onrender.com
 **Name:** recreational-racketball-frontend
 
 **Settings:**
+
 - Root Directory: `frontend`
 - Build Command: `npm install && ng build --configuration=production`
 - Start Command: Add a simple Node server in `server.js` (see below)
 - Instance Type: Standard (2GB RAM)
 
 **Create server.js in frontend directory:**
+
 ```javascript
-const express = require('express');
-const path = require('path');
+const express = require("express");
+const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 4200;
 
 // Serve static files from dist directory
-app.use(express.static(path.join(__dirname, 'dist/tennis-club-frontend/browser')));
+app.use(
+  express.static(path.join(__dirname, "dist/tennis-club-frontend/browser")),
+);
 
 // Redirect all routes to index.html for SPA routing
-app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist/tennis-club-frontend/browser', 'index.html'));
+app.get("/*", (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "dist/tennis-club-frontend/browser", "index.html"),
+  );
 });
 
 app.listen(PORT, () => {
@@ -79,6 +88,7 @@ app.listen(PORT, () => {
 ```
 
 **Update frontend/package.json scripts:**
+
 ```json
 {
   "scripts": {
@@ -89,6 +99,7 @@ app.listen(PORT, () => {
 ```
 
 **Environment Variables:**
+
 ```
 NODE_ENV = production
 BACKEND_URL = https://your-backend-url.onrender.com/api
@@ -99,10 +110,12 @@ BACKEND_URL = https://your-backend-url.onrender.com/api
 Update your frontend environment files to use the Render backend URL:
 
 **frontend/src/environments/environment.prod.ts:**
+
 ```typescript
 export const environment = {
   production: true,
-  apiUrl: process.env['BACKEND_URL'] || 'https://your-backend-url.onrender.com/api'
+  apiUrl:
+    process.env["BACKEND_URL"] || "https://your-backend-url.onrender.com/api",
 };
 ```
 
@@ -113,13 +126,14 @@ The backend CORS is configured to accept the frontend URL. Update `backend/src/s
 ```typescript
 const allowedOrigins: string[] = [
   "http://localhost:4200",
-  process.env.FRONTEND_URL || ""
+  process.env.FRONTEND_URL || "",
 ];
 ```
 
 ### 6. Deploy
 
 1. Commit all changes to GitHub:
+
    ```bash
    git add .
    git commit -m "Add Render deployment configuration"
@@ -135,11 +149,13 @@ const allowedOrigins: string[] = [
 ### 7. Verify Deployment
 
 1. Check backend health:
+
    ```
    https://your-backend-url.onrender.com/health
    ```
 
 2. Check frontend accessibility:
+
    ```
    https://your-frontend-url.onrender.com
    ```
@@ -149,21 +165,25 @@ const allowedOrigins: string[] = [
 ## Troubleshooting
 
 ### Backend deployment fails
+
 - Check that `backend/dist/server.js` exists after build
 - Verify all dependencies are in `backend/package.json`
 - Check MongoDB connection string is correct
 
 ### Frontend deployment fails
+
 - Ensure `server.js` is created in frontend directory
 - Check that Angular build output path matches `dist/tennis-club-frontend/browser`
 - Verify all dependencies are installed
 
 ### CORS errors
+
 - Update `FRONTEND_URL` environment variable in backend
 - Restart backend service after changing env vars
 - Check that frontend URL is added to `allowedOrigins` array
 
 ### WebSocket connection issues
+
 - WebSocket runs on same port as HTTP
 - Ensure backend is fully deployed before testing
 - Check browser console for connection errors
@@ -183,6 +203,7 @@ const allowedOrigins: string[] = [
 ## Rolling Back
 
 If deployment fails:
+
 1. Go to Render Dashboard
 2. Select the affected service
 3. Click "Deployments" tab

@@ -20,10 +20,10 @@ import { AuthService, ClubMembership } from '../../services/auth.service';
     MatMenuModule,
     MatDividerModule,
     MatBadgeModule,
-    MatTooltipModule
+    MatTooltipModule,
   ],
   templateUrl: './club-switcher.component.html',
-  styleUrls: ['./club-switcher.component.scss']
+  styleUrls: ['./club-switcher.component.scss'],
 })
 export class ClubSwitcherComponent implements OnInit, OnDestroy {
   clubs: ClubMembership[] = [];
@@ -32,22 +32,22 @@ export class ClubSwitcherComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
     // Subscribe to clubs
     this.subscription.add(
-      this.authService.clubs$.subscribe(clubs => {
-        this.clubs = clubs.filter(c => c.status === 'approved');
-      })
+      this.authService.clubs$.subscribe((clubs) => {
+        this.clubs = clubs.filter((c) => c.status === 'approved');
+      }),
     );
 
     // Subscribe to selected club
     this.subscription.add(
-      this.authService.selectedClub$.subscribe(club => {
+      this.authService.selectedClub$.subscribe((club) => {
         this.selectedClub = club;
-      })
+      }),
     );
   }
 

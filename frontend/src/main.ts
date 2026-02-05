@@ -23,8 +23,7 @@ try {
 }
 
 bootstrapApplication(App, appConfig)
-  .then(() => {
-  })
+  .then(() => {})
   .catch((err) => {
     console.error('🚀 main.ts: Bootstrap error:', err);
   });

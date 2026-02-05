@@ -524,7 +524,8 @@ interface Reservation {
                   >
                   <span *ngIf="pricingModel === 'fixed-daily'"
                     >Guest Fee ({{ getNonMemberCount() }}
-                    {{ getNonMemberCount() === 1 ? 'guest' : 'guests' }} × ₱{{ guestFee }} per guest):</span
+                    {{ getNonMemberCount() === 1 ? 'guest' : 'guests' }} × ₱{{ guestFee }} per
+                    guest):</span
                   >
                   <span>₱{{ getGuestFeeTotal() }}</span>
                 </div>
@@ -1125,7 +1126,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   initializeTimeSlots(): void {
     this.timeSlots = [];
     // Court hours based on club settings (last start time is operatingEnd - 1)
-    console.log(`⏰ Initializing time slots with operating hours: ${this.operatingStart}:00 - ${this.operatingEnd}:00`);
+    console.log(
+      `⏰ Initializing time slots with operating hours: ${this.operatingStart}:00 - ${this.operatingEnd}:00`,
+    );
     for (let hour = this.operatingStart; hour < this.operatingEnd; hour++) {
       this.timeSlots.push({
         hour: hour,
@@ -1134,7 +1137,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         isPeak: this.peakHours.includes(hour),
       });
     }
-    console.log(`✅ Initialized ${this.timeSlots.length} time slots (${this.operatingStart} to ${this.operatingEnd - 1})`);
+    console.log(
+      `✅ Initialized ${this.timeSlots.length} time slots (${this.operatingStart} to ${this.operatingEnd - 1})`,
+    );
   }
 
   onDateChange(event: any): void {
@@ -1629,7 +1634,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     let totalFee = 0;
     if (this.pricingModel === 'fixed-daily') {
       // Flat daily fee per member (not multiplied by hours)
-      totalFee = (FIXED_DAILY_FEE * memberCount) + guestCount * GUEST_FEE;
+      totalFee = FIXED_DAILY_FEE * memberCount + guestCount * GUEST_FEE;
       console.log(
         `🔍 Fixed daily: Base=₱${FIXED_DAILY_FEE}×${memberCount}, Guests=${guestCount}×₱${GUEST_FEE}, Total=₱${totalFee}`,
       );

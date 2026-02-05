@@ -1,22 +1,22 @@
-import { Server as HttpServer } from 'http';
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import { Server as HttpServer } from "http";
+import { Server as SocketIOServer, Socket } from "socket.io";
 
 export interface FinancialUpdateEvent {
-  type: 'financial_data_updated';
+  type: "financial_data_updated";
   data: any;
   timestamp: string;
   message: string;
 }
 
 export interface CourtUsageUpdateEvent {
-  type: 'court_usage_data_updated';
+  type: "court_usage_data_updated";
   data: any;
   timestamp: string;
   message: string;
 }
 
 export interface OpenPlayNotificationEvent {
-  type: 'open_play_created' | 'open_play_updated' | 'open_play_closed';
+  type: "open_play_created" | "open_play_updated" | "open_play_closed";
   data: {
     pollId: string;
     title: string;
@@ -37,7 +37,7 @@ export interface OpenPlayNotificationEvent {
 }
 
 export interface ChatMessageEvent {
-  type: 'new_message' | 'message_edited' | 'message_deleted';
+  type: "new_message" | "message_edited" | "message_deleted";
   data: {
     _id: string;
     roomId: string;
@@ -50,7 +50,7 @@ export interface ChatMessageEvent {
       role: string;
     };
     content: string;
-    type: 'text' | 'system' | 'announcement';
+    type: "text" | "system" | "announcement";
     isEdited: boolean;
     editedAt?: string;
     isDeleted: boolean;
@@ -76,7 +76,7 @@ export interface ChatTypingEvent {
 }
 
 export interface ChatUserStatusEvent {
-  type: 'user_joined' | 'user_left' | 'user_online' | 'user_offline';
+  type: "user_joined" | "user_left" | "user_online" | "user_offline";
   data: {
     roomId?: string;
     userId: string;
@@ -87,7 +87,7 @@ export interface ChatUserStatusEvent {
 }
 
 export interface ActivityMonitorEvent {
-  type: 'page_navigation';
+  type: "page_navigation";
   data: {
     userId: string;
     username: string;
@@ -100,7 +100,7 @@ export interface ActivityMonitorEvent {
 }
 
 export interface UserActivityEvent {
-  type: 'user_activity';
+  type: "user_activity";
   data: {
     userId: string;
     username: string;
@@ -128,7 +128,7 @@ export class WebSocketService {
   private typingUsers: Map<string, Set<string>> = new Map(); // roomId -> Set of userIds who are typing
 
   constructor() {
-    console.log('🔌 WebSocket Service initialized');
+    console.log("🔌 WebSocket Service initialized");
   }
 
   /**
@@ -139,128 +139,171 @@ export class WebSocketService {
       cors: {
         origin: ["http://localhost:4200", "http://localhost:4201"],
         methods: ["GET", "POST"],
-        credentials: true
+        credentials: true,
       },
-      transports: ['websocket', 'polling']
+      transports: ["websocket", "polling"],
     });
 
-    this.io.on('connection', (socket: Socket) => {
-      console.log('🔗 Client connected to WebSocket:', socket.id);
+    this.io.on("connection", (socket: Socket) => {
+      console.log("🔗 Client connected to WebSocket:", socket.id);
       this.connectedClients.add(socket);
 
       // Handle client subscription to financial updates
-      socket.on('subscribe_financial_updates', () => {
-        console.log('📊 Client subscribed to financial updates:', socket.id);
-        socket.join('financial_updates');
-        socket.emit('subscription_confirmed', { type: 'financial_updates' });
+      socket.on("subscribe_financial_updates", () => {
+        console.log("📊 Client subscribed to financial updates:", socket.id);
+        socket.join("financial_updates");
+        socket.emit("subscription_confirmed", { type: "financial_updates" });
       });
 
       // Handle client unsubscription
-      socket.on('unsubscribe_financial_updates', () => {
-        console.log('📊 Client unsubscribed from financial updates:', socket.id);
-        socket.leave('financial_updates');
+      socket.on("unsubscribe_financial_updates", () => {
+        console.log(
+          "📊 Client unsubscribed from financial updates:",
+          socket.id,
+        );
+        socket.leave("financial_updates");
       });
 
       // Handle client subscription to court usage updates
-      socket.on('subscribe_court_usage_updates', () => {
-        console.log('🏸 Client subscribed to court usage updates:', socket.id);
-        socket.join('court_usage_updates');
-        socket.emit('subscription_confirmed', { type: 'court_usage_updates' });
+      socket.on("subscribe_court_usage_updates", () => {
+        console.log("🏸 Client subscribed to court usage updates:", socket.id);
+        socket.join("court_usage_updates");
+        socket.emit("subscription_confirmed", { type: "court_usage_updates" });
       });
 
       // Handle client unsubscription from court usage
-      socket.on('unsubscribe_court_usage_updates', () => {
-        console.log('🏸 Client unsubscribed from court usage updates:', socket.id);
-        socket.leave('court_usage_updates');
+      socket.on("unsubscribe_court_usage_updates", () => {
+        console.log(
+          "🏸 Client unsubscribed from court usage updates:",
+          socket.id,
+        );
+        socket.leave("court_usage_updates");
       });
 
       // Handle client subscription to open play notifications
-      socket.on('subscribe_open_play_notifications', () => {
-        console.log('🎾 Client subscribed to open play notifications:', socket.id);
-        socket.join('open_play_notifications');
-        socket.emit('subscription_confirmed', { type: 'open_play_notifications' });
+      socket.on("subscribe_open_play_notifications", () => {
+        console.log(
+          "🎾 Client subscribed to open play notifications:",
+          socket.id,
+        );
+        socket.join("open_play_notifications");
+        socket.emit("subscription_confirmed", {
+          type: "open_play_notifications",
+        });
       });
 
       // Handle client unsubscription from open play notifications
-      socket.on('unsubscribe_open_play_notifications', () => {
-        console.log('🎾 Client unsubscribed from open play notifications:', socket.id);
-        socket.leave('open_play_notifications');
+      socket.on("unsubscribe_open_play_notifications", () => {
+        console.log(
+          "🎾 Client unsubscribed from open play notifications:",
+          socket.id,
+        );
+        socket.leave("open_play_notifications");
       });
 
       // Handle client subscription to announcements
-      socket.on('subscribe_announcements', () => {
-        console.log('📢 Client subscribed to announcements:', socket.id);
-        socket.join('announcements');
-        socket.emit('subscription_confirmed', { type: 'announcements' });
+      socket.on("subscribe_announcements", () => {
+        console.log("📢 Client subscribed to announcements:", socket.id);
+        socket.join("announcements");
+        socket.emit("subscription_confirmed", { type: "announcements" });
       });
 
       // Handle client unsubscription from announcements
-      socket.on('unsubscribe_announcements', () => {
-        console.log('📢 Client unsubscribed from announcements:', socket.id);
-        socket.leave('announcements');
+      socket.on("unsubscribe_announcements", () => {
+        console.log("📢 Client unsubscribed from announcements:", socket.id);
+        socket.leave("announcements");
       });
 
       // Chat-related socket handlers
 
       // Handle user authentication for chat
-      socket.on('chat_authenticate', (userData: { userId: string; username: string; fullName: string; role?: string }) => {
-        console.log('💬 Chat authentication for user:', userData.username);
+      socket.on(
+        "chat_authenticate",
+        (userData: {
+          userId: string;
+          username: string;
+          fullName: string;
+          role?: string;
+        }) => {
+          console.log("💬 Chat authentication for user:", userData.username);
 
-        // Store user-socket mapping
-        if (!this.userSockets.has(userData.userId)) {
-          this.userSockets.set(userData.userId, new Set());
-        }
-        this.userSockets.get(userData.userId)!.add(socket.id);
+          // Store user-socket mapping
+          if (!this.userSockets.has(userData.userId)) {
+            this.userSockets.set(userData.userId, new Set());
+          }
+          this.userSockets.get(userData.userId)!.add(socket.id);
 
-        // Store user data on socket for later use
-        (socket as any).userData = userData;
+          // Store user data on socket for later use
+          (socket as any).userData = userData;
 
-        // Auto-join admin_monitor room if user is admin/superadmin/treasurer
-        if (userData.role && ['admin', 'superadmin', 'treasurer'].includes(userData.role)) {
-          socket.join('admin_monitor');
-          console.log('👮 Admin user auto-joined admin_monitor room:', userData.username);
-        }
+          // Auto-join admin_monitor room if user is admin/superadmin/treasurer
+          if (
+            userData.role &&
+            ["admin", "superadmin", "treasurer"].includes(userData.role)
+          ) {
+            socket.join("admin_monitor");
+            console.log(
+              "👮 Admin user auto-joined admin_monitor room:",
+              userData.username,
+            );
+          }
 
-        socket.emit('chat_authenticated', { success: true });
-      });
+          socket.emit("chat_authenticated", { success: true });
+        },
+      );
 
       // Handle admin subscription to activity monitor
-      socket.on('subscribe_activity_monitor', () => {
+      socket.on("subscribe_activity_monitor", () => {
         const userData = (socket as any).userData;
-        if (userData && userData.role && ['admin', 'superadmin', 'treasurer'].includes(userData.role)) {
-          socket.join('admin_monitor');
-          console.log('📊 Admin subscribed to activity monitor:', userData.username);
-          socket.emit('subscription_confirmed', { type: 'activity_monitor' });
+        if (
+          userData &&
+          userData.role &&
+          ["admin", "superadmin", "treasurer"].includes(userData.role)
+        ) {
+          socket.join("admin_monitor");
+          console.log(
+            "📊 Admin subscribed to activity monitor:",
+            userData.username,
+          );
+          socket.emit("subscription_confirmed", { type: "activity_monitor" });
         } else {
-          console.warn('⚠️  Non-admin attempted to subscribe to activity monitor');
+          console.warn(
+            "⚠️  Non-admin attempted to subscribe to activity monitor",
+          );
         }
       });
 
       // Handle page navigation events from all users (authenticated and anonymous for public pages)
-      socket.on('page_navigation', (navData: ActivityMonitorEvent) => {
+      socket.on("page_navigation", (navData: ActivityMonitorEvent) => {
         // Allow anonymous navigation for public pages (register, login)
-        const publicPages = ['Registration', 'Login'];
-        const isPublicPage = publicPages.includes(navData.data.page || '');
-        const isAnonymous = navData.data.userId === 'anonymous';
+        const publicPages = ["Registration", "Login"];
+        const isPublicPage = publicPages.includes(navData.data.page || "");
+        const isAnonymous = navData.data.userId === "anonymous";
 
         if (!(socket as any).userData && !isAnonymous) {
-          console.warn('⚠️  Unauthenticated user attempted page navigation event for non-public page');
+          console.warn(
+            "⚠️  Unauthenticated user attempted page navigation event for non-public page",
+          );
           return;
         }
 
         // Log the navigation
-        console.log(`📍 Received page_navigation from ${navData.data.fullName} to ${navData.data.page}`);
+        console.log(
+          `📍 Received page_navigation from ${navData.data.fullName} to ${navData.data.page}`,
+        );
 
         // Broadcast to all in the admin_monitor room including sender
         // Use io.to() instead of socket.to() to include the sender
         const io = this.io;
         if (io) {
-          io.to('admin_monitor').emit('activity_broadcast', {
-            type: 'member_navigation',
+          io.to("admin_monitor").emit("activity_broadcast", {
+            type: "member_navigation",
             data: navData.data,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
-          console.log(`📢 Broadcasted activity for ${navData.data.fullName} to admin_monitor room`);
+          console.log(
+            `📢 Broadcasted activity for ${navData.data.fullName} to admin_monitor room`,
+          );
         }
 
         // Log anonymous visits to public pages
@@ -270,112 +313,116 @@ export class WebSocketService {
       });
 
       // Handle user activity events from all authenticated users
-      socket.on('user_activity', (activityData: UserActivityEvent) => {
+      socket.on("user_activity", (activityData: UserActivityEvent) => {
         if (!(socket as any).userData) {
-          console.warn('⚠️  Unauthenticated user attempted user activity event');
+          console.warn(
+            "⚠️  Unauthenticated user attempted user activity event",
+          );
           return;
         }
 
         // Broadcast to all admins in the admin_monitor room (excluding sender)
-        socket.to('admin_monitor').emit('activity_broadcast', {
-          type: 'member_activity',
+        socket.to("admin_monitor").emit("activity_broadcast", {
+          type: "member_activity",
           data: activityData.data,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         // Log for debugging
-        console.log(`🎯 ${activityData.data.fullName} performed ${activityData.data.action} on ${activityData.data.component}`);
+        console.log(
+          `🎯 ${activityData.data.fullName} performed ${activityData.data.action} on ${activityData.data.component}`,
+        );
       });
 
       // Handle joining chat rooms
-      socket.on('join_chat_room', (roomId: string) => {
-        console.log('💬 User joining chat room:', roomId, 'Socket:', socket.id);
+      socket.on("join_chat_room", (roomId: string) => {
+        console.log("💬 User joining chat room:", roomId, "Socket:", socket.id);
         socket.join(`chat_room_${roomId}`);
-        
+
         // Notify other participants that user is online
         if ((socket as any).userData) {
           const userData = (socket as any).userData;
-          socket.to(`chat_room_${roomId}`).emit('user_status_changed', {
-            type: 'user_online',
+          socket.to(`chat_room_${roomId}`).emit("user_status_changed", {
+            type: "user_online",
             data: {
               roomId,
               userId: userData.userId,
               username: userData.username,
-              fullName: userData.fullName
+              fullName: userData.fullName,
             },
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           } as ChatUserStatusEvent);
         }
       });
 
       // Handle leaving chat rooms
-      socket.on('leave_chat_room', (roomId: string) => {
-        console.log('💬 User leaving chat room:', roomId, 'Socket:', socket.id);
+      socket.on("leave_chat_room", (roomId: string) => {
+        console.log("💬 User leaving chat room:", roomId, "Socket:", socket.id);
         socket.leave(`chat_room_${roomId}`);
-        
+
         // Notify other participants that user left
         if ((socket as any).userData) {
           const userData = (socket as any).userData;
-          socket.to(`chat_room_${roomId}`).emit('user_status_changed', {
-            type: 'user_offline',
+          socket.to(`chat_room_${roomId}`).emit("user_status_changed", {
+            type: "user_offline",
             data: {
               roomId,
               userId: userData.userId,
               username: userData.username,
-              fullName: userData.fullName
+              fullName: userData.fullName,
             },
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           } as ChatUserStatusEvent);
         }
       });
 
       // Handle typing indicators
-      socket.on('chat_typing_start', (data: { roomId: string }) => {
+      socket.on("chat_typing_start", (data: { roomId: string }) => {
         if (!(socket as any).userData) return;
-        
+
         const userData = (socket as any).userData;
         const { roomId } = data;
-        
+
         // Add user to typing users for this room
         if (!this.typingUsers.has(roomId)) {
           this.typingUsers.set(roomId, new Set());
         }
         this.typingUsers.get(roomId)!.add(userData.userId);
-        
+
         // Notify other participants
-        socket.to(`chat_room_${roomId}`).emit('user_typing', {
+        socket.to(`chat_room_${roomId}`).emit("user_typing", {
           roomId,
           userId: userData.userId,
           username: userData.username,
-          isTyping: true
+          isTyping: true,
         } as ChatTypingEvent);
       });
 
-      socket.on('chat_typing_stop', (data: { roomId: string }) => {
+      socket.on("chat_typing_stop", (data: { roomId: string }) => {
         if (!(socket as any).userData) return;
-        
+
         const userData = (socket as any).userData;
         const { roomId } = data;
-        
+
         // Remove user from typing users for this room
         if (this.typingUsers.has(roomId)) {
           this.typingUsers.get(roomId)!.delete(userData.userId);
         }
-        
+
         // Notify other participants
-        socket.to(`chat_room_${roomId}`).emit('user_typing', {
+        socket.to(`chat_room_${roomId}`).emit("user_typing", {
           roomId,
           userId: userData.userId,
           username: userData.username,
-          isTyping: false
+          isTyping: false,
         } as ChatTypingEvent);
       });
 
       // Handle disconnect
-      socket.on('disconnect', () => {
-        console.log('🔌 Client disconnected:', socket.id);
+      socket.on("disconnect", () => {
+        console.log("🔌 Client disconnected:", socket.id);
         this.connectedClients.delete(socket);
-        
+
         // Clean up user-socket mapping
         if ((socket as any).userData) {
           const userId = (socket as any).userData.userId;
@@ -385,17 +432,17 @@ export class WebSocketService {
               this.userSockets.delete(userId);
             }
           }
-          
+
           // Clean up typing indicators
           this.typingUsers.forEach((typingSet, roomId) => {
             if (typingSet.has(userId)) {
               typingSet.delete(userId);
               // Notify others that user stopped typing
-              socket.to(`chat_room_${roomId}`).emit('user_typing', {
+              socket.to(`chat_room_${roomId}`).emit("user_typing", {
                 roomId,
                 userId,
                 username: (socket as any).userData.username,
-                isTyping: false
+                isTyping: false,
               } as ChatTypingEvent);
             }
           });
@@ -403,13 +450,15 @@ export class WebSocketService {
       });
 
       // Send welcome message
-      socket.emit('welcome', {
-        message: 'Connected to Tennis Club RT2 real-time updates',
-        timestamp: new Date().toISOString()
+      socket.emit("welcome", {
+        message: "Connected to Tennis Club RT2 real-time updates",
+        timestamp: new Date().toISOString(),
       });
     });
 
-    console.log('✅ Socket.IO server initialized with CORS for Angular dev server');
+    console.log(
+      "✅ Socket.IO server initialized with CORS for Angular dev server",
+    );
   }
 
   /**
@@ -417,20 +466,24 @@ export class WebSocketService {
    */
   emitFinancialUpdate(updateData: FinancialUpdateEvent): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot emit financial update');
+      console.warn(
+        "⚠️  WebSocket not initialized - cannot emit financial update",
+      );
       return;
     }
 
-    console.log('📡 Broadcasting financial update to subscribed clients');
-    console.log(`💰 Fund Balance Updated: ₱${updateData.data.fundBalance?.toLocaleString()}`);
-    
+    console.log("📡 Broadcasting financial update to subscribed clients");
+    console.log(
+      `💰 Fund Balance Updated: ₱${updateData.data.fundBalance?.toLocaleString()}`,
+    );
+
     // Emit to all clients subscribed to financial updates
-    this.io.to('financial_updates').emit('financial_update', updateData);
+    this.io.to("financial_updates").emit("financial_update", updateData);
 
     // Also emit to all connected clients as a fallback
-    this.io.emit('financial_data_changed', {
+    this.io.emit("financial_data_changed", {
       message: updateData.message,
-      timestamp: updateData.timestamp
+      timestamp: updateData.timestamp,
     });
   }
 
@@ -439,7 +492,7 @@ export class WebSocketService {
    */
   broadcast(event: string, data: any): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot broadcast');
+      console.warn("⚠️  WebSocket not initialized - cannot broadcast");
       return;
     }
 
@@ -455,12 +508,13 @@ export class WebSocketService {
       return { connectedClients: 0, rooms: [] };
     }
 
-    const rooms = Array.from(this.io.sockets.adapter.rooms.keys())
-      .filter(room => !this.io!.sockets.sockets.has(room)); // Filter out socket IDs
+    const rooms = Array.from(this.io.sockets.adapter.rooms.keys()).filter(
+      (room) => !this.io!.sockets.sockets.has(room),
+    ); // Filter out socket IDs
 
     return {
       connectedClients: this.connectedClients.size,
-      rooms
+      rooms,
     };
   }
 
@@ -469,20 +523,24 @@ export class WebSocketService {
    */
   emitCourtUsageUpdate(updateData: CourtUsageUpdateEvent): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot emit court usage update');
+      console.warn(
+        "⚠️  WebSocket not initialized - cannot emit court usage update",
+      );
       return;
     }
 
-    console.log('📡 Broadcasting court usage update to subscribed clients');
-    console.log(`🏸 Court Usage Updated: ${updateData.data.summary?.totalMembers} members, ${updateData.data.summary?.totalRevenue} revenue`);
-    
+    console.log("📡 Broadcasting court usage update to subscribed clients");
+    console.log(
+      `🏸 Court Usage Updated: ${updateData.data.summary?.totalMembers} members, ${updateData.data.summary?.totalRevenue} revenue`,
+    );
+
     // Emit to all clients subscribed to court usage updates
-    this.io.to('court_usage_updates').emit('court_usage_update', updateData);
+    this.io.to("court_usage_updates").emit("court_usage_update", updateData);
 
     // Also emit to all connected clients as a fallback
-    this.io.emit('court_usage_data_changed', {
+    this.io.emit("court_usage_data_changed", {
       message: updateData.message,
-      timestamp: updateData.timestamp
+      timestamp: updateData.timestamp,
     });
   }
 
@@ -491,27 +549,38 @@ export class WebSocketService {
    */
   emitOpenPlayNotification(notificationData: OpenPlayNotificationEvent): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot emit open play notification');
+      console.warn(
+        "⚠️  WebSocket not initialized - cannot emit open play notification",
+      );
       return;
     }
 
-    console.log('📡 Broadcasting open play notification to subscribed clients');
-    console.log(`🎾 Open Play Event: ${notificationData.data.title} on ${new Date(notificationData.data.eventDate).toLocaleDateString()}`);
-    console.log(`🎾 Event times: ${notificationData.data.startTime}:00 - ${notificationData.data.endTime}:00`);
-    console.log('🎾 Full notification data:', JSON.stringify(notificationData, null, 2));
-    
+    console.log("📡 Broadcasting open play notification to subscribed clients");
+    console.log(
+      `🎾 Open Play Event: ${notificationData.data.title} on ${new Date(notificationData.data.eventDate).toLocaleDateString()}`,
+    );
+    console.log(
+      `🎾 Event times: ${notificationData.data.startTime}:00 - ${notificationData.data.endTime}:00`,
+    );
+    console.log(
+      "🎾 Full notification data:",
+      JSON.stringify(notificationData, null, 2),
+    );
+
     // Emit to all clients subscribed to open play notifications
-    this.io.to('open_play_notifications').emit('open_play_notification', notificationData);
+    this.io
+      .to("open_play_notifications")
+      .emit("open_play_notification", notificationData);
 
     // Also emit to all connected clients as a general notification
-    this.io.emit('open_play_event', {
+    this.io.emit("open_play_event", {
       message: notificationData.message,
       timestamp: notificationData.timestamp,
       pollId: notificationData.data.pollId,
       eventDate: notificationData.data.eventDate,
       title: notificationData.data.title,
       startTime: notificationData.data.startTime,
-      endTime: notificationData.data.endTime
+      endTime: notificationData.data.endTime,
     });
   }
 
@@ -527,23 +596,25 @@ export class WebSocketService {
    */
   emitChatMessage(messageEvent: ChatMessageEvent): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot emit chat message');
+      console.warn("⚠️  WebSocket not initialized - cannot emit chat message");
       return;
     }
 
     const roomChannel = `chat_room_${messageEvent.data.roomId}`;
-    console.log(`💬 Broadcasting ${messageEvent.type} to room ${messageEvent.data.roomId}`);
-    
+    console.log(
+      `💬 Broadcasting ${messageEvent.type} to room ${messageEvent.data.roomId}`,
+    );
+
     // Emit to all clients in the chat room
-    this.io.to(roomChannel).emit('chat_message', messageEvent);
+    this.io.to(roomChannel).emit("chat_message", messageEvent);
 
     // For announcement messages, also emit to general notification channel
-    if (messageEvent.data.type === 'announcement') {
-      this.io.emit('chat_announcement', {
+    if (messageEvent.data.type === "announcement") {
+      this.io.emit("chat_announcement", {
         roomId: messageEvent.data.roomId,
         message: messageEvent.data.content,
         author: messageEvent.data.user.fullName,
-        timestamp: messageEvent.timestamp
+        timestamp: messageEvent.timestamp,
       });
     }
   }
@@ -553,12 +624,14 @@ export class WebSocketService {
    */
   emitTypingIndicator(typingEvent: ChatTypingEvent): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot emit typing indicator');
+      console.warn(
+        "⚠️  WebSocket not initialized - cannot emit typing indicator",
+      );
       return;
     }
 
     const roomChannel = `chat_room_${typingEvent.roomId}`;
-    this.io.to(roomChannel).emit('user_typing', typingEvent);
+    this.io.to(roomChannel).emit("user_typing", typingEvent);
   }
 
   /**
@@ -566,16 +639,18 @@ export class WebSocketService {
    */
   emitUserStatusChange(statusEvent: ChatUserStatusEvent): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot emit user status change');
+      console.warn(
+        "⚠️  WebSocket not initialized - cannot emit user status change",
+      );
       return;
     }
 
     if (statusEvent.data.roomId) {
       const roomChannel = `chat_room_${statusEvent.data.roomId}`;
-      this.io.to(roomChannel).emit('user_status_changed', statusEvent);
+      this.io.to(roomChannel).emit("user_status_changed", statusEvent);
     } else {
       // Global user status change
-      this.io.emit('user_status_changed', statusEvent);
+      this.io.emit("user_status_changed", statusEvent);
     }
   }
 
@@ -584,15 +659,19 @@ export class WebSocketService {
    */
   sendNotificationToUser(userId: string, event: string, data: any): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot send notification to user');
+      console.warn(
+        "⚠️  WebSocket not initialized - cannot send notification to user",
+      );
       return;
     }
 
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds && userSocketIds.size > 0) {
-      console.log(`📱 Sending ${event} notification to user ${userId} (${userSocketIds.size} sockets)`);
-      
-      userSocketIds.forEach(socketId => {
+      console.log(
+        `📱 Sending ${event} notification to user ${userId} (${userSocketIds.size} sockets)`,
+      );
+
+      userSocketIds.forEach((socketId) => {
         const socket = this.io!.sockets.sockets.get(socketId);
         if (socket) {
           socket.emit(event, data);
@@ -611,13 +690,13 @@ export class WebSocketService {
 
     const roomChannel = `chat_room_${roomId}`;
     const room = this.io.sockets.adapter.rooms.get(roomChannel);
-    
+
     if (!room) {
       return [];
     }
 
     const onlineUsers: string[] = [];
-    room.forEach(socketId => {
+    room.forEach((socketId) => {
       const socket = this.io!.sockets.sockets.get(socketId);
       if (socket && (socket as any).userData) {
         onlineUsers.push((socket as any).userData.userId);
@@ -640,21 +719,23 @@ export class WebSocketService {
    */
   emitAnnouncement(announcementData: AnnouncementEvent): void {
     if (!this.io) {
-      console.warn('⚠️  WebSocket not initialized - cannot emit announcement');
+      console.warn("⚠️  WebSocket not initialized - cannot emit announcement");
       return;
     }
 
-    console.log('📡 Broadcasting announcement to subscribed clients');
+    console.log("📡 Broadcasting announcement to subscribed clients");
     console.log(`📢 Announcement: ${announcementData.title}`);
 
     // Emit to all clients subscribed to announcements
-    this.io.to('announcements').emit('announcement_notification', announcementData);
+    this.io
+      .to("announcements")
+      .emit("announcement_notification", announcementData);
 
     // Also emit to all connected clients as a fallback
-    this.io.emit('new_announcement', {
+    this.io.emit("new_announcement", {
       message: `New announcement: ${announcementData.title}`,
       timestamp: new Date().toISOString(),
-      announcement: announcementData
+      announcement: announcementData,
     });
   }
 }

@@ -24,22 +24,40 @@ import { Subscription } from 'rxjs';
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
-    ClubSwitcherComponent
+    ClubSwitcherComponent,
   ],
   template: `
     <!-- Modern Header -->
     <mat-toolbar class="modern-header" [class.mobile-menu-open]="isMobileMenuOpen">
       <div class="header-wrapper">
         <!-- Mobile Menu Trigger (Hamburger) -->
-        <button mat-icon-button class="mobile-menu-trigger" [class.active]="isMobileMenuOpen" (click)="toggleMobileMenu()" aria-label="Toggle Menu">
+        <button
+          mat-icon-button
+          class="mobile-menu-trigger"
+          [class.active]="isMobileMenuOpen"
+          (click)="toggleMobileMenu()"
+          aria-label="Toggle Menu"
+        >
           <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
         </button>
 
         <!-- Logo Section -->
-        <div class="logo-section" (click)="handleLogoClick()" role="button" tabindex="0" (keydown.enter)="handleLogoClick()" (keydown.space)="handleLogoClick()">
+        <div
+          class="logo-section"
+          (click)="handleLogoClick()"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="handleLogoClick()"
+          (keydown.space)="handleLogoClick()"
+        >
           <div class="logo-icon">
-            <img *ngIf="clubLogo" [src]="clubLogo" [alt]="clubName" class="club-logo">
-            <img *ngIf="!clubLogo" src="images/rt2-logo.png" alt="Rich Town 2 Tennis Club" class="club-logo">
+            <img *ngIf="clubLogo" [src]="clubLogo" [alt]="clubName" class="club-logo" />
+            <img
+              *ngIf="!clubLogo"
+              src="images/rt2-logo.png"
+              alt="Rich Town 2 Tennis Club"
+              class="club-logo"
+            />
           </div>
           <div class="logo-text">
             <h1 class="club-name">{{ clubName }}</h1>
@@ -47,10 +65,15 @@ import { Subscription } from 'rxjs';
         </div>
 
         <!-- Mobile Home Button -->
-        <button mat-icon-button class="mobile-home-btn" (click)="navigateTo('/dashboard')" aria-label="Go to Dashboard">
+        <button
+          mat-icon-button
+          class="mobile-home-btn"
+          (click)="navigateTo('/dashboard')"
+          aria-label="Go to Dashboard"
+        >
           <mat-icon>home</mat-icon>
         </button>
-        
+
         <!-- Desktop Navigation -->
         <nav class="desktop-nav">
           <div class="nav-group">
@@ -98,7 +121,7 @@ import { Subscription } from 'rxjs';
           <div class="nav-group user-section">
             <div class="user-info">
               <mat-icon class="user-icon">account_circle</mat-icon>
-              <span class="username">{{currentUser?.fullName}}</span>
+              <span class="username">{{ currentUser?.fullName }}</span>
             </div>
             <button mat-button class="nav-item logout-btn" (click)="logout()">
               <mat-icon>logout</mat-icon>
@@ -108,10 +131,14 @@ import { Subscription } from 'rxjs';
         </nav>
       </div>
     </mat-toolbar>
-    
+
     <!-- Mobile Navigation Overlay -->
-    <div class="mobile-nav-overlay" [class.open]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
-    
+    <div
+      class="mobile-nav-overlay"
+      [class.open]="isMobileMenuOpen"
+      (click)="closeMobileMenu()"
+    ></div>
+
     <!-- Mobile Navigation Menu -->
     <nav class="mobile-nav" [class.open]="isMobileMenuOpen">
       <div class="mobile-nav-content">
@@ -120,15 +147,15 @@ import { Subscription } from 'rxjs';
             <mat-icon>account_circle</mat-icon>
           </div>
           <div class="mobile-user-details">
-            <span class="mobile-user-name">{{currentUser?.fullName}}</span>
+            <span class="mobile-user-name">{{ currentUser?.fullName }}</span>
             <div class="mobile-user-stats">
               <div class="mobile-stat-item">
                 <mat-icon>stars</mat-icon>
-                <span>{{getUserSeed() === 0 ? 'Unranked' : 'Seed #' + getUserSeed()}}</span>
+                <span>{{ getUserSeed() === 0 ? 'Unranked' : 'Seed #' + getUserSeed() }}</span>
               </div>
               <div class="mobile-stat-item">
                 <mat-icon>emoji_events</mat-icon>
-                <span>{{getUserPoints()}} points</span>
+                <span>{{ getUserPoints() }} points</span>
               </div>
             </div>
             <span class="mobile-user-role" *ngIf="isAdmin">Administrator</span>
@@ -173,70 +200,119 @@ import { Subscription } from 'rxjs';
               <mat-icon>admin_panel_settings</mat-icon>
               <span>Administration</span>
             </div>
-            
-            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/members')">
+
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              (click)="navigateAndClose('/admin/members')"
+            >
               <mat-icon>people_alt</mat-icon>
               <span>Member Management</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/membership-payments')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              (click)="navigateAndClose('/admin/membership-payments')"
+            >
               <mat-icon>card_membership</mat-icon>
               <span>Membership Payments</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/reports')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              (click)="navigateAndClose('/admin/reports')"
+            >
               <mat-icon>analytics</mat-icon>
               <span>Reports & Analytics</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/polls')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              (click)="navigateAndClose('/admin/polls')"
+            >
               <mat-icon>poll</mat-icon>
               <span>Poll Management</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/tournaments')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              (click)="navigateAndClose('/admin/tournaments')"
+            >
               <mat-icon>emoji_events</mat-icon>
               <span>Tournament Management</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" (click)="navigateAndClose('/admin/block-court')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              (click)="navigateAndClose('/admin/block-court')"
+            >
               <mat-icon>block</mat-icon>
               <span>Block Court</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/manual-court-usage')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              *ngIf="isSuperAdmin"
+              (click)="navigateAndClose('/admin/manual-court-usage')"
+            >
               <mat-icon>edit_calendar</mat-icon>
               <span>Manual Court Usage</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/gallery-upload')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              *ngIf="isSuperAdmin"
+              (click)="navigateAndClose('/admin/gallery-upload')"
+            >
               <mat-icon>add_photo_alternate</mat-icon>
               <span>Upload Gallery Photo</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/announcements')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              *ngIf="isSuperAdmin"
+              (click)="navigateAndClose('/admin/announcements')"
+            >
               <mat-icon>campaign</mat-icon>
               <span>Announcements</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/pending-clubs')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              *ngIf="isSuperAdmin"
+              (click)="navigateAndClose('/admin/pending-clubs')"
+            >
               <mat-icon>pending_actions</mat-icon>
               <span>Pending Clubs</span>
             </button>
 
-            <button mat-button class="mobile-nav-item admin-item" *ngIf="isSuperAdmin" (click)="navigateAndClose('/admin/clubs')">
+            <button
+              mat-button
+              class="mobile-nav-item admin-item"
+              *ngIf="isSuperAdmin"
+              (click)="navigateAndClose('/admin/clubs')"
+            >
               <mat-icon>business</mat-icon>
               <span>Club Management</span>
             </button>
           </div>
-          
+
           <!-- Profile & Logout -->
           <div class="mobile-nav-section">
             <button mat-button class="mobile-nav-item" (click)="navigateAndClose('/profile')">
               <mat-icon>person</mat-icon>
               <span>My Profile</span>
             </button>
-            
+
             <button mat-button class="mobile-nav-item logout-item" (click)="logout()">
               <mat-icon>logout</mat-icon>
               <span>Sign Out</span>
@@ -246,7 +322,7 @@ import { Subscription } from 'rxjs';
       </div>
     </nav>
   `,
-  styleUrl: './toolbar.component.scss'
+  styleUrl: './toolbar.component.scss',
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
@@ -266,23 +342,23 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private notificationService: NotificationService,
     private pwaNotificationService: PWANotificationService,
-    private analyticsService: AnalyticsService
+    private analyticsService: AnalyticsService,
   ) {}
 
   ngOnInit(): void {
     // Subscribe to user changes
-    this.userSubscription = this.authService.currentUser$.subscribe(user => {
+    this.userSubscription = this.authService.currentUser$.subscribe((user) => {
       this.currentUser = user;
       this.isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
       this.isSuperAdmin = user?.role === 'superadmin';
     });
 
     // Subscribe to selected club changes
-    this.clubSubscription = this.authService.selectedClub$.subscribe(club => {
+    this.clubSubscription = this.authService.selectedClub$.subscribe((club) => {
       if (club) {
         // Extract club name
         this.clubName = club.club?.name || (club as any).clubName || 'Rich Town 2 Tennis Club';
-        
+
         // Extract club logo - check nested club object first, then flat structure
         this.clubLogo = club.club?.logo || (club as any).clubLogo || null;
       } else {
@@ -292,9 +368,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     });
 
     // Subscribe to open play notifications
-    this.notificationSubscription = this.notificationService.notifications$.subscribe(notifications => {
-      // Handle notifications if needed
-    });
+    this.notificationSubscription = this.notificationService.notifications$.subscribe(
+      (notifications) => {
+        // Handle notifications if needed
+      },
+    );
   }
 
   ngOnDestroy(): void {
@@ -365,7 +443,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       '/admin/block-court': 'Block Court',
       '/admin/manual-court-usage': 'Manual Court Usage',
       '/admin/pending-clubs': 'Pending Clubs',
-      '/admin/clubs': 'Club Management'
+      '/admin/clubs': 'Club Management',
     };
     return pathMap[path] || `Navigate to ${path}`;
   }

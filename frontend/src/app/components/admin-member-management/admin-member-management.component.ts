@@ -413,7 +413,10 @@ interface GroupedMemberData {
                     </div>
                   </mat-card-content>
 
-                  <mat-card-actions class="member-actions" *ngIf="authService.isClubAdmin() || authService.isSuperAdmin()">
+                  <mat-card-actions
+                    class="member-actions"
+                    *ngIf="authService.isClubAdmin() || authService.isSuperAdmin()"
+                  >
                     <button
                       mat-raised-button
                       color="primary"

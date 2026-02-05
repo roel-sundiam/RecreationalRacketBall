@@ -62,7 +62,10 @@
       <div class="card-content">
         <!-- Pending Status -->
         <div *ngIf="request.status === 'pending'" class="status-content pending">
-          <p class="info-text">Your membership request is under review. The club admin will review your application soon.</p>
+          <p class="info-text">
+            Your membership request is under review. The club admin will review your application
+            soon.
+          </p>
         </div>
 
         <!-- Approved Status -->
@@ -110,8 +113,12 @@
           mat-stroked-button
           class="cancel-btn"
           [disabled]="canceling && selectedRequestId === request._id"
-          (click)="cancelRequest(request._id)">
-          <mat-spinner *ngIf="canceling && selectedRequestId === request._id" diameter="20"></mat-spinner>
+          (click)="cancelRequest(request._id)"
+        >
+          <mat-spinner
+            *ngIf="canceling && selectedRequestId === request._id"
+            diameter="20"
+          ></mat-spinner>
           <mat-icon *ngIf="!(canceling && selectedRequestId === request._id)">close</mat-icon>
           <span *ngIf="!(canceling && selectedRequestId === request._id)">Cancel Request</span>
           <span *ngIf="canceling && selectedRequestId === request._id">Canceling...</span>
@@ -122,7 +129,8 @@
           mat-raised-button
           color="primary"
           class="access-btn"
-          (click)="goToClubSelector()">
+          (click)="goToClubSelector()"
+        >
           <mat-icon>arrow_forward</mat-icon>
           <span>Access Club</span>
         </button>

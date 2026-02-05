@@ -1,12 +1,15 @@
-import { sheetsService } from './sheetsService';
-import { webSocketService, FinancialUpdateEvent } from './websocketService';
-import path from 'path';
-import fs from 'fs';
+import { sheetsService } from "./sheetsService";
+import { webSocketService, FinancialUpdateEvent } from "./websocketService";
+import path from "path";
+import fs from "fs";
 
 export class SyncService {
   private syncInterval: NodeJS.Timeout | null = null;
   private readonly SYNC_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
-  private readonly JSON_FILE_PATH = path.join(__dirname, '../../data/financial-report.json');
+  private readonly JSON_FILE_PATH = path.join(
+    __dirname,
+    "../../data/financial-report.json",
+  );
   private lastSyncTime: Date | null = null;
   private isGoogleSheetsEnabled = false;
 
@@ -18,18 +21,24 @@ export class SyncService {
    * Check if Google Sheets is properly configured
    */
   private checkGoogleSheetsConfig(): void {
-    const hasSpreadsheetId = process.env.GOOGLE_SHEETS_FINANCIAL_ID && 
-                            process.env.GOOGLE_SHEETS_FINANCIAL_ID !== 'your-financial-spreadsheet-id-here';
-    
+    const hasSpreadsheetId =
+      process.env.GOOGLE_SHEETS_FINANCIAL_ID &&
+      process.env.GOOGLE_SHEETS_FINANCIAL_ID !==
+        "your-financial-spreadsheet-id-here";
+
     this.isGoogleSheetsEnabled = !!hasSpreadsheetId;
-    
+
     if (this.isGoogleSheetsEnabled) {
-      console.log('✅ Google Sheets sync enabled (using public CSV method)');
+      console.log("✅ Google Sheets sync enabled (using public CSV method)");
       console.log(`📊 Will sync every ${this.SYNC_INTERVAL_MS / 1000} seconds`);
-      console.log(`🔗 Spreadsheet ID: ${process.env.GOOGLE_SHEETS_FINANCIAL_ID}`);
+      console.log(
+        `🔗 Spreadsheet ID: ${process.env.GOOGLE_SHEETS_FINANCIAL_ID}`,
+      );
     } else {
-      console.log('⚠️  Google Sheets sync disabled - using JSON file only');
-      console.log('💡 To enable: Set GOOGLE_SHEETS_FINANCIAL_ID in your .env file');
+      console.log("⚠️  Google Sheets sync disabled - using JSON file only");
+      console.log(
+        "💡 To enable: Set GOOGLE_SHEETS_FINANCIAL_ID in your .env file",
+      );
     }
   }
 
@@ -38,25 +47,27 @@ export class SyncService {
    */
   public startSync(): void {
     if (!this.isGoogleSheetsEnabled) {
-      console.log('📄 Google Sheets not configured - JSON file mode only');
+      console.log("📄 Google Sheets not configured - JSON file mode only");
       return;
     }
 
     // Perform initial sync
-    this.performSync().then(() => {
-      console.log('🔄 Initial sync completed');
-    }).catch(error => {
-      console.error('❌ Initial sync failed:', error.message);
-    });
+    this.performSync()
+      .then(() => {
+        console.log("🔄 Initial sync completed");
+      })
+      .catch((error) => {
+        console.error("❌ Initial sync failed:", error.message);
+      });
 
     // Set up recurring sync
     this.syncInterval = setInterval(() => {
-      this.performSync().catch(error => {
-        console.error('❌ Scheduled sync failed:', error.message);
+      this.performSync().catch((error) => {
+        console.error("❌ Scheduled sync failed:", error.message);
       });
     }, this.SYNC_INTERVAL_MS);
 
-    console.log('🔄 Google Sheets sync service started');
+    console.log("🔄 Google Sheets sync service started");
   }
 
   /**
@@ -66,7 +77,7 @@ export class SyncService {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
       this.syncInterval = null;
-      console.log('⏹️  Google Sheets sync service stopped');
+      console.log("⏹️  Google Sheets sync service stopped");
     }
   }
 
@@ -75,56 +86,59 @@ export class SyncService {
    */
   public async performSync(): Promise<boolean> {
     if (!this.isGoogleSheetsEnabled) {
-      console.log('⚠️  Sync skipped - Google Sheets not configured');
+      console.log("⚠️  Sync skipped - Google Sheets not configured");
       return false;
     }
 
     try {
-      console.log('📥 Syncing from Google Sheets...');
-      
+      console.log("📥 Syncing from Google Sheets...");
+
       // Get fresh data from Google Sheets
       const sheetData = await sheetsService.getFinancialReportData();
-      
+
       // Read current JSON file to compare
       const currentData = this.readCurrentJsonFile();
-      
+
       // Check if data has changed
       const hasChanges = this.hasDataChanged(currentData, sheetData);
-      
+
       if (hasChanges) {
         // Update the JSON file
         this.writeJsonFile(sheetData);
         this.lastSyncTime = new Date();
-        
-        console.log('✅ Sync completed - JSON file updated');
+
+        console.log("✅ Sync completed - JSON file updated");
         console.log(`📊 Club: ${sheetData.clubName}`);
-        console.log(`💰 Fund Balance: ₱${sheetData.fundBalance.toLocaleString()}`);
+        console.log(
+          `💰 Fund Balance: ₱${sheetData.fundBalance.toLocaleString()}`,
+        );
         console.log(`🕒 Last Updated: ${sheetData.lastUpdated}`);
-        
+
         // Emit real-time update event if WebSocket is available
         if (webSocketService.isInitialized()) {
           const updateEvent: FinancialUpdateEvent = {
-            type: 'financial_data_updated',
+            type: "financial_data_updated",
             data: sheetData,
             timestamp: new Date().toISOString(),
-            message: `💰 Financial data updated! Fund Balance: ₱${sheetData.fundBalance.toLocaleString()}`
+            message: `💰 Financial data updated! Fund Balance: ₱${sheetData.fundBalance.toLocaleString()}`,
           };
-          
+
           webSocketService.emitFinancialUpdate(updateEvent);
-          console.log('📡 Real-time update broadcasted to clients');
+          console.log("📡 Real-time update broadcasted to clients");
         } else {
-          console.log('⚠️  WebSocket not initialized - real-time update not sent');
+          console.log(
+            "⚠️  WebSocket not initialized - real-time update not sent",
+          );
         }
-        
+
         return true;
       } else {
-        console.log('📊 Sync completed - no changes detected');
+        console.log("📊 Sync completed - no changes detected");
         this.lastSyncTime = new Date();
         return false;
       }
-      
     } catch (error: any) {
-      console.error('❌ Sync failed:', error.message);
+      console.error("❌ Sync failed:", error.message);
       return false;
     }
   }
@@ -135,12 +149,12 @@ export class SyncService {
   private readCurrentJsonFile(): any {
     try {
       if (fs.existsSync(this.JSON_FILE_PATH)) {
-        const content = fs.readFileSync(this.JSON_FILE_PATH, 'utf8');
+        const content = fs.readFileSync(this.JSON_FILE_PATH, "utf8");
         return JSON.parse(content);
       }
       return null;
     } catch (error) {
-      console.error('⚠️  Error reading JSON file:', error);
+      console.error("⚠️  Error reading JSON file:", error);
       return null;
     }
   }
@@ -155,39 +169,51 @@ export class SyncService {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      
+
       // Ensure App Service Fee is preserved in disbursements
-      let appServiceFee = 103.20; // Use the known correct amount
+      let appServiceFee = 103.2; // Use the known correct amount
       const appServiceFeeIndex = data.disbursementsExpenses.findIndex(
-        (item: any) => item.description === 'App Service Fee'
+        (item: any) => item.description === "App Service Fee",
       );
-      
+
       if (appServiceFeeIndex === -1) {
         // Add App Service Fee if it doesn't exist
         data.disbursementsExpenses.push({
-          description: 'App Service Fee',
-          amount: appServiceFee
+          description: "App Service Fee",
+          amount: appServiceFee,
         });
-        console.log('💰 Added missing App Service Fee to financial report (sync)');
+        console.log(
+          "💰 Added missing App Service Fee to financial report (sync)",
+        );
       } else {
         // Preserve existing App Service Fee amount
         appServiceFee = data.disbursementsExpenses[appServiceFeeIndex].amount;
-        console.log(`💰 Preserved existing App Service Fee: ₱${appServiceFee} (sync)`);
+        console.log(
+          `💰 Preserved existing App Service Fee: ₱${appServiceFee} (sync)`,
+        );
       }
-      
+
       // Recalculate total disbursements to include App Service Fee
-      data.totalDisbursements = data.disbursementsExpenses.reduce((sum: number, item: any) => sum + item.amount, 0);
-      
+      data.totalDisbursements = data.disbursementsExpenses.reduce(
+        (sum: number, item: any) => sum + item.amount,
+        0,
+      );
+
       // Recalculate net income and fund balance
       data.netIncome = data.totalReceipts - data.totalDisbursements;
       data.fundBalance = (data.beginningBalance?.amount || 0) + data.netIncome;
-      
+
       // Write formatted JSON
-      fs.writeFileSync(this.JSON_FILE_PATH, JSON.stringify(data, null, 2), 'utf8');
-      console.log('💾 JSON file updated successfully with App Service Fee preserved');
-      
+      fs.writeFileSync(
+        this.JSON_FILE_PATH,
+        JSON.stringify(data, null, 2),
+        "utf8",
+      );
+      console.log(
+        "💾 JSON file updated successfully with App Service Fee preserved",
+      );
     } catch (error) {
-      console.error('❌ Error writing JSON file:', error);
+      console.error("❌ Error writing JSON file:", error);
       throw error;
     }
   }
@@ -197,7 +223,7 @@ export class SyncService {
    */
   private hasDataChanged(currentData: any, newData: any): boolean {
     if (!currentData) return true;
-    
+
     // Compare key fields that would indicate changes
     const currentStr = JSON.stringify({
       clubName: currentData.clubName,
@@ -205,18 +231,18 @@ export class SyncService {
       totalReceipts: currentData.totalReceipts,
       totalDisbursements: currentData.totalDisbursements,
       receiptsCollections: currentData.receiptsCollections,
-      disbursementsExpenses: currentData.disbursementsExpenses
+      disbursementsExpenses: currentData.disbursementsExpenses,
     });
-    
+
     const newStr = JSON.stringify({
       clubName: newData.clubName,
       fundBalance: newData.fundBalance,
       totalReceipts: newData.totalReceipts,
       totalDisbursements: newData.totalDisbursements,
       receiptsCollections: newData.receiptsCollections,
-      disbursementsExpenses: newData.disbursementsExpenses
+      disbursementsExpenses: newData.disbursementsExpenses,
     });
-    
+
     return currentStr !== newStr;
   }
 
@@ -224,28 +250,28 @@ export class SyncService {
    * Force a manual sync
    */
   public async forcSync(): Promise<boolean> {
-    console.log('🔄 Forcing manual sync...');
+    console.log("🔄 Forcing manual sync...");
     return await this.performSync();
   }
 
   /**
    * Get sync status
    */
-  public getSyncStatus(): { 
-    enabled: boolean; 
-    lastSync: Date | null; 
+  public getSyncStatus(): {
+    enabled: boolean;
+    lastSync: Date | null;
     nextSync: Date | null;
     interval: number;
   } {
-    const nextSync = this.lastSyncTime 
+    const nextSync = this.lastSyncTime
       ? new Date(this.lastSyncTime.getTime() + this.SYNC_INTERVAL_MS)
       : null;
-      
+
     return {
       enabled: this.isGoogleSheetsEnabled,
       lastSync: this.lastSyncTime,
       nextSync: nextSync,
-      interval: this.SYNC_INTERVAL_MS
+      interval: this.SYNC_INTERVAL_MS,
     };
   }
 }

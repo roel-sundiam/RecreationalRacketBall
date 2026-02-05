@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   getDashboardStats,
   getMemberActivityReport,
@@ -12,11 +12,15 @@ import {
   forceRefreshFinancialReport,
   forceRefreshCourtUsageReport,
   triggerSync,
-  getSyncStatus
-} from '../controllers/reportController';
-import { getStaticCourtUsageReport } from '../controllers/staticReportController';
-import { authenticateToken, requireRole, requireFinancialAccess } from '../middleware/auth';
-import { extractClubContext } from '../middleware/club';
+  getSyncStatus,
+} from "../controllers/reportController";
+import { getStaticCourtUsageReport } from "../controllers/staticReportController";
+import {
+  authenticateToken,
+  requireRole,
+  requireFinancialAccess,
+} from "../middleware/auth";
+import { extractClubContext } from "../middleware/club";
 
 const router = Router();
 
@@ -26,10 +30,10 @@ const router = Router();
  * @access Private (Admin/SuperAdmin)
  */
 router.get(
-  '/dashboard',
+  "/dashboard",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getDashboardStats
+  requireRole(["admin", "superadmin"]),
+  getDashboardStats,
 );
 
 /**
@@ -38,10 +42,10 @@ router.get(
  * @access Private (Admin/SuperAdmin)
  */
 router.get(
-  '/member-activity',
+  "/member-activity",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getMemberActivityReport
+  requireRole(["admin", "superadmin"]),
+  getMemberActivityReport,
 );
 
 /**
@@ -50,10 +54,10 @@ router.get(
  * @access Private (Admin/SuperAdmin)
  */
 router.get(
-  '/financial',
+  "/financial",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getFinancialAnalysisReport
+  requireRole(["admin", "superadmin"]),
+  getFinancialAnalysisReport,
 );
 
 /**
@@ -62,10 +66,10 @@ router.get(
  * @access Private (Admin/SuperAdmin)
  */
 router.get(
-  '/coins',
+  "/coins",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getCoinReport
+  requireRole(["admin", "superadmin"]),
+  getCoinReport,
 );
 
 /**
@@ -74,10 +78,10 @@ router.get(
  * @access Private (Admin/SuperAdmin)
  */
 router.get(
-  '/reservations',
+  "/reservations",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getReservationReport
+  requireRole(["admin", "superadmin"]),
+  getReservationReport,
 );
 
 /**
@@ -86,10 +90,10 @@ router.get(
  * @access Private (Treasurer/Admin/SuperAdmin)
  */
 router.get(
-  '/court-receipts',
+  "/court-receipts",
   authenticateToken,
   requireFinancialAccess,
-  getCourtReceiptsReport
+  getCourtReceiptsReport,
 );
 
 /**
@@ -97,10 +101,7 @@ router.get(
  * @desc Get court usage report from Google Spreadsheet
  * @access Private (All authenticated users)
  */
-router.get(
-  '/court-usage-sheet',
-  getCourtUsageFromSheet
-);
+router.get("/court-usage-sheet", getCourtUsageFromSheet);
 
 /**
  * @route GET /api/reports/static-court-usage
@@ -108,12 +109,11 @@ router.get(
  * @access Private (All authenticated users)
  */
 router.get(
-  '/static-court-usage',
+  "/static-court-usage",
   authenticateToken,
   extractClubContext,
-  getStaticCourtUsageReport
+  getStaticCourtUsageReport,
 );
-
 
 /**
  * @route GET /api/reports/financial-sheet
@@ -121,11 +121,11 @@ router.get(
  * @access Private (Treasurer/Admin/SuperAdmin)
  */
 router.get(
-  '/financial-sheet',
+  "/financial-sheet",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  getFinancialReport
+  getFinancialReport,
 );
 
 /**
@@ -134,10 +134,10 @@ router.get(
  * @access Private (Treasurer/Admin/SuperAdmin)
  */
 router.post(
-  '/financial-sheet/force-refresh',
+  "/financial-sheet/force-refresh",
   authenticateToken,
   requireFinancialAccess,
-  forceRefreshFinancialReport
+  forceRefreshFinancialReport,
 );
 
 /**
@@ -146,10 +146,10 @@ router.post(
  * @access Private (Treasurer/Admin/SuperAdmin)
  */
 router.get(
-  '/financial-sheet/export-2025-html',
+  "/financial-sheet/export-2025-html",
   authenticateToken,
   requireFinancialAccess,
-  export2025FinancialReportHTML
+  export2025FinancialReportHTML,
 );
 
 /**
@@ -158,10 +158,10 @@ router.get(
  * @access Private (Admin/SuperAdmin)
  */
 router.post(
-  '/court-usage-sheet/force-refresh',
+  "/court-usage-sheet/force-refresh",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  forceRefreshCourtUsageReport
+  requireRole(["admin", "superadmin"]),
+  forceRefreshCourtUsageReport,
 );
 
 /**
@@ -170,10 +170,10 @@ router.post(
  * @access Private (Admin/SuperAdmin)
  */
 router.post(
-  '/sync',
+  "/sync",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  triggerSync
+  requireRole(["admin", "superadmin"]),
+  triggerSync,
 );
 
 /**
@@ -182,10 +182,10 @@ router.post(
  * @access Private (Admin/SuperAdmin)
  */
 router.get(
-  '/sync-status',
+  "/sync-status",
   authenticateToken,
-  requireRole(['admin', 'superadmin']),
-  getSyncStatus
+  requireRole(["admin", "superadmin"]),
+  getSyncStatus,
 );
 
 /**
@@ -195,109 +195,129 @@ router.get(
  */
 // Special endpoint without auth for testing
 const specialRouter = Router();
-specialRouter.post('/fix-financial-report', async (req: any, res: any) => {
-    try {
-      console.log('🔧 Manual fix for financial report requested');
-      
-      // Import required modules
-      const Payment = (await import('../models/Payment')).default;
-      const fs = require('fs');
-      const path = require('path');
-      
-      // Calculate recorded payments
-      const recordedPayments = await Payment.find({ 
-        status: 'record', 
-        paymentMethod: { $ne: 'coins' }
-      });
-      
-      const totalRecordedAmount = recordedPayments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
-      console.log(`💰 Found ${recordedPayments.length} recorded payments totaling ₱${totalRecordedAmount}`);
-      
-      if (totalRecordedAmount > 0) {
-        // Read current financial report
-        const dataPath = path.join(__dirname, '../../data/financial-report.json');
-        const fileContent = fs.readFileSync(dataPath, 'utf8');
-        const financialData = JSON.parse(fileContent);
-        
-        // Find Tennis Court Usage Receipts
-        const courtReceiptsIndex = financialData.receiptsCollections.findIndex((item: any) => 
-          item.description === 'Tennis Court Usage Receipts'
+specialRouter.post("/fix-financial-report", async (req: any, res: any) => {
+  try {
+    console.log("🔧 Manual fix for financial report requested");
+
+    // Import required modules
+    const Payment = (await import("../models/Payment")).default;
+    const fs = require("fs");
+    const path = require("path");
+
+    // Calculate recorded payments
+    const recordedPayments = await Payment.find({
+      status: "record",
+      paymentMethod: { $ne: "coins" },
+    });
+
+    const totalRecordedAmount = recordedPayments.reduce(
+      (sum: number, payment: any) => sum + payment.amount,
+      0,
+    );
+    console.log(
+      `💰 Found ${recordedPayments.length} recorded payments totaling ₱${totalRecordedAmount}`,
+    );
+
+    if (totalRecordedAmount > 0) {
+      // Read current financial report
+      const dataPath = path.join(__dirname, "../../data/financial-report.json");
+      const fileContent = fs.readFileSync(dataPath, "utf8");
+      const financialData = JSON.parse(fileContent);
+
+      // Find Tennis Court Usage Receipts
+      const courtReceiptsIndex = financialData.receiptsCollections.findIndex(
+        (item: any) => item.description === "Tennis Court Usage Receipts",
+      );
+
+      if (courtReceiptsIndex !== -1) {
+        const baselineAmount = 67800; // Google Sheets baseline
+        const newAmount = baselineAmount + totalRecordedAmount;
+
+        financialData.receiptsCollections[courtReceiptsIndex].amount =
+          newAmount;
+
+        // Recalculate total receipts
+        financialData.totalReceipts = financialData.receiptsCollections.reduce(
+          (sum: number, item: any) => sum + item.amount,
+          0,
         );
-        
-        if (courtReceiptsIndex !== -1) {
-          const baselineAmount = 67800; // Google Sheets baseline
-          const newAmount = baselineAmount + totalRecordedAmount;
-          
-          financialData.receiptsCollections[courtReceiptsIndex].amount = newAmount;
-          
-          // Recalculate total receipts
-          financialData.totalReceipts = financialData.receiptsCollections.reduce((sum: number, item: any) => sum + item.amount, 0);
-          
-          // Ensure App Service Fee is preserved in disbursements
-          let appServiceFee = 103.20; // Use the known correct amount
-          const appServiceFeeIndex = financialData.disbursementsExpenses.findIndex(
-            (item: any) => item.description === 'App Service Fee'
+
+        // Ensure App Service Fee is preserved in disbursements
+        let appServiceFee = 103.2; // Use the known correct amount
+        const appServiceFeeIndex =
+          financialData.disbursementsExpenses.findIndex(
+            (item: any) => item.description === "App Service Fee",
           );
-          
-          if (appServiceFeeIndex === -1) {
-            // Add App Service Fee if it doesn't exist
-            financialData.disbursementsExpenses.push({
-              description: 'App Service Fee',
-              amount: appServiceFee
-            });
-            console.log('💰 Added missing App Service Fee to financial report (manual fix)');
-          } else {
-            // Preserve existing App Service Fee amount
-            appServiceFee = financialData.disbursementsExpenses[appServiceFeeIndex].amount;
-            console.log(`💰 Preserved existing App Service Fee: ₱${appServiceFee} (manual fix)`);
-          }
-          
-          // Recalculate total disbursements to include App Service Fee
-          financialData.totalDisbursements = financialData.disbursementsExpenses.reduce((sum: number, item: any) => sum + item.amount, 0);
-          
-          // Recalculate net income and fund balance
-          financialData.netIncome = financialData.totalReceipts - financialData.totalDisbursements;
-          financialData.fundBalance = (financialData.beginningBalance?.amount || 0) + financialData.netIncome;
-          financialData.lastUpdated = new Date().toISOString();
-          
-          // Save updated report
-          fs.writeFileSync(dataPath, JSON.stringify(financialData, null, 2));
-          
-          console.log('✅ Financial report manually fixed:', {
+
+        if (appServiceFeeIndex === -1) {
+          // Add App Service Fee if it doesn't exist
+          financialData.disbursementsExpenses.push({
+            description: "App Service Fee",
+            amount: appServiceFee,
+          });
+          console.log(
+            "💰 Added missing App Service Fee to financial report (manual fix)",
+          );
+        } else {
+          // Preserve existing App Service Fee amount
+          appServiceFee =
+            financialData.disbursementsExpenses[appServiceFeeIndex].amount;
+          console.log(
+            `💰 Preserved existing App Service Fee: ₱${appServiceFee} (manual fix)`,
+          );
+        }
+
+        // Recalculate total disbursements to include App Service Fee
+        financialData.totalDisbursements =
+          financialData.disbursementsExpenses.reduce(
+            (sum: number, item: any) => sum + item.amount,
+            0,
+          );
+
+        // Recalculate net income and fund balance
+        financialData.netIncome =
+          financialData.totalReceipts - financialData.totalDisbursements;
+        financialData.fundBalance =
+          (financialData.beginningBalance?.amount || 0) +
+          financialData.netIncome;
+        financialData.lastUpdated = new Date().toISOString();
+
+        // Save updated report
+        fs.writeFileSync(dataPath, JSON.stringify(financialData, null, 2));
+
+        console.log("✅ Financial report manually fixed:", {
+          baseline: baselineAmount,
+          recorded: totalRecordedAmount,
+          total: newAmount,
+          fundBalance: financialData.fundBalance,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: "Financial report fixed successfully",
+          data: {
             baseline: baselineAmount,
             recorded: totalRecordedAmount,
             total: newAmount,
-            fundBalance: financialData.fundBalance
-          });
-          
-          return res.status(200).json({
-            success: true,
-            message: 'Financial report fixed successfully',
-            data: {
-              baseline: baselineAmount,
-              recorded: totalRecordedAmount,
-              total: newAmount
-            }
-          });
-        }
+          },
+        });
       }
-      
-      return res.status(200).json({
-        success: true,
-        message: 'No recorded payments found to fix',
-        data: { recorded: totalRecordedAmount }
-      });
-      
-    } catch (error: any) {
-      console.error('❌ Error fixing financial report:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fix financial report',
-        details: error.message
-      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "No recorded payments found to fix",
+      data: { recorded: totalRecordedAmount },
+    });
+  } catch (error: any) {
+    console.error("❌ Error fixing financial report:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fix financial report",
+      details: error.message,
+    });
   }
-);
+});
 
 // TODO: Add export functionality
 

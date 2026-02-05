@@ -85,7 +85,7 @@ export interface ImpersonationState {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
@@ -97,7 +97,7 @@ export class AuthService {
     isImpersonating: false,
     adminUser: null,
     impersonatedUser: null,
-    startedAt: null
+    startedAt: null,
   });
 
   // Multi-tenant state
@@ -114,7 +114,7 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
   ) {
     // Check for existing token on service initialization
     const token = localStorage.getItem('token');
@@ -146,11 +146,18 @@ export class AuthService {
           }
 
           // Restore selected club if available
-          if (selectedClubString && selectedClubString !== 'undefined' && selectedClubString !== 'null') {
+          if (
+            selectedClubString &&
+            selectedClubString !== 'undefined' &&
+            selectedClubString !== 'null'
+          ) {
             try {
               const selectedClub = JSON.parse(selectedClubString);
               this.selectedClubSubject.next(selectedClub);
-              console.log('🏢 Restored selected club:', selectedClub.club?.name || selectedClub.clubId);
+              console.log(
+                '🏢 Restored selected club:',
+                selectedClub.club?.name || selectedClub.clubId,
+              );
             } catch (error) {
               console.error('Error parsing selected club from localStorage:', error);
             }
@@ -160,11 +167,14 @@ export class AuthService {
           const currentSelectedClub = this.selectedClubSubject.value;
           if (currentSelectedClub) {
             const clubs = this.clubsSubject.value;
-            const matchingClub = clubs.find(c => c.clubId === currentSelectedClub.clubId);
+            const matchingClub = clubs.find((c) => c.clubId === currentSelectedClub.clubId);
             if (matchingClub) {
               this.selectedClubSubject.next(matchingClub);
               localStorage.setItem('selectedClub', JSON.stringify(matchingClub));
-              console.log('🔄 Synced selected club from clubs list:', matchingClub.club?.name || matchingClub.clubId);
+              console.log(
+                '🔄 Synced selected club from clubs list:',
+                matchingClub.club?.name || matchingClub.clubId,
+              );
             }
           }
 
@@ -189,47 +199,55 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
     this.isLoadingSubject.next(true);
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
-      .pipe(
-        tap((response: any) => {
-          console.log('Login response:', response); // Debug log
-          // Backend returns: { success: true, data: { token, user, expiresIn, clubs }, message }
-          const token = response.data?.token || response.token;
-          const user = response.data?.user || response.user;
-          const expiresIn = response.data?.expiresIn || response.expiresIn || '7d';
-          const clubs = response.data?.clubs || [];
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
+      tap((response: any) => {
+        console.log('Login response:', response); // Debug log
+        // Backend returns: { success: true, data: { token, user, expiresIn, clubs }, message }
+        const token = response.data?.token || response.token;
+        const user = response.data?.user || response.user;
+        const expiresIn = response.data?.expiresIn || response.expiresIn || '7d';
+        const clubs = response.data?.clubs || [];
 
-          if (token && user) {
-            // Calculate and store token expiration timestamp
-            const expirationTimestamp = this.calculateExpirationTimestamp(expiresIn);
+        if (token && user) {
+          // Calculate and store token expiration timestamp
+          const expirationTimestamp = this.calculateExpirationTimestamp(expiresIn);
 
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
-            localStorage.setItem('loginTime', Date.now().toString());
-            localStorage.setItem('clubs', JSON.stringify(clubs));
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
+          localStorage.setItem('loginTime', Date.now().toString());
+          localStorage.setItem('clubs', JSON.stringify(clubs));
 
-            this.tokenSubject.next(token);
-            this.currentUserSubject.next(user);
-            this.clubsSubject.next(clubs);
+          this.tokenSubject.next(token);
+          this.currentUserSubject.next(user);
+          this.clubsSubject.next(clubs);
 
-            // Auto-select first approved club if available
-            const approvedClubs = clubs.filter((c: ClubMembership) => c.status === 'approved');
-            if (approvedClubs.length > 0) {
-              this.selectClub(approvedClubs[0]);
-            } else {
-              // Clear selected club if no approved clubs
-              this.selectedClubSubject.next(null);
-              localStorage.removeItem('selectedClub');
-            }
-
-            console.log('Auth state updated - token:', !!token, 'user:', user.username, 'clubs:', clubs.length, 'expires:', new Date(expirationTimestamp).toLocaleString());
+          // Auto-select first approved club if available
+          const approvedClubs = clubs.filter((c: ClubMembership) => c.status === 'approved');
+          if (approvedClubs.length > 0) {
+            this.selectClub(approvedClubs[0]);
           } else {
-            console.error('Invalid login response - missing token or user');
+            // Clear selected club if no approved clubs
+            this.selectedClubSubject.next(null);
+            localStorage.removeItem('selectedClub');
           }
-          this.isLoadingSubject.next(false);
-        })
-      );
+
+          console.log(
+            'Auth state updated - token:',
+            !!token,
+            'user:',
+            user.username,
+            'clubs:',
+            clubs.length,
+            'expires:',
+            new Date(expirationTimestamp).toLocaleString(),
+          );
+        } else {
+          console.error('Invalid login response - missing token or user');
+        }
+        this.isLoadingSubject.next(false);
+      }),
+    );
   }
 
   logout(saveRoute: boolean = false): void {
@@ -268,7 +286,7 @@ export class AuthService {
       isImpersonating: false,
       adminUser: null,
       impersonatedUser: null,
-      startedAt: null
+      startedAt: null,
     });
   }
 
@@ -348,9 +366,11 @@ export class AuthService {
       return true;
     }
     // Check old role field (backward compatibility)
-    if (this.currentUser?.role === 'treasurer' ||
-        this.currentUser?.role === 'admin' ||
-        this.currentUser?.role === 'superadmin') {
+    if (
+      this.currentUser?.role === 'treasurer' ||
+      this.currentUser?.role === 'admin' ||
+      this.currentUser?.role === 'superadmin'
+    ) {
       return true;
     }
     // Check current club role
@@ -368,17 +388,16 @@ export class AuthService {
    * Update user profile
    */
   updateProfile(profileData: UpdateProfileRequest): Observable<any> {
-    return this.http.put(`${this.apiUrl}/auth/profile`, profileData)
-      .pipe(
-        tap((response: any) => {
-          // Update local user data if response contains updated user
-          if (response.data?.user) {
-            const updatedUser = response.data.user;
-            this.currentUserSubject.next(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-          }
-        })
-      );
+    return this.http.put(`${this.apiUrl}/auth/profile`, profileData).pipe(
+      tap((response: any) => {
+        // Update local user data if response contains updated user
+        if (response.data?.user) {
+          const updatedUser = response.data.user;
+          this.currentUserSubject.next(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+      }),
+    );
   }
 
   /**
@@ -416,7 +435,7 @@ export class AuthService {
 
     if (!match) {
       console.warn('Invalid expiresIn format:', expiresIn, '- defaulting to 7 days');
-      return now + (7 * 24 * 60 * 60 * 1000); // Default to 7 days
+      return now + 7 * 24 * 60 * 60 * 1000; // Default to 7 days
     }
 
     const value = parseInt(match[1], 10);
@@ -519,7 +538,7 @@ export class AuthService {
    * Get approved clubs only
    */
   get approvedClubs(): ClubMembership[] {
-    return this.clubsSubject.value.filter(c => c.status === 'approved');
+    return this.clubsSubject.value.filter((c) => c.status === 'approved');
   }
 
   /**
@@ -547,11 +566,13 @@ export class AuthService {
 
     try {
       // Fetch the club's public info to get updated logo
-      const response = await this.http.get<any>(`${environment.apiUrl}/clubs/${selectedClub.clubId}/public`).toPromise();
+      const response = await this.http
+        .get<any>(`${environment.apiUrl}/clubs/${selectedClub.clubId}/public`)
+        .toPromise();
       console.log('Reload club response:', response);
       if (response.success && response.data && response.data.club) {
         const clubData = response.data.club;
-        
+
         // Update the selected club with new logo
         const updatedSelectedClub = {
           ...selectedClub,
@@ -559,14 +580,14 @@ export class AuthService {
             ...selectedClub.club,
             logo: clubData.logo,
             primaryColor: clubData.primaryColor,
-            accentColor: clubData.accentColor
-          }
+            accentColor: clubData.accentColor,
+          },
         };
-        
+
         console.log('Updated selected club:', updatedSelectedClub);
         this.selectedClubSubject.next(updatedSelectedClub);
         localStorage.setItem('selectedClub', JSON.stringify(updatedSelectedClub));
-        
+
         // Also update in clubs list
         const clubs = this.clubsSubject.value;
         const clubIndex = clubs.findIndex((c: ClubMembership) => c.clubId === selectedClub.clubId);
@@ -585,7 +606,7 @@ export class AuthService {
    * Switch to a different club by clubId
    */
   switchClub(clubId: string): boolean {
-    const club = this.approvedClubs.find(c => c.clubId === clubId);
+    const club = this.approvedClubs.find((c) => c.clubId === clubId);
     if (club) {
       this.selectClub(club);
       return true;
@@ -615,7 +636,7 @@ export class AuthService {
       return null;
     }
 
-    const fallbackClub = this.clubsSubject.value.find(c => c.clubId === selectedClubId);
+    const fallbackClub = this.clubsSubject.value.find((c) => c.clubId === selectedClubId);
     return fallbackClub?.role || null;
   }
 
@@ -668,70 +689,71 @@ export class AuthService {
    * Start impersonating a user
    */
   startImpersonation(userId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/impersonation/start/${userId}`, {})
-      .pipe(
-        tap((response: any) => {
-          const { token, user, adminUser, expiresIn } = response.data;
+    return this.http.post(`${this.apiUrl}/impersonation/start/${userId}`, {}).pipe(
+      tap((response: any) => {
+        const { token, user, adminUser, expiresIn } = response.data;
 
-          // Calculate token expiration
-          const expirationTimestamp = this.calculateExpirationTimestamp(expiresIn);
+        // Calculate token expiration
+        const expirationTimestamp = this.calculateExpirationTimestamp(expiresIn);
 
-          // Update localStorage
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-          localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
-          localStorage.setItem('impersonation', JSON.stringify({
+        // Update localStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
+        localStorage.setItem(
+          'impersonation',
+          JSON.stringify({
             adminUser,
             impersonatedUser: user,
-            startedAt: new Date().toISOString()
-          }));
+            startedAt: new Date().toISOString(),
+          }),
+        );
 
-          // Update subjects
-          this.tokenSubject.next(token);
-          this.currentUserSubject.next(user);
-          this.impersonationSubject.next({
-            isImpersonating: true,
-            adminUser,
-            impersonatedUser: user,
-            startedAt: new Date()
-          });
+        // Update subjects
+        this.tokenSubject.next(token);
+        this.currentUserSubject.next(user);
+        this.impersonationSubject.next({
+          isImpersonating: true,
+          adminUser,
+          impersonatedUser: user,
+          startedAt: new Date(),
+        });
 
-          console.log(`👥 Impersonation started: ${adminUser.username} → ${user.username}`);
-        })
-      );
+        console.log(`👥 Impersonation started: ${adminUser.username} → ${user.username}`);
+      }),
+    );
   }
 
   /**
    * Stop impersonating and return to admin account
    */
   stopImpersonation(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/impersonation/stop`, {})
-      .pipe(
-        tap((response: any) => {
-          const { token, user, expiresIn } = response.data;
+    return this.http.post(`${this.apiUrl}/impersonation/stop`, {}).pipe(
+      tap((response: any) => {
+        const { token, user, expiresIn } = response.data;
 
-          // Calculate token expiration
-          const expirationTimestamp = this.calculateExpirationTimestamp(expiresIn);
+        // Calculate token expiration
+        const expirationTimestamp = this.calculateExpirationTimestamp(expiresIn);
 
-          // Clear impersonation and restore admin
-          localStorage.removeItem('impersonation');
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-          localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
+        // Clear impersonation and restore admin
+        localStorage.removeItem('impersonation');
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
 
-          // Update subjects
-          this.tokenSubject.next(token);
-          this.currentUserSubject.next(user);
-          this.impersonationSubject.next({
-            isImpersonating: false,
-            adminUser: null,
-            impersonatedUser: null,
-            startedAt: null
-          });
+        // Update subjects
+        this.tokenSubject.next(token);
+        this.currentUserSubject.next(user);
+        this.impersonationSubject.next({
+          isImpersonating: false,
+          adminUser: null,
+          impersonatedUser: null,
+          startedAt: null,
+        });
 
-          console.log(`👥 Impersonation ended, returned to ${user.username}`);
-        })
-      );
+        console.log(`👥 Impersonation ended, returned to ${user.username}`);
+      }),
+    );
   }
 
   /**
@@ -746,9 +768,11 @@ export class AuthService {
           isImpersonating: true,
           adminUser,
           impersonatedUser,
-          startedAt: new Date(startedAt)
+          startedAt: new Date(startedAt),
         });
-        console.log(`👥 Restored impersonation state: ${adminUser.username} → ${impersonatedUser.username}`);
+        console.log(
+          `👥 Restored impersonation state: ${adminUser.username} → ${impersonatedUser.username}`,
+        );
       } catch (error) {
         console.error('Error restoring impersonation state:', error);
         localStorage.removeItem('impersonation');

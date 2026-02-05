@@ -22,7 +22,12 @@
 }
 
 .modern-header {
-  background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-mid), var(--primary-gradient-end));
+  background: linear-gradient(
+    135deg,
+    var(--primary-gradient-start),
+    var(--primary-gradient-mid),
+    var(--primary-gradient-end)
+  );
   padding: 2.5rem 2rem;
   color: white;
   position: relative;

@@ -102,8 +102,11 @@ interface CourtUsageData {
     <div class="financial-statement-container">
       <!-- Header with Club Logo and Title -->
       <div class="statement-header" *ngIf="!loading && financialData">
-        <div class="club-logo">
-          <img src="/images/rt2-logo.png" alt="Rich Town 2 Tennis Club" class="club-logo-img" />
+        <div class="club-logo" *ngIf="clubLogo">
+          <img [src]="clubLogo" [alt]="clubName + ' Logo'" class="club-logo-img" />
+        </div>
+        <div class="club-logo placeholder" *ngIf="!clubLogo">
+          <mat-icon>sports_tennis</mat-icon>
         </div>
         <div class="header-content">
           <h1 class="club-name">{{ financialData.clubName }}</h1>
@@ -638,5 +641,22 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
       this.socketConnected = false;
       console.log('🔌 WebSocket disconnected');
     }
+  }
+
+  /**
+   * Get the club logo from the selected club
+   */
+  get clubLogo(): string | null {
+    const selectedClub = this.authService.selectedClub;
+    // Handle both data structures: nested club object or direct clubLogo property
+    return selectedClub?.club?.logo || (selectedClub as any)?.clubLogo || null;
+  }
+
+  /**
+   * Get the club name for alt text
+   */
+  get clubName(): string {
+    const selectedClub = this.authService.selectedClub;
+    return selectedClub?.club?.name || (selectedClub as any)?.clubName || 'Club';
   }
 }

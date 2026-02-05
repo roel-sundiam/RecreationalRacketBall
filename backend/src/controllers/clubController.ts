@@ -8,7 +8,6 @@ import ClubMembership from "../models/ClubMembership";
 import User from "../models/User";
 import { uploadClubLogo } from "../config/supabase";
 
-
 /**
  * PUBLIC: Register a new club
  * Creates club, settings, and makes registrant the first admin
@@ -587,7 +586,9 @@ export const getClubSettings = asyncHandler(
     }
 
     // Fetch club info to include logo
-    const club = await Club.findById(req.clubId).select('logo primaryColor accentColor');
+    const club = await Club.findById(req.clubId).select(
+      "logo primaryColor accentColor",
+    );
 
     res.status(200).json({
       success: true,
@@ -765,7 +766,7 @@ export const uploadClubLogoEndpoint = asyncHandler(
     const uploadResult = await uploadClubLogo(
       clubId.toString(),
       req.file.buffer,
-      req.file.originalname
+      req.file.originalname,
     );
 
     if (!uploadResult.success) {
@@ -779,7 +780,7 @@ export const uploadClubLogoEndpoint = asyncHandler(
     const club = await Club.findByIdAndUpdate(
       clubId,
       { logo: uploadResult.publicUrl },
-      { new: true }
+      { new: true },
     );
 
     if (!club) {

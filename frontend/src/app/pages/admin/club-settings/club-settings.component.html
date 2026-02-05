@@ -1,9 +1,7 @@
 <div class="form-container">
   <!-- Page Header -->
   <div class="page-header">
-    <button class="back-btn" (click)="goBack()" type="button" aria-label="Go back">
-      ←
-    </button>
+    <button class="back-btn" (click)="goBack()" type="button" aria-label="Go back">←</button>
     <h1>
       <span class="icon">⚙</span>
       Club Settings
@@ -48,7 +46,7 @@
 
         <div class="logo-upload-container">
           <div class="logo-preview">
-            <img *ngIf="clubLogoUrl" [src]="clubLogoUrl" alt="Club Logo" class="preview-image">
+            <img *ngIf="clubLogoUrl" [src]="clubLogoUrl" alt="Club Logo" class="preview-image" />
             <div *ngIf="!clubLogoUrl" class="preview-placeholder">
               <span class="icon">📷</span>
               <p>No logo uploaded</p>
@@ -61,13 +59,15 @@
               #logoInput
               (change)="onLogoFileSelected($event)"
               accept="image/*"
-              style="display: none;">
-            
+              style="display: none"
+            />
+
             <button
               type="button"
               class="btn btn-secondary"
               (click)="logoInput.click()"
-              [disabled]="uploadingLogo">
+              [disabled]="uploadingLogo"
+            >
               <span class="icon">📁</span>
               Choose Image
             </button>
@@ -77,7 +77,8 @@
               type="button"
               class="btn btn-primary"
               (click)="uploadLogo()"
-              [disabled]="uploadingLogo">
+              [disabled]="uploadingLogo"
+            >
               <span *ngIf="!uploadingLogo" class="icon">⬆</span>
               <span *ngIf="uploadingLogo" class="spinner small"></span>
               {{ uploadingLogo ? 'Uploading...' : 'Upload Logo' }}
@@ -87,15 +88,14 @@
               *ngIf="clubLogoUrl && !selectedLogoFile"
               type="button"
               class="btn btn-outline"
-              (click)="removeLogo()">
+              (click)="removeLogo()"
+            >
               <span class="icon">🗑</span>
               Remove
             </button>
           </div>
 
-          <p class="help-text">
-            Recommended: Square image, at least 200x200px. Max file size: 5MB
-          </p>
+          <p class="help-text">Recommended: Square image, at least 200x200px. Max file size: 5MB</p>
         </div>
       </div>
     </div>
@@ -110,7 +110,6 @@
 
     <div class="card-body">
       <form [formGroup]="form" (ngSubmit)="saveSettings()">
-
         <!-- Operating Hours Section -->
         <div class="form-section">
           <div class="section-header">
@@ -170,9 +169,7 @@
             <span class="icon">💳</span>
             <h3>Membership Fee</h3>
           </div>
-          <p class="section-description">
-            Set the annual membership fee for joining your club
-          </p>
+          <p class="section-description">Set the annual membership fee for joining your club</p>
 
           <div class="form-row">
             <div class="form-group">
@@ -222,9 +219,7 @@
             <span class="icon">💰</span>
             <h3>Pricing Model</h3>
           </div>
-          <p class="section-description">
-            Choose how to price court reservations for your club
-          </p>
+          <p class="section-description">Choose how to price court reservations for your club</p>
 
           <!-- Pricing Model Selector -->
           <div class="pricing-model-selector">
@@ -281,9 +276,7 @@
             <span class="icon">📊</span>
             <h3>Peak & Off-Peak Rates</h3>
           </div>
-          <p class="section-description">
-            Set different rates based on court demand hours
-          </p>
+          <p class="section-description">Set different rates based on court demand hours</p>
 
           <div class="form-row">
             <div class="form-group">
@@ -326,9 +319,7 @@
           </div>
 
           <div class="form-group">
-            <label for="peakHoursInput">
-              Peak Hours (comma-separated)
-            </label>
+            <label for="peakHoursInput"> Peak Hours (comma-separated) </label>
             <input
               type="text"
               id="peakHoursInput"
@@ -336,7 +327,10 @@
               [class.error]="hasError('peakHoursInput')"
               placeholder="5, 18, 19, 20, 21"
             />
-            <span class="hint">Enter hours in 24-hour format (0-23), separated by commas. Example: 18, 19, 20, 21</span>
+            <span class="hint"
+              >Enter hours in 24-hour format (0-23), separated by commas. Example: 18, 19, 20,
+              21</span
+            >
             <span class="error-message" *ngIf="hasError('peakHoursInput')">
               {{ getErrorMessage('peakHoursInput') }}
             </span>
@@ -349,9 +343,7 @@
             <span class="icon">⏰</span>
             <h3>Hourly Rate</h3>
           </div>
-          <p class="section-description">
-            Set a single hourly rate that applies all day
-          </p>
+          <p class="section-description">Set a single hourly rate that applies all day</p>
 
           <div class="form-group">
             <label for="fixedHourlyFee">
@@ -366,7 +358,9 @@
               [class.error]="hasError('fixedHourlyFee')"
               placeholder="125"
             />
-            <span class="hint">Charge this amount per hour for all reservations. Example: ₱125/hour</span>
+            <span class="hint"
+              >Charge this amount per hour for all reservations. Example: ₱125/hour</span
+            >
             <span class="error-message" *ngIf="hasError('fixedHourlyFee')">
               {{ getErrorMessage('fixedHourlyFee') }}
             </span>
@@ -379,9 +373,7 @@
             <span class="icon">📅</span>
             <h3>Daily Rate</h3>
           </div>
-          <p class="section-description">
-            Set a flat fee for using the court for the entire day
-          </p>
+          <p class="section-description">Set a flat fee for using the court for the entire day</p>
 
           <div class="form-group">
             <label for="fixedDailyFee">
@@ -443,12 +435,17 @@
 
             <div class="preview-item">
               <strong>Operating Hours:</strong>
-              <span>{{ formatHour(form.value.operatingStart) }} - {{ formatHour(form.value.operatingEnd) }}</span>
+              <span
+                >{{ formatHour(form.value.operatingStart) }} -
+                {{ formatHour(form.value.operatingEnd) }}</span
+              >
             </div>
 
             <div class="preview-item">
               <strong>Annual Membership Fee:</strong>
-              <span>{{ form.value.membershipFeeCurrency }} {{ form.value.membershipFeeAnnual }}</span>
+              <span
+                >{{ form.value.membershipFeeCurrency }} {{ form.value.membershipFeeAnnual }}</span
+              >
             </div>
 
             <!-- Variable Pricing Preview -->
@@ -468,8 +465,15 @@
               <div class="preview-item">
                 <strong>Example (1 hour peak, 2 members, 1 guest):</strong>
                 <ul>
-                  <li>Peak: ₱{{ form.value.peakHourFee }} + (1 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.peakHourFee + form.value.guestFee }}</li>
-                  <li>Off-Peak: ₱{{ form.value.offPeakHourFee }} + (1 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.offPeakHourFee + form.value.guestFee }}</li>
+                  <li>
+                    Peak: ₱{{ form.value.peakHourFee }} + (1 × ₱{{ form.value.guestFee }}) = ₱{{
+                      form.value.peakHourFee + form.value.guestFee
+                    }}
+                  </li>
+                  <li>
+                    Off-Peak: ₱{{ form.value.offPeakHourFee }} + (1 × ₱{{ form.value.guestFee }}) =
+                    ₱{{ form.value.offPeakHourFee + form.value.guestFee }}
+                  </li>
                 </ul>
               </div>
             </div>
@@ -483,8 +487,15 @@
               <div class="preview-item">
                 <strong>Example (1 hour, 2 members, 1 guest):</strong>
                 <ul>
-                  <li>Hourly: ₱{{ form.value.fixedHourlyFee }} + (1 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.fixedHourlyFee + form.value.guestFee }}</li>
-                  <li>2 Hours: (2 × ₱{{ form.value.fixedHourlyFee }}) + (1 × ₱{{ form.value.guestFee }}) = ₱{{ (2 * form.value.fixedHourlyFee) + form.value.guestFee }}</li>
+                  <li>
+                    Hourly: ₱{{ form.value.fixedHourlyFee }} + (1 × ₱{{ form.value.guestFee }}) =
+                    ₱{{ form.value.fixedHourlyFee + form.value.guestFee }}
+                  </li>
+                  <li>
+                    2 Hours: (2 × ₱{{ form.value.fixedHourlyFee }}) + (1 × ₱{{
+                      form.value.guestFee
+                    }}) = ₱{{ 2 * form.value.fixedHourlyFee + form.value.guestFee }}
+                  </li>
                 </ul>
               </div>
             </div>
@@ -499,8 +510,15 @@
                 <strong>Example (1 member, 1 guest):</strong>
                 <ul>
                   <li>Member: ₱{{ form.value.fixedDailyFee }}</li>
-                  <li>Member + Guest: ₱{{ form.value.fixedDailyFee }} + ₱{{ form.value.guestFee }} = ₱{{ form.value.fixedDailyFee + form.value.guestFee }}</li>
-                  <li>Multiple Guests: ₱{{ form.value.fixedDailyFee }} + (2 × ₱{{ form.value.guestFee }}) = ₱{{ form.value.fixedDailyFee + (2 * form.value.guestFee) }}</li>
+                  <li>
+                    Member + Guest: ₱{{ form.value.fixedDailyFee }} + ₱{{ form.value.guestFee }} =
+                    ₱{{ form.value.fixedDailyFee + form.value.guestFee }}
+                  </li>
+                  <li>
+                    Multiple Guests: ₱{{ form.value.fixedDailyFee }} + (2 × ₱{{
+                      form.value.guestFee
+                    }}) = ₱{{ form.value.fixedDailyFee + 2 * form.value.guestFee }}
+                  </li>
                 </ul>
               </div>
             </div>
@@ -519,7 +537,12 @@
         <span class="icon">✕</span>
         Cancel
       </button>
-      <button type="button" class="btn btn-primary" (click)="saveSettings()" [disabled]="form.invalid || saving">
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="saveSettings()"
+        [disabled]="form.invalid || saving"
+      >
         <span class="icon" *ngIf="!saving">💾</span>
         <span class="icon" *ngIf="saving">⏳</span>
         <span *ngIf="!saving">Save Settings</span>

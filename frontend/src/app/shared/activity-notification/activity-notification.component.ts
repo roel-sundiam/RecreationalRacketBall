@@ -26,7 +26,13 @@ interface Notification {
           <span>Member Activity</span>
         </div>
         <div class="panel-actions">
-          <button mat-icon-button class="clear-btn" (click)="clearAll()" *ngIf="notifications.length > 0" title="Clear all">
+          <button
+            mat-icon-button
+            class="clear-btn"
+            (click)="clearAll()"
+            *ngIf="notifications.length > 0"
+            title="Clear all"
+          >
             <mat-icon>delete_sweep</mat-icon>
           </button>
           <button mat-icon-button class="hide-btn" (click)="hidePanel()" title="Hide panel">
@@ -39,7 +45,8 @@ interface Notification {
         <div
           *ngFor="let notification of notifications"
           class="notification"
-          [class.show]="notification.show">
+          [class.show]="notification.show"
+        >
           <div class="notification-header">
             <mat-icon class="notification-icon">person_pin</mat-icon>
             <span class="notification-time">{{ notification.timestamp }}</span>
@@ -67,195 +74,198 @@ interface Notification {
       (click)="showPanel()"
       [matBadge]="notifications.length"
       [matBadgeHidden]="notifications.length === 0"
-      matBadgeColor="warn">
+      matBadgeColor="warn"
+    >
       <mat-icon>notifications</mat-icon>
     </button>
   `,
-  styles: [`
-    .notification-panel {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 9998;
-      background: #1e1e1e;
-      border: 2px solid #4CAF50;
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
-      max-width: 400px;
-      max-height: calc(100vh - 100px);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 2px solid #4CAF50;
-      background: #2a2a2a;
-      border-radius: 6px 6px 0 0;
-    }
-
-    .panel-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #4CAF50;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .title-icon {
-      color: #4CAF50;
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-    }
-
-    .panel-actions {
-      display: flex;
-      gap: 4px;
-    }
-
-    .clear-btn mat-icon,
-    .hide-btn mat-icon {
-      color: #888;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
-
-    .clear-btn:hover mat-icon,
-    .hide-btn:hover mat-icon {
-      color: #fff;
-    }
-
-    .notification-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-      max-height: 500px;
-      overflow-y: auto;
-    }
-
-    .notification {
-      background: #2a2a2a;
-      border-left: 4px solid #2196F3;
-      border-radius: 4px;
-      padding: 12px;
-      transition: all 0.3s ease;
-      opacity: 0;
-      transform: translateX(20px);
-    }
-
-    .notification.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    .notification-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .notification-icon {
-      color: #2196F3;
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-    }
-
-    .notification-time {
-      color: #90EE90;
-      font-size: 12px;
-      font-family: 'Courier New', monospace;
-      flex: 1;
-    }
-
-    .close-btn {
-      width: 24px;
-      height: 24px;
-      padding: 0;
-    }
-
-    .close-btn mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: #888;
-    }
-
-    .close-btn:hover mat-icon {
-      color: #fff;
-    }
-
-    .notification-message {
-      color: #fff;
-      font-size: 12px;
-      font-weight: normal;
-      line-height: 1.4;
-    }
-
-    .no-notifications {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 24px;
-      color: #888;
-    }
-
-    .no-notifications mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      opacity: 0.5;
-    }
-
-    .no-notifications p {
-      margin: 0;
-      font-style: italic;
-    }
-
-    .show-panel-btn {
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
-      z-index: 9998;
-      background: #4CAF50 !important;
-      color: white !important;
-    }
-
-    .show-panel-btn:hover {
-      background: #45a049 !important;
-    }
-
-    @media (max-width: 600px) {
+  styles: [
+    `
       .notification-panel {
-        bottom: 10px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9998;
+        background: #1e1e1e;
+        border: 2px solid #4caf50;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+        max-width: 400px;
+        max-height: calc(100vh - 100px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 2px solid #4caf50;
+        background: #2a2a2a;
+        border-radius: 6px 6px 0 0;
+      }
+
+      .panel-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #4caf50;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .title-icon {
+        color: #4caf50;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .panel-actions {
+        display: flex;
+        gap: 4px;
+      }
+
+      .clear-btn mat-icon,
+      .hide-btn mat-icon {
+        color: #888;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .clear-btn:hover mat-icon,
+      .hide-btn:hover mat-icon {
+        color: #fff;
+      }
+
+      .notification-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        max-height: 500px;
+        overflow-y: auto;
       }
 
       .notification {
+        background: #2a2a2a;
+        border-left: 4px solid #2196f3;
+        border-radius: 4px;
         padding: 12px;
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateX(20px);
+      }
+
+      .notification.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .notification-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .notification-icon {
+        color: #2196f3;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .notification-time {
+        color: #90ee90;
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
+        flex: 1;
+      }
+
+      .close-btn {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+      }
+
+      .close-btn mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #888;
+      }
+
+      .close-btn:hover mat-icon {
+        color: #fff;
       }
 
       .notification-message {
+        color: #fff;
         font-size: 12px;
+        font-weight: normal;
+        line-height: 1.4;
+      }
+
+      .no-notifications {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 24px;
+        color: #888;
+      }
+
+      .no-notifications mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        opacity: 0.5;
+      }
+
+      .no-notifications p {
+        margin: 0;
+        font-style: italic;
       }
 
       .show-panel-btn {
+        position: fixed;
         bottom: 90px;
-        right: 16px;
+        right: 20px;
+        z-index: 9998;
+        background: #4caf50 !important;
+        color: white !important;
       }
-    }
-  `]
+
+      .show-panel-btn:hover {
+        background: #45a049 !important;
+      }
+
+      @media (max-width: 600px) {
+        .notification-panel {
+          bottom: 10px;
+          right: 10px;
+          left: 10px;
+          max-width: none;
+        }
+
+        .notification {
+          padding: 12px;
+        }
+
+        .notification-message {
+          font-size: 12px;
+        }
+
+        .show-panel-btn {
+          bottom: 90px;
+          right: 16px;
+        }
+      }
+    `,
+  ],
 })
 export class ActivityNotificationComponent implements OnInit, OnDestroy {
   notifications: Notification[] = [];
@@ -266,7 +276,7 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
 
   constructor(
     private activityMonitorService: ActivityMonitorService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -281,31 +291,29 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
     // Initialize admin notifications
     this.activityMonitorService.initializeAdminNotifications();
 
-    this.subscription = this.activityMonitorService.activity$.subscribe(
-      activity => {
-        // Don't show notifications for own activity
-        const currentUserId = this.authService.currentUser?._id;
-        if (activity.data.userId === currentUserId) {
-          return;
-        }
-
-        // Format message based on activity type
-        let message: string;
-        const clubInfo = activity.data.clubName ? ` [${activity.data.clubName}]` : '';
-        
-        if (activity.type === 'page_navigation' || activity.type === 'member_navigation') {
-          message = `${activity.data.fullName}${clubInfo} accessed ${activity.data.page || 'Unknown Page'}`;
-        } else if (activity.type === 'member_activity') {
-          message = `${activity.data.fullName}${clubInfo} - ${activity.data.action || 'Unknown Action'} on ${activity.data.component || 'Unknown Component'}`;
-        } else {
-          // Fallback for unknown types
-          console.warn('Unknown activity type:', activity.type, activity);
-          message = `${activity.data.fullName}${clubInfo} performed an action`;
-        }
-
-        this.addNotification(message);
+    this.subscription = this.activityMonitorService.activity$.subscribe((activity) => {
+      // Don't show notifications for own activity
+      const currentUserId = this.authService.currentUser?._id;
+      if (activity.data.userId === currentUserId) {
+        return;
       }
-    );
+
+      // Format message based on activity type
+      let message: string;
+      const clubInfo = activity.data.clubName ? ` [${activity.data.clubName}]` : '';
+
+      if (activity.type === 'page_navigation' || activity.type === 'member_navigation') {
+        message = `${activity.data.fullName}${clubInfo} accessed ${activity.data.page || 'Unknown Page'}`;
+      } else if (activity.type === 'member_activity') {
+        message = `${activity.data.fullName}${clubInfo} - ${activity.data.action || 'Unknown Action'} on ${activity.data.component || 'Unknown Component'}`;
+      } else {
+        // Fallback for unknown types
+        console.warn('Unknown activity type:', activity.type, activity);
+        message = `${activity.data.fullName}${clubInfo} performed an action`;
+      }
+
+      this.addNotification(message);
+    });
   }
 
   ngOnDestroy(): void {
@@ -320,7 +328,7 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
       id,
       message,
       timestamp,
-      show: false
+      show: false,
     };
 
     // Add to beginning of array (newest first)
@@ -331,7 +339,7 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
 
     // Trigger animation
     setTimeout(() => {
-      const notif = this.notifications.find(n => n.id === id);
+      const notif = this.notifications.find((n) => n.id === id);
       if (notif) notif.show = true;
     }, 100);
 
@@ -346,12 +354,15 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
       // Resume audio context if suspended (required for browser autoplay policies)
       if (audioContext.state === 'suspended') {
         console.log('🔊 Resuming suspended audio context...');
-        audioContext.resume().then(() => {
-          console.log('🔊 Audio context resumed, playing beep');
-          this.playBeep(audioContext);
-        }).catch(err => {
-          console.error('🔊 Failed to resume audio context:', err);
-        });
+        audioContext
+          .resume()
+          .then(() => {
+            console.log('🔊 Audio context resumed, playing beep');
+            this.playBeep(audioContext);
+          })
+          .catch((err) => {
+            console.error('🔊 Failed to resume audio context:', err);
+          });
       } else {
         console.log('🔊 Playing beep immediately');
         this.playBeep(audioContext);
@@ -391,7 +402,7 @@ export class ActivityNotificationComponent implements OnInit, OnDestroy {
   }
 
   removeNotification(id: number): void {
-    this.notifications = this.notifications.filter(n => n.id !== id);
+    this.notifications = this.notifications.filter((n) => n.id !== id);
   }
 
   clearAll(): void {

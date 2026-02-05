@@ -22,7 +22,8 @@
           class="search-input"
           [(ngModel)]="searchQuery"
           (input)="searchClubs(searchQuery)"
-          placeholder="Search clubs by name, city, or address...">
+          placeholder="Search clubs by name, city, or address..."
+        />
         <mat-icon class="search-icon">search</mat-icon>
       </div>
       <p class="search-results" *ngIf="searchQuery">
@@ -51,7 +52,10 @@
   </div>
 
   <!-- No Search Results -->
-  <div *ngIf="!loading && clubs.length > 0 && searchQuery && filteredClubs.length === 0" class="empty-state">
+  <div
+    *ngIf="!loading && clubs.length > 0 && searchQuery && filteredClubs.length === 0"
+    class="empty-state"
+  >
     <div class="empty-icon">
       <mat-icon>search_off</mat-icon>
     </div>
@@ -64,7 +68,16 @@
     <div *ngFor="let club of filteredClubs" class="club-card-wrapper">
       <div class="club-card" [style.border-top-color]="club.primaryColor">
         <!-- Card Header -->
-        <div class="card-header" [style.background]="'linear-gradient(135deg, ' + club.primaryColor + '20 0%, ' + club.primaryColor + '05 100%)'">
+        <div
+          class="card-header"
+          [style.background]="
+            'linear-gradient(135deg, ' +
+            club.primaryColor +
+            '20 0%, ' +
+            club.primaryColor +
+            '05 100%)'
+          "
+        >
           <div class="club-avatar" [style.background-color]="club.primaryColor">
             <mat-icon>sports_tennis</mat-icon>
           </div>
@@ -98,7 +111,10 @@
               </div>
               <div class="detail-content">
                 <p class="detail-label">Annual Fee</p>
-                <p class="detail-value">{{ club.settings.membershipFee.currency }} {{ club.settings.membershipFee.annual }}</p>
+                <p class="detail-value">
+                  {{ club.settings.membershipFee.currency }}
+                  {{ club.settings.membershipFee.annual }}
+                </p>
               </div>
             </div>
 
@@ -109,7 +125,10 @@
               </div>
               <div class="detail-content">
                 <p class="detail-label">Hours</p>
-                <p class="detail-value">{{ club.settings.operatingHours.start }}:00 - {{ club.settings.operatingHours.end }}:00</p>
+                <p class="detail-value">
+                  {{ club.settings.operatingHours.start }}:00 -
+                  {{ club.settings.operatingHours.end }}:00
+                </p>
               </div>
             </div>
           </div>
@@ -128,8 +147,12 @@
             color="primary"
             class="request-btn"
             [disabled]="requesting && selectedClubId === club._id"
-            (click)="requestMembership(club._id)">
-            <mat-spinner *ngIf="requesting && selectedClubId === club._id" diameter="20"></mat-spinner>
+            (click)="requestMembership(club._id)"
+          >
+            <mat-spinner
+              *ngIf="requesting && selectedClubId === club._id"
+              diameter="20"
+            ></mat-spinner>
             <mat-icon *ngIf="!(requesting && selectedClubId === club._id)">person_add</mat-icon>
             <span *ngIf="!(requesting && selectedClubId === club._id)">Request Membership</span>
             <span *ngIf="requesting && selectedClubId === club._id">Processing...</span>

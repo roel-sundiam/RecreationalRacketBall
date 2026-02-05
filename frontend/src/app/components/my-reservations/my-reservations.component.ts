@@ -74,7 +74,7 @@ interface AvatarInfo {
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatTooltipModule
+    MatTooltipModule,
   ],
   template: `
     <!-- Modern page structure following design system -->
@@ -102,272 +102,105 @@ interface AvatarInfo {
         </div>
 
         <div class="content-wrapper">
-        <mat-tab-group class="reservations-tabs modern-compact-tabs" (selectedTabChange)="onTabChange($event)">
-          <!-- All Reservations -->
-          <mat-tab [label]="getTabLabel('all')" [disabled]="loading">
-            <div class="tab-content">
-              <div *ngIf="loading" class="loading-container">
-                <mat-spinner diameter="50"></mat-spinner>
-                <p>Loading all reservations...</p>
-              </div>
-
-              <div *ngIf="!loading && allReservations !== null && allReservations.length === 0" class="no-reservations">
-                <mat-icon class="large-icon">event_note</mat-icon>
-                <h2>No Reservations Found</h2>
-                <p>No court reservations have been made by any members yet.</p>
-                <button mat-raised-button color="primary" (click)="createNewReservation()">
-                  <mat-icon>add</mat-icon>
-                  Book a Court
-                </button>
-              </div>
-
-              <!-- Mobile View: New Design -->
-              <div *ngIf="!loading && allReservations !== null && allReservations.length > 0 && isMobileView" class="reservations-list mobile-schedule">
-                <div *ngFor="let group of groupedAllReservations" class="date-group">
-                  <!-- Sticky Date Header -->
-                  <div class="date-header">{{group.date}}</div>
-
-                  <!-- Reservation Cards for this Date -->
-                  <div *ngFor="let reservation of group.reservations"
-                       class="mobile-event-card"
-                       [class.homeowner-day]="reservation.isHomeownerDay"
-                       [class.expanded]="isExpanded(reservation._id)"
-                       (click)="toggleExpansion(reservation._id)">
-
-                    <!-- Time Range -->
-                    <h2 class="event-time">{{reservation.timeSlotDisplay}}</h2>
-
-                    <!-- Blocked Court Info -->
-                    <div class="block-info" *ngIf="isBlockedReservation(reservation)">
-                      <mat-icon class="inline-icon">{{getBlockReasonIcon(reservation)}}</mat-icon>
-                      <span class="block-text">
-                        <strong>{{getBlockReasonDisplay(reservation)}}</strong>
-                        <span *ngIf="reservation.blockNotes"> - {{reservation.blockNotes}}</span>
-                      </span>
-                    </div>
-
-                    <!-- Participants with Avatars (non-blocked) -->
-                    <div class="participants-section" *ngIf="!isBlockedReservation(reservation)">
-                      <div *ngFor="let playerName of getAllPlayers(reservation)" class="participant-row">
-                        <div class="avatar" [style.background-color]="getAvatarColor(playerName)">
-                          {{getInitials(playerName)}}
-                        </div>
-                        <span class="participant-name">{{playerName}}</span>
-                      </div>
-                    </div>
-
-                    <!-- Weather Info -->
-                    <div class="weather-row" *ngIf="reservation.weatherForecast">
-                      <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                      <span class="temp">{{reservation.weatherForecast.temperature}}°C</span>
-                      <span class="humidity" *ngIf="reservation.weatherForecast.humidity">
-                        Humidity: {{reservation.weatherForecast.humidity}}%
-                      </span>
-                      <span class="rain-chance-mobile" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                        Rain: {{reservation.weatherForecast.rainChance}}%
-                      </span>
-                    </div>
-
-                    <!-- Fee Badge (Floating) -->
-                    <div class="fee-badge" [style.background-color]="getFeeColor(reservation.totalFee)">
-                      ₱{{reservation.totalFee}}
-                    </div>
-
-                    <!-- Expanded Content -->
-                    <div class="expanded-content" *ngIf="isExpanded(reservation._id)">
-                      <mat-divider></mat-divider>
-
-                      <div class="expanded-details">
-                        <div class="detail-row">
-                          <mat-icon class="detail-icon">event</mat-icon>
-                          <span class="detail-label">Status:</span>
-                          <mat-chip class="status-chip" [ngClass]="'status-' + reservation.status">
-                            {{reservation.status | titlecase}}
-                          </mat-chip>
-                        </div>
-
-                        <div class="detail-row" *ngIf="reservation.userId">
-                          <mat-icon class="detail-icon">person</mat-icon>
-                          <span class="detail-label">Reserved by:</span>
-                          <span class="detail-value">{{reservation.userId.fullName}}</span>
-                        </div>
-
-                        <div class="detail-row" *ngIf="isBlockedReservation(reservation) && reservation.blockReason">
-                          <mat-icon class="detail-icon">{{getBlockReasonIcon(reservation)}}</mat-icon>
-                          <span class="detail-label">Block Reason:</span>
-                          <span class="detail-value">{{getBlockReasonDisplay(reservation)}}</span>
-                        </div>
-
-                        <div class="detail-row" *ngIf="reservation.status === 'blocked' && reservation.blockNotes">
-                          <mat-icon class="detail-icon">notes</mat-icon>
-                          <span class="detail-label">Notes:</span>
-                          <span class="detail-value">{{reservation.blockNotes}}</span>
-                        </div>
-
-                        <div class="detail-row">
-                          <mat-icon class="detail-icon">payments</mat-icon>
-                          <span class="detail-label">Fee per player:</span>
-                          <span class="detail-value">₱{{(reservation.totalFee / getAllPlayers(reservation).length) | number:'1.0-0'}}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Expand Indicator -->
-                    <mat-icon class="expand-icon" *ngIf="!isExpanded(reservation._id)">expand_more</mat-icon>
-                    <mat-icon class="expand-icon" *ngIf="isExpanded(reservation._id)">expand_less</mat-icon>
-                  </div>
+          <mat-tab-group
+            class="reservations-tabs modern-compact-tabs"
+            (selectedTabChange)="onTabChange($event)"
+          >
+            <!-- All Reservations -->
+            <mat-tab [label]="getTabLabel('all')" [disabled]="loading">
+              <div class="tab-content">
+                <div *ngIf="loading" class="loading-container">
+                  <mat-spinner diameter="50"></mat-spinner>
+                  <p>Loading all reservations...</p>
                 </div>
-              </div>
 
-              <!-- Desktop View: Original Design -->
-              <div *ngIf="!loading && allReservations !== null && allReservations.length > 0 && !isMobileView" class="reservations-list">
-                <!-- Original Desktop Design -->
-                <div *ngFor="let reservation of allReservations"
-                     class="reservation-card-compact all-reservations"
-                     [class.homeowner-day]="reservation.isHomeownerDay"
-                     [style.border-left-color]="getWeatherBorderColor(reservation)">
-                  <div class="card-left">
-                    <div class="date-badge" [ngClass]="isPastReservation(reservation.date) ? 'past' : ''">
-                      <span class="date-day">{{getDay(reservation.date)}}</span>
-                      <span class="date-info">{{getShortDate(reservation.date)}}</span>
-                    </div>
-                    <div class="reservation-main show-user-info">
-                      <div class="time-slot">{{reservation.timeSlotDisplay}}</div>
-                      <!-- Show user info only for non-blocked -->
-                      <div class="user-info" *ngIf="!isBlockedReservation(reservation) && reservation.userId">
-                        <mat-icon class="inline-icon">person</mat-icon>
-                        <span class="user-text">{{reservation.userId.fullName}}</span>
-                      </div>
-                      <!-- Show block info for blocked reservations -->
-                      <div class="block-info" *ngIf="isBlockedReservation(reservation)">
-                        <mat-icon class="inline-icon">{{getBlockReasonIcon(reservation)}}</mat-icon>
-                        <span class="block-text">
-                          <strong>{{getBlockReasonDisplay(reservation)}}</strong>
-                          <span *ngIf="reservation.blockNotes"> - {{reservation.blockNotes}}</span>
-                        </span>
-                      </div>
-                      <!-- Show players for non-blocked reservations -->
-                      <div class="players-info" *ngIf="!isBlockedReservation(reservation)">
-                        <mat-icon class="inline-icon">people</mat-icon>
-                        <span class="players-text">{{formatPlayerNames(getFilteredPlayers(reservation))}}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="card-right">
-                    <!-- Hide status chip for blocked reservations -->
-                    <div class="status-chips" *ngIf="!isBlockedReservation(reservation)">
-                      <mat-chip *ngIf="reservation.status !== 'pending'" class="status-chip" [ngClass]="'status-' + reservation.status">
-                        {{reservation.status | titlecase}}
-                      </mat-chip>
-                    </div>
-                    <div class="status-chips" *ngIf="isBlockedReservation(reservation)">
-                      <!-- Empty for blocked reservations -->
-                    </div>
-                    <!-- For blocked: hide fee, show only weather -->
-                    <div class="fee-weather" *ngIf="!isBlockedReservation(reservation)">
-                      <span class="fee">₱{{reservation.totalFee}}</span>
-                      <span class="weather" *ngIf="reservation.weatherForecast">
-                        <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                        {{reservation.weatherForecast.temperature}}°C
-                        <span class="humidity-desktop" *ngIf="reservation.weatherForecast.humidity !== undefined">
-                          {{reservation.weatherForecast.humidity}}% humidity
-                        </span>
-                        <span class="rain-chance" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                          {{reservation.weatherForecast.rainChance}}% rain
-                        </span>
-                      </span>
-                    </div>
-                    <div class="fee-weather" *ngIf="isBlockedReservation(reservation)">
-                      <!-- No fee for blocked, only weather -->
-                      <span class="weather" *ngIf="reservation.weatherForecast">
-                        <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                        {{reservation.weatherForecast.temperature}}°C
-                        <span class="rain-chance" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                          {{reservation.weatherForecast.rainChance}}% rain
-                        </span>
-                      </span>
-                    </div>
-                  </div>
+                <div
+                  *ngIf="!loading && allReservations !== null && allReservations.length === 0"
+                  class="no-reservations"
+                >
+                  <mat-icon class="large-icon">event_note</mat-icon>
+                  <h2>No Reservations Found</h2>
+                  <p>No court reservations have been made by any members yet.</p>
+                  <button mat-raised-button color="primary" (click)="createNewReservation()">
+                    <mat-icon>add</mat-icon>
+                    Book a Court
+                  </button>
                 </div>
-              </div>
-            </div>
-          </mat-tab>
-          
-          <!-- Upcoming Reservations -->
-          <mat-tab [label]="getTabLabel('upcoming')" [disabled]="loading">
-            <div class="tab-content">
-              <div *ngIf="loading" class="loading-container">
-                <mat-spinner diameter="50"></mat-spinner>
-                <p>Loading your reservations...</p>
-              </div>
 
-              <div *ngIf="!loading && upcomingReservations.length === 0" class="no-reservations">
-                <mat-icon class="large-icon">event_busy</mat-icon>
-                <h2>No Upcoming Reservations</h2>
-                <p>You don't have any upcoming court reservations.</p>
-                <button mat-raised-button color="primary" (click)="createNewReservation()">
-                  <mat-icon>add</mat-icon>
-                  Book Your First Court
-                </button>
-              </div>
+                <!-- Mobile View: New Design -->
+                <div
+                  *ngIf="
+                    !loading &&
+                    allReservations !== null &&
+                    allReservations.length > 0 &&
+                    isMobileView
+                  "
+                  class="reservations-list mobile-schedule"
+                >
+                  <div *ngFor="let group of groupedAllReservations" class="date-group">
+                    <!-- Sticky Date Header -->
+                    <div class="date-header">{{ group.date }}</div>
 
-              <!-- Mobile View: New Design -->
-              <div *ngIf="!loading && upcomingReservations.length > 0 && isMobileView" class="reservations-list mobile-schedule">
-                <div *ngFor="let group of groupedUpcomingReservations" class="date-group">
-                  <!-- Sticky Date Header -->
-                  <div class="date-header">{{group.date}}</div>
-
-                  <!-- Reservation Cards for this Date -->
-                  <div *ngFor="let reservation of group.reservations"
-                       class="mobile-event-card"
-                       [class.expanded]="isExpanded(reservation._id)">
-
-                    <!-- Action Buttons (Floating Top Right) -->
-                    <div class="action-buttons-mobile">
-                      <button mat-icon-button class="action-btn edit-btn"
-                              (click)="editReservation(reservation); $event.stopPropagation()"
-                              [disabled]="!canEdit(reservation)"
-                              matTooltip="Edit">
-                        <mat-icon>edit</mat-icon>
-                      </button>
-                      <button mat-icon-button class="action-btn cancel-btn"
-                              (click)="cancelReservation(reservation); $event.stopPropagation()"
-                              [disabled]="!canCancel(reservation)"
-                              matTooltip="Cancel">
-                        <mat-icon>cancel</mat-icon>
-                      </button>
-                    </div>
-
-                    <!-- Clickable area for expansion -->
-                    <div (click)="toggleExpansion(reservation._id)">
+                    <!-- Reservation Cards for this Date -->
+                    <div
+                      *ngFor="let reservation of group.reservations"
+                      class="mobile-event-card"
+                      [class.homeowner-day]="reservation.isHomeownerDay"
+                      [class.expanded]="isExpanded(reservation._id)"
+                      (click)="toggleExpansion(reservation._id)"
+                    >
                       <!-- Time Range -->
-                      <h2 class="event-time">{{reservation.timeSlotDisplay}}</h2>
+                      <h2 class="event-time">{{ reservation.timeSlotDisplay }}</h2>
 
-                      <!-- Participants with Avatars -->
-                      <div class="participants-section">
-                        <div *ngFor="let playerName of getAllPlayers(reservation)" class="participant-row">
+                      <!-- Blocked Court Info -->
+                      <div class="block-info" *ngIf="isBlockedReservation(reservation)">
+                        <mat-icon class="inline-icon">{{
+                          getBlockReasonIcon(reservation)
+                        }}</mat-icon>
+                        <span class="block-text">
+                          <strong>{{ getBlockReasonDisplay(reservation) }}</strong>
+                          <span *ngIf="reservation.blockNotes">
+                            - {{ reservation.blockNotes }}</span
+                          >
+                        </span>
+                      </div>
+
+                      <!-- Participants with Avatars (non-blocked) -->
+                      <div class="participants-section" *ngIf="!isBlockedReservation(reservation)">
+                        <div
+                          *ngFor="let playerName of getAllPlayers(reservation)"
+                          class="participant-row"
+                        >
                           <div class="avatar" [style.background-color]="getAvatarColor(playerName)">
-                            {{getInitials(playerName)}}
+                            {{ getInitials(playerName) }}
                           </div>
-                          <span class="participant-name">{{playerName}}</span>
+                          <span class="participant-name">{{ playerName }}</span>
                         </div>
                       </div>
 
                       <!-- Weather Info -->
                       <div class="weather-row" *ngIf="reservation.weatherForecast">
-                        <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                        <span class="temp">{{reservation.weatherForecast.temperature}}°C</span>
+                        <mat-icon class="weather-icon">{{
+                          getWeatherIcon(reservation.weatherForecast.icon)
+                        }}</mat-icon>
+                        <span class="temp">{{ reservation.weatherForecast.temperature }}°C</span>
                         <span class="humidity" *ngIf="reservation.weatherForecast.humidity">
-                          Humidity: {{reservation.weatherForecast.humidity}}%
+                          Humidity: {{ reservation.weatherForecast.humidity }}%
                         </span>
-                        <span class="rain-chance-mobile" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                          Rain: {{reservation.weatherForecast.rainChance}}%
+                        <span
+                          class="rain-chance-mobile"
+                          *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                        >
+                          Rain: {{ reservation.weatherForecast.rainChance }}%
                         </span>
                       </div>
 
                       <!-- Fee Badge (Floating) -->
-                      <div class="fee-badge" [style.background-color]="getFeeColor(reservation.totalFee)">
-                        ₱{{reservation.totalFee}}
+                      <div
+                        class="fee-badge"
+                        [style.background-color]="getFeeColor(reservation.totalFee)"
+                      >
+                        ₱{{ reservation.totalFee }}
                       </div>
 
                       <!-- Expanded Content -->
@@ -378,415 +211,832 @@ interface AvatarInfo {
                           <div class="detail-row">
                             <mat-icon class="detail-icon">event</mat-icon>
                             <span class="detail-label">Status:</span>
-                            <mat-chip class="status-chip" [ngClass]="'status-' + reservation.status">
-                              {{reservation.status | titlecase}}
+                            <mat-chip
+                              class="status-chip"
+                              [ngClass]="'status-' + reservation.status"
+                            >
+                              {{ reservation.status | titlecase }}
                             </mat-chip>
                           </div>
 
+                          <div class="detail-row" *ngIf="reservation.userId">
+                            <mat-icon class="detail-icon">person</mat-icon>
+                            <span class="detail-label">Reserved by:</span>
+                            <span class="detail-value">{{ reservation.userId.fullName }}</span>
+                          </div>
+
+                          <div
+                            class="detail-row"
+                            *ngIf="isBlockedReservation(reservation) && reservation.blockReason"
+                          >
+                            <mat-icon class="detail-icon">{{
+                              getBlockReasonIcon(reservation)
+                            }}</mat-icon>
+                            <span class="detail-label">Block Reason:</span>
+                            <span class="detail-value">{{
+                              getBlockReasonDisplay(reservation)
+                            }}</span>
+                          </div>
+
+                          <div
+                            class="detail-row"
+                            *ngIf="reservation.status === 'blocked' && reservation.blockNotes"
+                          >
+                            <mat-icon class="detail-icon">notes</mat-icon>
+                            <span class="detail-label">Notes:</span>
+                            <span class="detail-value">{{ reservation.blockNotes }}</span>
+                          </div>
+
                           <div class="detail-row">
-                            <mat-icon class="detail-icon">payment</mat-icon>
-                            <span class="detail-label">Payment:</span>
-                            <mat-chip class="payment-chip" [ngClass]="'payment-' + reservation.paymentStatus">
-                              {{getPaymentStatusText(reservation.paymentStatus)}}
+                            <mat-icon class="detail-icon">payments</mat-icon>
+                            <span class="detail-label">Fee per player:</span>
+                            <span class="detail-value"
+                              >₱{{
+                                reservation.totalFee / getAllPlayers(reservation).length
+                                  | number: '1.0-0'
+                              }}</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Expand Indicator -->
+                      <mat-icon class="expand-icon" *ngIf="!isExpanded(reservation._id)"
+                        >expand_more</mat-icon
+                      >
+                      <mat-icon class="expand-icon" *ngIf="isExpanded(reservation._id)"
+                        >expand_less</mat-icon
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Desktop View: Original Design -->
+                <div
+                  *ngIf="
+                    !loading &&
+                    allReservations !== null &&
+                    allReservations.length > 0 &&
+                    !isMobileView
+                  "
+                  class="reservations-list"
+                >
+                  <!-- Original Desktop Design -->
+                  <div
+                    *ngFor="let reservation of allReservations"
+                    class="reservation-card-compact all-reservations"
+                    [class.homeowner-day]="reservation.isHomeownerDay"
+                    [style.border-left-color]="getWeatherBorderColor(reservation)"
+                  >
+                    <div class="card-left">
+                      <div
+                        class="date-badge"
+                        [ngClass]="isPastReservation(reservation.date) ? 'past' : ''"
+                      >
+                        <span class="date-day">{{ getDay(reservation.date) }}</span>
+                        <span class="date-info">{{ getShortDate(reservation.date) }}</span>
+                      </div>
+                      <div class="reservation-main show-user-info">
+                        <div class="time-slot">{{ reservation.timeSlotDisplay }}</div>
+                        <!-- Show user info only for non-blocked -->
+                        <div
+                          class="user-info"
+                          *ngIf="!isBlockedReservation(reservation) && reservation.userId"
+                        >
+                          <mat-icon class="inline-icon">person</mat-icon>
+                          <span class="user-text">{{ reservation.userId.fullName }}</span>
+                        </div>
+                        <!-- Show block info for blocked reservations -->
+                        <div class="block-info" *ngIf="isBlockedReservation(reservation)">
+                          <mat-icon class="inline-icon">{{
+                            getBlockReasonIcon(reservation)
+                          }}</mat-icon>
+                          <span class="block-text">
+                            <strong>{{ getBlockReasonDisplay(reservation) }}</strong>
+                            <span *ngIf="reservation.blockNotes">
+                              - {{ reservation.blockNotes }}</span
+                            >
+                          </span>
+                        </div>
+                        <!-- Show players for non-blocked reservations -->
+                        <div class="players-info" *ngIf="!isBlockedReservation(reservation)">
+                          <mat-icon class="inline-icon">people</mat-icon>
+                          <span class="players-text">{{
+                            formatPlayerNames(getFilteredPlayers(reservation))
+                          }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-right">
+                      <!-- Hide status chip for blocked reservations -->
+                      <div class="status-chips" *ngIf="!isBlockedReservation(reservation)">
+                        <mat-chip
+                          *ngIf="reservation.status !== 'pending'"
+                          class="status-chip"
+                          [ngClass]="'status-' + reservation.status"
+                        >
+                          {{ reservation.status | titlecase }}
+                        </mat-chip>
+                      </div>
+                      <div class="status-chips" *ngIf="isBlockedReservation(reservation)">
+                        <!-- Empty for blocked reservations -->
+                      </div>
+                      <!-- For blocked: hide fee, show only weather -->
+                      <div class="fee-weather" *ngIf="!isBlockedReservation(reservation)">
+                        <span class="fee">₱{{ reservation.totalFee }}</span>
+                        <span class="weather" *ngIf="reservation.weatherForecast">
+                          <mat-icon class="weather-icon">{{
+                            getWeatherIcon(reservation.weatherForecast.icon)
+                          }}</mat-icon>
+                          {{ reservation.weatherForecast.temperature }}°C
+                          <span
+                            class="humidity-desktop"
+                            *ngIf="reservation.weatherForecast.humidity !== undefined"
+                          >
+                            {{ reservation.weatherForecast.humidity }}% humidity
+                          </span>
+                          <span
+                            class="rain-chance"
+                            *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                          >
+                            {{ reservation.weatherForecast.rainChance }}% rain
+                          </span>
+                        </span>
+                      </div>
+                      <div class="fee-weather" *ngIf="isBlockedReservation(reservation)">
+                        <!-- No fee for blocked, only weather -->
+                        <span class="weather" *ngIf="reservation.weatherForecast">
+                          <mat-icon class="weather-icon">{{
+                            getWeatherIcon(reservation.weatherForecast.icon)
+                          }}</mat-icon>
+                          {{ reservation.weatherForecast.temperature }}°C
+                          <span
+                            class="rain-chance"
+                            *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                          >
+                            {{ reservation.weatherForecast.rainChance }}% rain
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Upcoming Reservations -->
+            <mat-tab [label]="getTabLabel('upcoming')" [disabled]="loading">
+              <div class="tab-content">
+                <div *ngIf="loading" class="loading-container">
+                  <mat-spinner diameter="50"></mat-spinner>
+                  <p>Loading your reservations...</p>
+                </div>
+
+                <div *ngIf="!loading && upcomingReservations.length === 0" class="no-reservations">
+                  <mat-icon class="large-icon">event_busy</mat-icon>
+                  <h2>No Upcoming Reservations</h2>
+                  <p>You don't have any upcoming court reservations.</p>
+                  <button mat-raised-button color="primary" (click)="createNewReservation()">
+                    <mat-icon>add</mat-icon>
+                    Book Your First Court
+                  </button>
+                </div>
+
+                <!-- Mobile View: New Design -->
+                <div
+                  *ngIf="!loading && upcomingReservations.length > 0 && isMobileView"
+                  class="reservations-list mobile-schedule"
+                >
+                  <div *ngFor="let group of groupedUpcomingReservations" class="date-group">
+                    <!-- Sticky Date Header -->
+                    <div class="date-header">{{ group.date }}</div>
+
+                    <!-- Reservation Cards for this Date -->
+                    <div
+                      *ngFor="let reservation of group.reservations"
+                      class="mobile-event-card"
+                      [class.expanded]="isExpanded(reservation._id)"
+                    >
+                      <!-- Action Buttons (Floating Top Right) -->
+                      <div class="action-buttons-mobile">
+                        <button
+                          mat-icon-button
+                          class="action-btn edit-btn"
+                          (click)="editReservation(reservation); $event.stopPropagation()"
+                          [disabled]="!canEdit(reservation)"
+                          matTooltip="Edit"
+                        >
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          class="action-btn cancel-btn"
+                          (click)="cancelReservation(reservation); $event.stopPropagation()"
+                          [disabled]="!canCancel(reservation)"
+                          matTooltip="Cancel"
+                        >
+                          <mat-icon>cancel</mat-icon>
+                        </button>
+                      </div>
+
+                      <!-- Clickable area for expansion -->
+                      <div (click)="toggleExpansion(reservation._id)">
+                        <!-- Time Range -->
+                        <h2 class="event-time">{{ reservation.timeSlotDisplay }}</h2>
+
+                        <!-- Participants with Avatars -->
+                        <div class="participants-section">
+                          <div
+                            *ngFor="let playerName of getAllPlayers(reservation)"
+                            class="participant-row"
+                          >
+                            <div
+                              class="avatar"
+                              [style.background-color]="getAvatarColor(playerName)"
+                            >
+                              {{ getInitials(playerName) }}
+                            </div>
+                            <span class="participant-name">{{ playerName }}</span>
+                          </div>
+                        </div>
+
+                        <!-- Weather Info -->
+                        <div class="weather-row" *ngIf="reservation.weatherForecast">
+                          <mat-icon class="weather-icon">{{
+                            getWeatherIcon(reservation.weatherForecast.icon)
+                          }}</mat-icon>
+                          <span class="temp">{{ reservation.weatherForecast.temperature }}°C</span>
+                          <span class="humidity" *ngIf="reservation.weatherForecast.humidity">
+                            Humidity: {{ reservation.weatherForecast.humidity }}%
+                          </span>
+                          <span
+                            class="rain-chance-mobile"
+                            *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                          >
+                            Rain: {{ reservation.weatherForecast.rainChance }}%
+                          </span>
+                        </div>
+
+                        <!-- Fee Badge (Floating) -->
+                        <div
+                          class="fee-badge"
+                          [style.background-color]="getFeeColor(reservation.totalFee)"
+                        >
+                          ₱{{ reservation.totalFee }}
+                        </div>
+
+                        <!-- Expanded Content -->
+                        <div class="expanded-content" *ngIf="isExpanded(reservation._id)">
+                          <mat-divider></mat-divider>
+
+                          <div class="expanded-details">
+                            <div class="detail-row">
+                              <mat-icon class="detail-icon">event</mat-icon>
+                              <span class="detail-label">Status:</span>
+                              <mat-chip
+                                class="status-chip"
+                                [ngClass]="'status-' + reservation.status"
+                              >
+                                {{ reservation.status | titlecase }}
+                              </mat-chip>
+                            </div>
+
+                            <div class="detail-row">
+                              <mat-icon class="detail-icon">payment</mat-icon>
+                              <span class="detail-label">Payment:</span>
+                              <mat-chip
+                                class="payment-chip"
+                                [ngClass]="'payment-' + reservation.paymentStatus"
+                              >
+                                {{ getPaymentStatusText(reservation.paymentStatus) }}
+                              </mat-chip>
+                            </div>
+
+                            <div class="detail-row">
+                              <mat-icon class="detail-icon">payments</mat-icon>
+                              <span class="detail-label">Fee per player:</span>
+                              <span class="detail-value"
+                                >₱{{
+                                  reservation.totalFee / getAllPlayers(reservation).length
+                                    | number: '1.0-0'
+                                }}</span
+                              >
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Expand Indicator -->
+                        <mat-icon class="expand-icon" *ngIf="!isExpanded(reservation._id)"
+                          >expand_more</mat-icon
+                        >
+                        <mat-icon class="expand-icon" *ngIf="isExpanded(reservation._id)"
+                          >expand_less</mat-icon
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Desktop View: Original Design -->
+                <div
+                  *ngIf="!loading && upcomingReservations.length > 0 && !isMobileView"
+                  class="reservations-list"
+                >
+                  <div
+                    *ngFor="let reservation of upcomingReservations"
+                    class="reservation-card-compact"
+                  >
+                    <!-- Mobile Action Buttons (Upper Right Corner) -->
+                    <div class="card-actions-mobile" *ngIf="isMobileView">
+                      <button
+                        mat-icon-button
+                        class="action-btn edit-btn"
+                        (click)="editReservation(reservation)"
+                        [disabled]="!canEdit(reservation)"
+                        matTooltip="Edit"
+                      >
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        class="action-btn cancel-btn"
+                        (click)="cancelReservation(reservation)"
+                        [disabled]="!canCancel(reservation)"
+                        matTooltip="Cancel"
+                      >
+                        <mat-icon>cancel</mat-icon>
+                      </button>
+                    </div>
+
+                    <div class="card-left">
+                      <div class="date-badge">
+                        <span class="date-day">{{ getDay(reservation.date) }}</span>
+                        <span class="date-info">{{ getShortDate(reservation.date) }}</span>
+                      </div>
+                      <div class="reservation-main">
+                        <div class="time-slot">{{ reservation.timeSlotDisplay }}</div>
+                        <div class="players-info">
+                          <mat-icon class="inline-icon">people</mat-icon>
+                          <span class="players-text">{{
+                            formatPlayerNames(reservation.players)
+                          }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-right">
+                      <div class="status-chips">
+                        <mat-chip
+                          *ngIf="reservation.status !== 'pending'"
+                          class="status-chip"
+                          [ngClass]="'status-' + reservation.status"
+                        >
+                          {{ reservation.status | titlecase }}
+                        </mat-chip>
+                        <mat-chip
+                          class="payment-chip"
+                          [ngClass]="'payment-' + reservation.paymentStatus"
+                        >
+                          {{ getPaymentStatusText(reservation.paymentStatus) }}
+                        </mat-chip>
+                      </div>
+                      <div class="fee-weather">
+                        <span class="fee">₱{{ reservation.totalFee }}</span>
+                        <span class="weather" *ngIf="reservation.weatherForecast">
+                          <mat-icon class="weather-icon">{{
+                            getWeatherIcon(reservation.weatherForecast.icon)
+                          }}</mat-icon>
+                          {{ reservation.weatherForecast.temperature }}°C
+                          <span
+                            class="rain-chance"
+                            *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                          >
+                            {{ reservation.weatherForecast.rainChance }}%
+                          </span>
+                        </span>
+                      </div>
+                      <!-- Desktop Action Buttons (Bottom Right) -->
+                      <div class="card-actions" *ngIf="!isMobileView">
+                        <button
+                          mat-icon-button
+                          class="action-btn edit-btn"
+                          (click)="editReservation(reservation)"
+                          [disabled]="!canEdit(reservation)"
+                          matTooltip="Edit"
+                        >
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          class="action-btn cancel-btn"
+                          (click)="cancelReservation(reservation)"
+                          [disabled]="!canCancel(reservation)"
+                          matTooltip="Cancel"
+                        >
+                          <mat-icon>cancel</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Past Reservations -->
+            <mat-tab [label]="getTabLabel('history')" [disabled]="loading">
+              <div class="tab-content">
+                <div *ngIf="loading" class="loading-container">
+                  <mat-spinner diameter="50"></mat-spinner>
+                  <p>Loading reservation history...</p>
+                </div>
+
+                <div *ngIf="!loading && pastReservations.length === 0" class="no-reservations">
+                  <mat-icon class="large-icon">history</mat-icon>
+                  <h2>No Past Reservations</h2>
+                  <p>Your reservation history will appear here.</p>
+                </div>
+
+                <!-- Mobile View: New Design -->
+                <div
+                  *ngIf="!loading && pastReservations.length > 0 && isMobileView"
+                  class="reservations-list mobile-schedule"
+                >
+                  <div *ngFor="let group of groupedPastReservations" class="date-group">
+                    <!-- Sticky Date Header -->
+                    <div class="date-header past-header">{{ group.date }}</div>
+
+                    <!-- Reservation Cards for this Date -->
+                    <div
+                      *ngFor="let reservation of group.reservations"
+                      class="mobile-event-card past-card"
+                      [class.expanded]="isExpanded(reservation._id)"
+                      (click)="toggleExpansion(reservation._id)"
+                    >
+                      <!-- Time Range -->
+                      <h2 class="event-time">{{ reservation.timeSlotDisplay }}</h2>
+
+                      <!-- Participants with Avatars -->
+                      <div class="participants-section">
+                        <div
+                          *ngFor="let playerName of getAllPlayers(reservation)"
+                          class="participant-row"
+                        >
+                          <div class="avatar" [style.background-color]="getAvatarColor(playerName)">
+                            {{ getInitials(playerName) }}
+                          </div>
+                          <span class="participant-name">{{ playerName }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Weather Info (if available) -->
+                      <div class="weather-row" *ngIf="reservation.weatherForecast">
+                        <mat-icon class="weather-icon">{{
+                          getWeatherIcon(reservation.weatherForecast.icon)
+                        }}</mat-icon>
+                        <span class="temp">{{ reservation.weatherForecast.temperature }}°C</span>
+                        <span class="humidity" *ngIf="reservation.weatherForecast.humidity">
+                          Humidity: {{ reservation.weatherForecast.humidity }}%
+                        </span>
+                        <span
+                          class="rain-chance-mobile"
+                          *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                        >
+                          Rain: {{ reservation.weatherForecast.rainChance }}%
+                        </span>
+                      </div>
+
+                      <!-- Fee Badge (Floating) -->
+                      <div
+                        class="fee-badge past-badge"
+                        [style.background-color]="getFeeColor(reservation.totalFee)"
+                      >
+                        ₱{{ reservation.totalFee }}
+                      </div>
+
+                      <!-- Expanded Content -->
+                      <div class="expanded-content" *ngIf="isExpanded(reservation._id)">
+                        <mat-divider></mat-divider>
+
+                        <div class="expanded-details">
+                          <div class="detail-row">
+                            <mat-icon class="detail-icon">event</mat-icon>
+                            <span class="detail-label">Status:</span>
+                            <mat-chip
+                              class="status-chip"
+                              [ngClass]="'status-' + reservation.status"
+                            >
+                              {{ reservation.status | titlecase }}
                             </mat-chip>
                           </div>
 
                           <div class="detail-row">
                             <mat-icon class="detail-icon">payments</mat-icon>
                             <span class="detail-label">Fee per player:</span>
-                            <span class="detail-value">₱{{(reservation.totalFee / getAllPlayers(reservation).length) | number:'1.0-0'}}</span>
+                            <span class="detail-value"
+                              >₱{{
+                                reservation.totalFee / getAllPlayers(reservation).length
+                                  | number: '1.0-0'
+                              }}</span
+                            >
+                          </div>
+
+                          <div class="detail-row">
+                            <mat-icon class="detail-icon">calendar_today</mat-icon>
+                            <span class="detail-label">Date:</span>
+                            <span class="detail-value">{{
+                              reservation.date | date: 'fullDate'
+                            }}</span>
                           </div>
                         </div>
                       </div>
 
                       <!-- Expand Indicator -->
-                      <mat-icon class="expand-icon" *ngIf="!isExpanded(reservation._id)">expand_more</mat-icon>
-                      <mat-icon class="expand-icon" *ngIf="isExpanded(reservation._id)">expand_less</mat-icon>
+                      <mat-icon class="expand-icon" *ngIf="!isExpanded(reservation._id)"
+                        >expand_more</mat-icon
+                      >
+                      <mat-icon class="expand-icon" *ngIf="isExpanded(reservation._id)"
+                        >expand_less</mat-icon
+                      >
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Desktop View: Original Design -->
-              <div *ngIf="!loading && upcomingReservations.length > 0 && !isMobileView" class="reservations-list">
-                <div *ngFor="let reservation of upcomingReservations" class="reservation-card-compact">
-                  <!-- Mobile Action Buttons (Upper Right Corner) -->
-                  <div class="card-actions-mobile" *ngIf="isMobileView">
-                    <button mat-icon-button class="action-btn edit-btn"
-                            (click)="editReservation(reservation)"
-                            [disabled]="!canEdit(reservation)"
-                            matTooltip="Edit">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button class="action-btn cancel-btn"
-                            (click)="cancelReservation(reservation)"
-                            [disabled]="!canCancel(reservation)"
-                            matTooltip="Cancel">
-                      <mat-icon>cancel</mat-icon>
-                    </button>
-                  </div>
-
-                  <div class="card-left">
-                    <div class="date-badge">
-                      <span class="date-day">{{getDay(reservation.date)}}</span>
-                      <span class="date-info">{{getShortDate(reservation.date)}}</span>
-                    </div>
-                    <div class="reservation-main">
-                      <div class="time-slot">{{reservation.timeSlotDisplay}}</div>
-                      <div class="players-info">
-                        <mat-icon class="inline-icon">people</mat-icon>
-                        <span class="players-text">{{formatPlayerNames(reservation.players)}}</span>
+                <!-- Desktop View: Original Design -->
+                <div
+                  *ngIf="!loading && pastReservations.length > 0 && !isMobileView"
+                  class="reservations-list"
+                >
+                  <div
+                    *ngFor="let reservation of pastReservations"
+                    class="reservation-card-compact past"
+                  >
+                    <div class="card-left">
+                      <div class="date-badge past">
+                        <span class="date-day">{{ getDay(reservation.date) }}</span>
+                        <span class="date-info">{{ getShortDate(reservation.date) }}</span>
                       </div>
-                    </div>
-                  </div>
-                  <div class="card-right">
-                    <div class="status-chips">
-                      <mat-chip *ngIf="reservation.status !== 'pending'" class="status-chip" [ngClass]="'status-' + reservation.status">
-                        {{reservation.status | titlecase}}
-                      </mat-chip>
-                      <mat-chip class="payment-chip" [ngClass]="'payment-' + reservation.paymentStatus">
-                        {{getPaymentStatusText(reservation.paymentStatus)}}
-                      </mat-chip>
-                    </div>
-                    <div class="fee-weather">
-                      <span class="fee">₱{{reservation.totalFee}}</span>
-                      <span class="weather" *ngIf="reservation.weatherForecast">
-                        <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                        {{reservation.weatherForecast.temperature}}°C
-                        <span class="rain-chance" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                          {{reservation.weatherForecast.rainChance}}%
-                        </span>
-                      </span>
-                    </div>
-                    <!-- Desktop Action Buttons (Bottom Right) -->
-                    <div class="card-actions" *ngIf="!isMobileView">
-                      <button mat-icon-button class="action-btn edit-btn"
-                              (click)="editReservation(reservation)"
-                              [disabled]="!canEdit(reservation)"
-                              matTooltip="Edit">
-                        <mat-icon>edit</mat-icon>
-                      </button>
-                      <button mat-icon-button class="action-btn cancel-btn"
-                              (click)="cancelReservation(reservation)"
-                              [disabled]="!canCancel(reservation)"
-                              matTooltip="Cancel">
-                        <mat-icon>cancel</mat-icon>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </mat-tab>
-          
-          <!-- Past Reservations -->
-          <mat-tab [label]="getTabLabel('history')" [disabled]="loading">
-            <div class="tab-content">
-              <div *ngIf="loading" class="loading-container">
-                <mat-spinner diameter="50"></mat-spinner>
-                <p>Loading reservation history...</p>
-              </div>
-
-              <div *ngIf="!loading && pastReservations.length === 0" class="no-reservations">
-                <mat-icon class="large-icon">history</mat-icon>
-                <h2>No Past Reservations</h2>
-                <p>Your reservation history will appear here.</p>
-              </div>
-
-              <!-- Mobile View: New Design -->
-              <div *ngIf="!loading && pastReservations.length > 0 && isMobileView" class="reservations-list mobile-schedule">
-                <div *ngFor="let group of groupedPastReservations" class="date-group">
-                  <!-- Sticky Date Header -->
-                  <div class="date-header past-header">{{group.date}}</div>
-
-                  <!-- Reservation Cards for this Date -->
-                  <div *ngFor="let reservation of group.reservations"
-                       class="mobile-event-card past-card"
-                       [class.expanded]="isExpanded(reservation._id)"
-                       (click)="toggleExpansion(reservation._id)">
-
-                    <!-- Time Range -->
-                    <h2 class="event-time">{{reservation.timeSlotDisplay}}</h2>
-
-                    <!-- Participants with Avatars -->
-                    <div class="participants-section">
-                      <div *ngFor="let playerName of getAllPlayers(reservation)" class="participant-row">
-                        <div class="avatar" [style.background-color]="getAvatarColor(playerName)">
-                          {{getInitials(playerName)}}
-                        </div>
-                        <span class="participant-name">{{playerName}}</span>
-                      </div>
-                    </div>
-
-                    <!-- Weather Info (if available) -->
-                    <div class="weather-row" *ngIf="reservation.weatherForecast">
-                      <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                      <span class="temp">{{reservation.weatherForecast.temperature}}°C</span>
-                      <span class="humidity" *ngIf="reservation.weatherForecast.humidity">
-                        Humidity: {{reservation.weatherForecast.humidity}}%
-                      </span>
-                      <span class="rain-chance-mobile" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                        Rain: {{reservation.weatherForecast.rainChance}}%
-                      </span>
-                    </div>
-
-                    <!-- Fee Badge (Floating) -->
-                    <div class="fee-badge past-badge" [style.background-color]="getFeeColor(reservation.totalFee)">
-                      ₱{{reservation.totalFee}}
-                    </div>
-
-                    <!-- Expanded Content -->
-                    <div class="expanded-content" *ngIf="isExpanded(reservation._id)">
-                      <mat-divider></mat-divider>
-
-                      <div class="expanded-details">
-                        <div class="detail-row">
-                          <mat-icon class="detail-icon">event</mat-icon>
-                          <span class="detail-label">Status:</span>
-                          <mat-chip class="status-chip" [ngClass]="'status-' + reservation.status">
-                            {{reservation.status | titlecase}}
-                          </mat-chip>
-                        </div>
-
-                        <div class="detail-row">
-                          <mat-icon class="detail-icon">payments</mat-icon>
-                          <span class="detail-label">Fee per player:</span>
-                          <span class="detail-value">₱{{(reservation.totalFee / getAllPlayers(reservation).length) | number:'1.0-0'}}</span>
-                        </div>
-
-                        <div class="detail-row">
-                          <mat-icon class="detail-icon">calendar_today</mat-icon>
-                          <span class="detail-label">Date:</span>
-                          <span class="detail-value">{{reservation.date | date:'fullDate'}}</span>
+                      <div class="reservation-main">
+                        <div class="time-slot">{{ reservation.timeSlotDisplay }}</div>
+                        <div class="players-info">
+                          <mat-icon class="inline-icon">people</mat-icon>
+                          <span class="players-text">{{
+                            formatPlayerNames(reservation.players)
+                          }}</span>
                         </div>
                       </div>
                     </div>
-
-                    <!-- Expand Indicator -->
-                    <mat-icon class="expand-icon" *ngIf="!isExpanded(reservation._id)">expand_more</mat-icon>
-                    <mat-icon class="expand-icon" *ngIf="isExpanded(reservation._id)">expand_less</mat-icon>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Desktop View: Original Design -->
-              <div *ngIf="!loading && pastReservations.length > 0 && !isMobileView" class="reservations-list">
-                <div *ngFor="let reservation of pastReservations" class="reservation-card-compact past">
-                  <div class="card-left">
-                    <div class="date-badge past">
-                      <span class="date-day">{{getDay(reservation.date)}}</span>
-                      <span class="date-info">{{getShortDate(reservation.date)}}</span>
-                    </div>
-                    <div class="reservation-main">
-                      <div class="time-slot">{{reservation.timeSlotDisplay}}</div>
-                      <div class="players-info">
-                        <mat-icon class="inline-icon">people</mat-icon>
-                        <span class="players-text">{{formatPlayerNames(reservation.players)}}</span>
+                    <div class="card-right">
+                      <div class="status-chips">
+                        <mat-chip
+                          *ngIf="reservation.status !== 'pending'"
+                          class="status-chip"
+                          [ngClass]="'status-' + reservation.status"
+                        >
+                          {{ reservation.status | titlecase }}
+                        </mat-chip>
+                      </div>
+                      <div class="fee-weather">
+                        <span class="fee">₱{{ reservation.totalFee }}</span>
                       </div>
                     </div>
                   </div>
-                  <div class="card-right">
-                    <div class="status-chips">
-                      <mat-chip *ngIf="reservation.status !== 'pending'" class="status-chip" [ngClass]="'status-' + reservation.status">
-                        {{reservation.status | titlecase}}
-                      </mat-chip>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Admin Report Tab (Superadmin Only) -->
+            <mat-tab
+              *ngIf="isSuperAdmin()"
+              [label]="isMobileView ? 'Admin' : 'Admin Report'"
+              [disabled]="loading"
+            >
+              <div class="tab-content">
+                <!-- Summary Statistics Card -->
+                <div
+                  class="admin-stats-card"
+                  *ngIf="!loading && sortedAdminReservations.length > 0"
+                >
+                  <h3>
+                    <mat-icon>analytics</mat-icon>
+                    Report Summary
+                  </h3>
+                  <div class="stats-grid">
+                    <div class="stat-item">
+                      <span class="stat-label">Total Reservations</span>
+                      <span class="stat-value">{{ adminStats.total }}</span>
                     </div>
-                    <div class="fee-weather">
-                      <span class="fee">₱{{reservation.totalFee}}</span>
+                    <div class="stat-item status-pending">
+                      <span class="stat-label">Pending</span>
+                      <span class="stat-value">{{ adminStats.pending }}</span>
+                    </div>
+                    <div class="stat-item status-confirmed">
+                      <span class="stat-label">Confirmed</span>
+                      <span class="stat-value">{{ adminStats.confirmed }}</span>
+                    </div>
+                    <div class="stat-item status-cancelled">
+                      <span class="stat-label">Cancelled</span>
+                      <span class="stat-value">{{ adminStats.cancelled }}</span>
+                    </div>
+                    <div class="stat-item status-completed">
+                      <span class="stat-label">Completed</span>
+                      <span class="stat-value">{{ adminStats.completed }}</span>
+                    </div>
+                    <div class="stat-item status-no-show">
+                      <span class="stat-label">No-Show</span>
+                      <span class="stat-value">{{ adminStats.noShow }}</span>
+                    </div>
+                    <div class="stat-item revenue-total">
+                      <span class="stat-label">Total Revenue</span>
+                      <span class="stat-value">₱{{ adminStats.totalRevenue }}</span>
+                    </div>
+                    <div class="stat-item revenue-paid">
+                      <span class="stat-label">Paid Revenue</span>
+                      <span class="stat-value">₱{{ adminStats.paidRevenue }}</span>
+                    </div>
+                    <div class="stat-item revenue-pending">
+                      <span class="stat-label">Pending Revenue</span>
+                      <span class="stat-value">₱{{ adminStats.pendingRevenue }}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </mat-tab>
 
-          <!-- Admin Report Tab (Superadmin Only) -->
-          <mat-tab *ngIf="isSuperAdmin()" [label]="isMobileView ? 'Admin' : 'Admin Report'" [disabled]="loading">
-            <div class="tab-content">
-              <!-- Summary Statistics Card -->
-              <div class="admin-stats-card" *ngIf="!loading && sortedAdminReservations.length > 0">
-                <h3>
-                  <mat-icon>analytics</mat-icon>
-                  Report Summary
-                </h3>
-                <div class="stats-grid">
-                  <div class="stat-item">
-                    <span class="stat-label">Total Reservations</span>
-                    <span class="stat-value">{{adminStats.total}}</span>
-                  </div>
-                  <div class="stat-item status-pending">
-                    <span class="stat-label">Pending</span>
-                    <span class="stat-value">{{adminStats.pending}}</span>
-                  </div>
-                  <div class="stat-item status-confirmed">
-                    <span class="stat-label">Confirmed</span>
-                    <span class="stat-value">{{adminStats.confirmed}}</span>
-                  </div>
-                  <div class="stat-item status-cancelled">
-                    <span class="stat-label">Cancelled</span>
-                    <span class="stat-value">{{adminStats.cancelled}}</span>
-                  </div>
-                  <div class="stat-item status-completed">
-                    <span class="stat-label">Completed</span>
-                    <span class="stat-value">{{adminStats.completed}}</span>
-                  </div>
-                  <div class="stat-item status-no-show">
-                    <span class="stat-label">No-Show</span>
-                    <span class="stat-value">{{adminStats.noShow}}</span>
-                  </div>
-                  <div class="stat-item revenue-total">
-                    <span class="stat-label">Total Revenue</span>
-                    <span class="stat-value">₱{{adminStats.totalRevenue}}</span>
-                  </div>
-                  <div class="stat-item revenue-paid">
-                    <span class="stat-label">Paid Revenue</span>
-                    <span class="stat-value">₱{{adminStats.paidRevenue}}</span>
-                  </div>
-                  <div class="stat-item revenue-pending">
-                    <span class="stat-label">Pending Revenue</span>
-                    <span class="stat-value">₱{{adminStats.pendingRevenue}}</span>
-                  </div>
+                <div *ngIf="loading" class="loading-container">
+                  <mat-spinner diameter="50"></mat-spinner>
+                  <p>Loading admin report...</p>
                 </div>
-              </div>
 
-              <div *ngIf="loading" class="loading-container">
-                <mat-spinner diameter="50"></mat-spinner>
-                <p>Loading admin report...</p>
-              </div>
+                <div
+                  *ngIf="!loading && sortedAdminReservations.length === 0"
+                  class="no-reservations"
+                >
+                  <mat-icon class="large-icon">assessment</mat-icon>
+                  <h2>No Reservations Data</h2>
+                  <p>No court reservations found in the system.</p>
+                </div>
 
-              <div *ngIf="!loading && sortedAdminReservations.length === 0" class="no-reservations">
-                <mat-icon class="large-icon">assessment</mat-icon>
-                <h2>No Reservations Data</h2>
-                <p>No court reservations found in the system.</p>
-              </div>
+                <!-- Nested tabs for Admin Report -->
+                <mat-tab-group
+                  *ngIf="!loading && sortedAdminReservations.length > 0"
+                  class="admin-sub-tabs modern-compact-tabs"
+                >
+                  <!-- Pending Items Tab -->
+                  <mat-tab label="Pending Items ({{ pendingAdminReservations.length }})">
+                    <div class="tab-content">
+                      <div *ngIf="pendingAdminReservations.length === 0" class="no-reservations">
+                        <mat-icon class="large-icon">check_circle</mat-icon>
+                        <h2>All Clear!</h2>
+                        <p>No pending items or pending payments.</p>
+                      </div>
 
-              <!-- Nested tabs for Admin Report -->
-              <mat-tab-group *ngIf="!loading && sortedAdminReservations.length > 0" class="admin-sub-tabs modern-compact-tabs">
-                <!-- Pending Items Tab -->
-                <mat-tab label="Pending Items ({{pendingAdminReservations.length}})">
-                  <div class="tab-content">
-                    <div *ngIf="pendingAdminReservations.length === 0" class="no-reservations">
-                      <mat-icon class="large-icon">check_circle</mat-icon>
-                      <h2>All Clear!</h2>
-                      <p>No pending items or pending payments.</p>
-                    </div>
-
-                    <div *ngIf="pendingAdminReservations.length > 0" class="reservations-list">
-                      <div *ngFor="let reservation of pendingAdminReservations"
-                           class="reservation-card-compact admin-report"
-                           [class.cancelled-reservation]="reservation.status === 'cancelled'"
-                           [class.completed-reservation]="reservation.status === 'completed'"
-                           [style.border-left-color]="getWeatherBorderColor(reservation)">
-                        <div class="card-left">
-                          <div class="date-badge"
-                               [ngClass]="{
-                                 'past': isPastReservation(reservation.date),
-                                 'cancelled': reservation.status === 'cancelled'
-                               }">
-                            <span class="date-day">{{getDay(reservation.date)}}</span>
-                            <span class="date-info">{{getShortDate(reservation.date)}}</span>
-                          </div>
-                          <div class="reservation-main show-user-info">
-                            <div class="time-slot">{{reservation.timeSlotDisplay}}</div>
-                            <div class="user-info" *ngIf="reservation.userId">
-                              <mat-icon class="inline-icon">person</mat-icon>
-                              <span class="user-text">{{reservation.userId.fullName}}</span>
+                      <div *ngIf="pendingAdminReservations.length > 0" class="reservations-list">
+                        <div
+                          *ngFor="let reservation of pendingAdminReservations"
+                          class="reservation-card-compact admin-report"
+                          [class.cancelled-reservation]="reservation.status === 'cancelled'"
+                          [class.completed-reservation]="reservation.status === 'completed'"
+                          [style.border-left-color]="getWeatherBorderColor(reservation)"
+                        >
+                          <div class="card-left">
+                            <div
+                              class="date-badge"
+                              [ngClass]="{
+                                past: isPastReservation(reservation.date),
+                                cancelled: reservation.status === 'cancelled',
+                              }"
+                            >
+                              <span class="date-day">{{ getDay(reservation.date) }}</span>
+                              <span class="date-info">{{ getShortDate(reservation.date) }}</span>
                             </div>
-                            <div class="players-info">
-                              <mat-icon class="inline-icon">people</mat-icon>
-                              <span class="players-text">{{formatPlayerNames(getFilteredPlayers(reservation))}}</span>
+                            <div class="reservation-main show-user-info">
+                              <div class="time-slot">{{ reservation.timeSlotDisplay }}</div>
+                              <div class="user-info" *ngIf="reservation.userId">
+                                <mat-icon class="inline-icon">person</mat-icon>
+                                <span class="user-text">{{ reservation.userId.fullName }}</span>
+                              </div>
+                              <div class="players-info">
+                                <mat-icon class="inline-icon">people</mat-icon>
+                                <span class="players-text">{{
+                                  formatPlayerNames(getFilteredPlayers(reservation))
+                                }}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div class="card-right">
-                          <div class="status-chips">
-                            <mat-chip class="status-chip" [ngClass]="'status-' + reservation.status">
-                              {{reservation.status | titlecase}}
-                            </mat-chip>
-                            <mat-chip class="payment-chip" [ngClass]="'payment-' + reservation.paymentStatus">
-                              {{getPaymentStatusText(reservation.paymentStatus)}}
-                            </mat-chip>
-                          </div>
-                          <div class="fee-weather">
-                            <span class="fee">₱{{reservation.totalFee}}</span>
-                            <span class="weather" *ngIf="reservation.weatherForecast">
-                              <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                              {{reservation.weatherForecast.temperature}}°C
-                              <span class="rain-chance" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                                {{reservation.weatherForecast.rainChance}}%
+                          <div class="card-right">
+                            <div class="status-chips">
+                              <mat-chip
+                                class="status-chip"
+                                [ngClass]="'status-' + reservation.status"
+                              >
+                                {{ reservation.status | titlecase }}
+                              </mat-chip>
+                              <mat-chip
+                                class="payment-chip"
+                                [ngClass]="'payment-' + reservation.paymentStatus"
+                              >
+                                {{ getPaymentStatusText(reservation.paymentStatus) }}
+                              </mat-chip>
+                            </div>
+                            <div class="fee-weather">
+                              <span class="fee">₱{{ reservation.totalFee }}</span>
+                              <span class="weather" *ngIf="reservation.weatherForecast">
+                                <mat-icon class="weather-icon">{{
+                                  getWeatherIcon(reservation.weatherForecast.icon)
+                                }}</mat-icon>
+                                {{ reservation.weatherForecast.temperature }}°C
+                                <span
+                                  class="rain-chance"
+                                  *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                                >
+                                  {{ reservation.weatherForecast.rainChance }}%
+                                </span>
                               </span>
-                            </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </mat-tab>
+                  </mat-tab>
 
-                <!-- Other Items Tab -->
-                <mat-tab label="Other Items ({{otherAdminReservations.length}})">
-                  <div class="tab-content">
-                    <div *ngIf="otherAdminReservations.length === 0" class="no-reservations">
-                      <mat-icon class="large-icon">inbox</mat-icon>
-                      <h2>No Other Items</h2>
-                      <p>No confirmed, cancelled, completed, or no-show reservations.</p>
-                    </div>
+                  <!-- Other Items Tab -->
+                  <mat-tab label="Other Items ({{ otherAdminReservations.length }})">
+                    <div class="tab-content">
+                      <div *ngIf="otherAdminReservations.length === 0" class="no-reservations">
+                        <mat-icon class="large-icon">inbox</mat-icon>
+                        <h2>No Other Items</h2>
+                        <p>No confirmed, cancelled, completed, or no-show reservations.</p>
+                      </div>
 
-                    <div *ngIf="otherAdminReservations.length > 0" class="reservations-list">
-                      <div *ngFor="let reservation of otherAdminReservations"
-                           class="reservation-card-compact admin-report"
-                           [class.cancelled-reservation]="reservation.status === 'cancelled'"
-                           [class.completed-reservation]="reservation.status === 'completed'"
-                           [style.border-left-color]="getWeatherBorderColor(reservation)">
-                        <div class="card-left">
-                          <div class="date-badge"
-                               [ngClass]="{
-                                 'past': isPastReservation(reservation.date),
-                                 'cancelled': reservation.status === 'cancelled'
-                               }">
-                            <span class="date-day">{{getDay(reservation.date)}}</span>
-                            <span class="date-info">{{getShortDate(reservation.date)}}</span>
-                          </div>
-                          <div class="reservation-main show-user-info">
-                            <div class="time-slot">{{reservation.timeSlotDisplay}}</div>
-                            <div class="user-info" *ngIf="reservation.userId">
-                              <mat-icon class="inline-icon">person</mat-icon>
-                              <span class="user-text">{{reservation.userId.fullName}}</span>
+                      <div *ngIf="otherAdminReservations.length > 0" class="reservations-list">
+                        <div
+                          *ngFor="let reservation of otherAdminReservations"
+                          class="reservation-card-compact admin-report"
+                          [class.cancelled-reservation]="reservation.status === 'cancelled'"
+                          [class.completed-reservation]="reservation.status === 'completed'"
+                          [style.border-left-color]="getWeatherBorderColor(reservation)"
+                        >
+                          <div class="card-left">
+                            <div
+                              class="date-badge"
+                              [ngClass]="{
+                                past: isPastReservation(reservation.date),
+                                cancelled: reservation.status === 'cancelled',
+                              }"
+                            >
+                              <span class="date-day">{{ getDay(reservation.date) }}</span>
+                              <span class="date-info">{{ getShortDate(reservation.date) }}</span>
                             </div>
-                            <div class="players-info">
-                              <mat-icon class="inline-icon">people</mat-icon>
-                              <span class="players-text">{{formatPlayerNames(getFilteredPlayers(reservation))}}</span>
+                            <div class="reservation-main show-user-info">
+                              <div class="time-slot">{{ reservation.timeSlotDisplay }}</div>
+                              <div class="user-info" *ngIf="reservation.userId">
+                                <mat-icon class="inline-icon">person</mat-icon>
+                                <span class="user-text">{{ reservation.userId.fullName }}</span>
+                              </div>
+                              <div class="players-info">
+                                <mat-icon class="inline-icon">people</mat-icon>
+                                <span class="players-text">{{
+                                  formatPlayerNames(getFilteredPlayers(reservation))
+                                }}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div class="card-right">
-                          <div class="status-chips">
-                            <mat-chip class="status-chip" [ngClass]="'status-' + reservation.status">
-                              {{reservation.status | titlecase}}
-                            </mat-chip>
-                            <mat-chip class="payment-chip" [ngClass]="'payment-' + reservation.paymentStatus">
-                              {{getPaymentStatusText(reservation.paymentStatus)}}
-                            </mat-chip>
-                          </div>
-                          <div class="fee-weather">
-                            <span class="fee">₱{{reservation.totalFee}}</span>
-                            <span class="weather" *ngIf="reservation.weatherForecast">
-                              <mat-icon class="weather-icon">{{getWeatherIcon(reservation.weatherForecast.icon)}}</mat-icon>
-                              {{reservation.weatherForecast.temperature}}°C
-                              <span class="rain-chance" *ngIf="reservation.weatherForecast.rainChance !== undefined">
-                                {{reservation.weatherForecast.rainChance}}%
+                          <div class="card-right">
+                            <div class="status-chips">
+                              <mat-chip
+                                class="status-chip"
+                                [ngClass]="'status-' + reservation.status"
+                              >
+                                {{ reservation.status | titlecase }}
+                              </mat-chip>
+                              <mat-chip
+                                class="payment-chip"
+                                [ngClass]="'payment-' + reservation.paymentStatus"
+                              >
+                                {{ getPaymentStatusText(reservation.paymentStatus) }}
+                              </mat-chip>
+                            </div>
+                            <div class="fee-weather">
+                              <span class="fee">₱{{ reservation.totalFee }}</span>
+                              <span class="weather" *ngIf="reservation.weatherForecast">
+                                <mat-icon class="weather-icon">{{
+                                  getWeatherIcon(reservation.weatherForecast.icon)
+                                }}</mat-icon>
+                                {{ reservation.weatherForecast.temperature }}°C
+                                <span
+                                  class="rain-chance"
+                                  *ngIf="reservation.weatherForecast.rainChance !== undefined"
+                                >
+                                  {{ reservation.weatherForecast.rainChance }}%
+                                </span>
                               </span>
-                            </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </mat-tab>
-              </mat-tab-group>
-            </div>
-          </mat-tab>
-        </mat-tab-group>
+                  </mat-tab>
+                </mat-tab-group>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
         </div>
       </div>
     </div>
@@ -802,16 +1052,14 @@ interface AvatarInfo {
           <div class="warning-icon">⚠️</div>
           <p>Are you sure you want to cancel this reservation?</p>
           <div class="reservation-details" *ngIf="reservationToCancel">
-            <strong>Date:</strong> {{reservationToCancel.date | date:'fullDate'}}<br>
-            <strong>Time:</strong> {{reservationToCancel.timeSlotDisplay}}<br>
-            <strong>Players:</strong> {{formatPlayerNames(reservationToCancel.players)}}
+            <strong>Date:</strong> {{ reservationToCancel.date | date: 'fullDate' }}<br />
+            <strong>Time:</strong> {{ reservationToCancel.timeSlotDisplay }}<br />
+            <strong>Players:</strong> {{ formatPlayerNames(reservationToCancel.players) }}
           </div>
           <p class="warning-text">This action cannot be undone.</p>
         </div>
         <div class="modal-actions">
-          <button class="btn-secondary" (click)="closeCancelModal()">
-            Keep Reservation
-          </button>
+          <button class="btn-secondary" (click)="closeCancelModal()">Keep Reservation</button>
           <button class="btn-danger" (click)="confirmCancelReservation()">
             Yes, Cancel Reservation
           </button>
@@ -819,7 +1067,7 @@ interface AvatarInfo {
       </div>
     </div>
   `,
-  styleUrl: './my-reservations.component.scss'
+  styleUrl: './my-reservations.component.scss',
 })
 export class MyReservationsComponent implements OnInit, OnDestroy {
   upcomingReservations: Reservation[] = [];
@@ -848,16 +1096,16 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
     noShow: 0,
     totalRevenue: 0,
     paidRevenue: 0,
-    pendingRevenue: 0
+    pendingRevenue: 0,
   };
-  
+
   // Responsive tab labels for modern compact design
   isMobileView = false;
-  
+
   // Cancel modal state
   showCancelModal = false;
   reservationToCancel: Reservation | null = null;
-  
+
   private apiUrl = environment.apiUrl;
 
   constructor(
@@ -865,17 +1113,17 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
     console.log('🚀 MyReservationsComponent ngOnInit called');
     console.log('🚀 User authenticated:', this.authService.isAuthenticated());
     console.log('🚀 Current user:', this.authService.currentUser);
-    
+
     // Initialize responsive tab detection
     this.checkScreenSize();
-    
+
     // Test backend connectivity first
     this.testBackendConnectivity();
   }
@@ -917,7 +1165,7 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
       '#EC4899', // Pink
       '#3B82F6', // Light blue
       '#14B8A6', // Teal
-      '#EF4444'  // Red
+      '#EF4444', // Red
     ];
 
     // Simple hash function
@@ -935,7 +1183,7 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
   getAvatarInfo(name: string): AvatarInfo {
     return {
       initials: this.getInitials(name),
-      color: this.getAvatarColor(name)
+      color: this.getAvatarColor(name),
     };
   }
 
@@ -945,7 +1193,7 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
   groupReservationsByDate(reservations: Reservation[]): GroupedReservations[] {
     const grouped = new Map<string, Reservation[]>();
 
-    reservations.forEach(reservation => {
+    reservations.forEach((reservation) => {
       const dateKey = new Date(reservation.date).toDateString();
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
@@ -960,20 +1208,18 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
       const formattedDate = date.toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       });
 
       result.push({
         date: formattedDate,
         dateKey: dateKey,
-        reservations: reservations.sort((a, b) => a.timeSlot - b.timeSlot)
+        reservations: reservations.sort((a, b) => a.timeSlot - b.timeSlot),
       });
     });
 
     // Sort by date
-    return result.sort((a, b) =>
-      new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime()
-    );
+    return result.sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime());
   }
 
   /**
@@ -1032,31 +1278,32 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
     const labels = {
       upcoming: this.isMobileView ? 'Up' : 'Upcoming',
       history: this.isMobileView ? 'Past' : 'History',
-      all: this.isMobileView ? 'All' : 'All Reservations'
+      all: this.isMobileView ? 'All' : 'All Reservations',
     };
     return labels[tabType];
   }
 
   private testBackendConnectivity(): void {
     console.log('🔌 Testing backend connectivity...');
-    
+
     // Try /health endpoint first (without /api prefix)
-    this.http.get<any>('${environment.apiBaseUrl}/health')
+    this.http
+      .get<any>('${environment.apiBaseUrl}/health')
       .pipe(
         timeout(5000),
-        catchError(error => {
+        catchError((error) => {
           console.warn('⚠️ /health endpoint failed, trying /api/health:', error);
           // Fallback to /api/health endpoint
           return this.http.get<any>(`${this.apiUrl}/health`).pipe(
             timeout(5000),
-            catchError(apiError => {
+            catchError((apiError) => {
               console.error('❌ Both health endpoints failed');
               console.error('- /health error:', error);
               console.error('- /api/health error:', apiError);
               throw apiError;
-            })
+            }),
           );
-        })
+        }),
       )
       .subscribe({
         next: (response) => {
@@ -1067,31 +1314,34 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('❌ Backend connectivity test failed:', error);
           this.handleBackendConnectivityError();
-        }
+        },
       });
   }
 
   private handleBackendConnectivityError(): void {
     this.loading = false;
-    
+
     // Show a comprehensive error message with clear instructions
-    this.snackBar.open(
-      'Backend server connection failed. Please start the backend server first.',
-      'Show Instructions',
-      {
-        duration: 0, // Don't auto-dismiss
-        panelClass: ['error-snackbar']
-      }
-    ).onAction().subscribe(() => {
-      // User clicked "Show Instructions" - display detailed startup guide
-      this.showBackendStartupInstructions();
-    });
-    
+    this.snackBar
+      .open(
+        'Backend server connection failed. Please start the backend server first.',
+        'Show Instructions',
+        {
+          duration: 0, // Don't auto-dismiss
+          panelClass: ['error-snackbar'],
+        },
+      )
+      .onAction()
+      .subscribe(() => {
+        // User clicked "Show Instructions" - display detailed startup guide
+        this.showBackendStartupInstructions();
+      });
+
     // Show empty state immediately so page is usable
     this.upcomingReservations = [];
     this.pastReservations = [];
     this.allReservations = [];
-    
+
     console.log('🚨 BACKEND CONNECTION FAILED - TROUBLESHOOTING GUIDE:');
     console.log('');
     console.log('📋 STEP 1: Open a new terminal');
@@ -1130,154 +1380,170 @@ Run: ./start-backend.sh
 Once you see "🚀 Rich Town 2 Tennis Club Backend running on port 3000", 
 click "Try Again" below to reconnect.
     `;
-    
+
     console.log(instructions);
-    
+
     // Provide try again option
-    this.snackBar.open(
-      'Ready to test connection again?',
-      'Try Again',
-      {
+    this.snackBar
+      .open('Ready to test connection again?', 'Try Again', {
         duration: 0,
-        panelClass: ['info-snackbar']
-      }
-    ).onAction().subscribe(() => {
-      this.loading = true;
-      this.testBackendConnectivity();
-    });
+        panelClass: ['info-snackbar'],
+      })
+      .onAction()
+      .subscribe(() => {
+        this.loading = true;
+        this.testBackendConnectivity();
+      });
   }
 
   loadReservations(): void {
     console.log('📡 Starting loadReservations...');
     this.loading = true;
     this.allReservations = null; // Reset to null while loading
-    
+
     console.log('📡 Making HTTP request to:', `${this.apiUrl}/reservations/my-upcoming`);
     console.log('📡 Auth token available:', !!this.authService.token);
-    
-    this.http.get<any>(`${this.apiUrl}/reservations/my-upcoming`)
+
+    this.http
+      .get<any>(`${this.apiUrl}/reservations/my-upcoming`)
       .pipe(
         timeout(10000), // 10 second timeout
-        catchError(error => {
+        catchError((error) => {
           console.error('❌ HTTP request timed out or failed:', error);
           throw error;
-        })
+        }),
       )
       .subscribe({
-      next: (response) => {
-        console.log('✅ HTTP request successful, processing response...');
-        console.log('🔍 MY-UPCOMING Response received:', response);
-        const reservations = response.data || response;
-        console.log('🔍 Parsed reservations:', reservations.length);
-        console.log('🔍 Raw reservations data:', reservations.map((r: any) => ({
-          id: r._id,
-          date: r.date,
-          timeSlot: r.timeSlot,
-          status: r.status,
-          players: r.players
-        })));
-        
-        const now = new Date();
-        console.log('🔍 Current time for filtering:', now);
-        
-        // Group and process reservations to handle time ranges
-        // Consider time slots: if it's today but future time slot, it's still upcoming
-        const upcomingRaw = reservations.filter((r: any) => {
-          const reservationDate = new Date(r.date);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          reservationDate.setHours(0, 0, 0, 0);
-          
-          // If future date, it's upcoming
-          if (reservationDate > today) {
-            return true;
+        next: (response) => {
+          console.log('✅ HTTP request successful, processing response...');
+          console.log('🔍 MY-UPCOMING Response received:', response);
+          const reservations = response.data || response;
+          console.log('🔍 Parsed reservations:', reservations.length);
+          console.log(
+            '🔍 Raw reservations data:',
+            reservations.map((r: any) => ({
+              id: r._id,
+              date: r.date,
+              timeSlot: r.timeSlot,
+              status: r.status,
+              players: r.players,
+            })),
+          );
+
+          const now = new Date();
+          console.log('🔍 Current time for filtering:', now);
+
+          // Group and process reservations to handle time ranges
+          // Consider time slots: if it's today but future time slot, it's still upcoming
+          const upcomingRaw = reservations.filter((r: any) => {
+            const reservationDate = new Date(r.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            reservationDate.setHours(0, 0, 0, 0);
+
+            // If future date, it's upcoming
+            if (reservationDate > today) {
+              return true;
+            }
+
+            // If today, check if the time slot hasn't passed yet
+            if (reservationDate.getTime() === today.getTime()) {
+              const currentHour = now.getHours();
+              console.log(
+                `🔍 Today reservation: timeSlot ${r.timeSlot} vs currentHour ${currentHour} = ${r.timeSlot > currentHour ? 'UPCOMING' : 'PAST'}`,
+              );
+              return r.timeSlot > currentHour;
+            }
+
+            // Past date
+            return false;
+          });
+
+          const pastRaw = reservations.filter((r: any) => {
+            const reservationDate = new Date(r.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            reservationDate.setHours(0, 0, 0, 0);
+
+            // If past date, it's past
+            if (reservationDate < today) {
+              return true;
+            }
+
+            // If today, check if the time slot has already passed
+            if (reservationDate.getTime() === today.getTime()) {
+              const currentHour = now.getHours();
+              return r.timeSlot <= currentHour;
+            }
+
+            // Future date
+            return false;
+          });
+
+          console.log(
+            '🔍 Before formatting - Upcoming:',
+            upcomingRaw.length,
+            'Past:',
+            pastRaw.length,
+          );
+
+          this.upcomingReservations = this.formatReservationTimeDisplay(upcomingRaw);
+          this.pastReservations = this.formatReservationTimeDisplay(pastRaw);
+
+          // Ensure all time displays use AM/PM format
+          this.convertToAMPMFormat(this.upcomingReservations);
+          this.convertToAMPMFormat(this.pastReservations);
+
+          // Group reservations by date for mobile view
+          this.groupedUpcomingReservations = this.groupReservationsByDate(
+            this.upcomingReservations,
+          );
+          this.groupedPastReservations = this.groupReservationsByDate(this.pastReservations);
+
+          console.log('📊 Personal Reservations loaded:');
+          console.log('- Upcoming:', this.upcomingReservations.length);
+          console.log('- Past:', this.pastReservations.length);
+          console.log(
+            '- Weather data from backend:',
+            this.upcomingReservations.filter((r) => r.weatherForecast).length,
+            'reservations',
+          );
+
+          this.loading = false;
+
+          // Load all reservations since it's now the first tab (without showing loading again)
+          this.loadAllReservations(false);
+
+          // Also load admin reservations if user is admin
+          const user = this.authService.currentUser;
+          if (user?.role === 'admin' || user?.role === 'superadmin') {
+            console.log('✅ Admin user detected, loading admin reservations on init');
+            this.loadAdminReservations(false);
           }
-          
-          // If today, check if the time slot hasn't passed yet
-          if (reservationDate.getTime() === today.getTime()) {
-            const currentHour = now.getHours();
-            console.log(`🔍 Today reservation: timeSlot ${r.timeSlot} vs currentHour ${currentHour} = ${r.timeSlot > currentHour ? 'UPCOMING' : 'PAST'}`);
-            return r.timeSlot > currentHour;
+        },
+        error: (error) => {
+          console.error('❌ HTTP request failed:', error);
+          console.error('❌ Error status:', error.status);
+          console.error('❌ Error message:', error.message);
+          console.error('❌ Error details:', error.error);
+
+          this.loading = false;
+
+          let errorMessage = 'Failed to load reservations';
+          if (error.status === 401) {
+            errorMessage = 'Authentication required. Please log in again.';
+          } else if (error.status === 403) {
+            errorMessage = 'Access denied. Please check your permissions.';
+          } else if (error.status === 0) {
+            errorMessage = 'Cannot connect to server. Please check your internet connection.';
           }
-          
-          // Past date
-          return false;
-        });
-        
-        const pastRaw = reservations.filter((r: any) => {
-          const reservationDate = new Date(r.date);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          reservationDate.setHours(0, 0, 0, 0);
-          
-          // If past date, it's past
-          if (reservationDate < today) {
-            return true;
-          }
-          
-          // If today, check if the time slot has already passed
-          if (reservationDate.getTime() === today.getTime()) {
-            const currentHour = now.getHours();
-            return r.timeSlot <= currentHour;
-          }
-          
-          // Future date
-          return false;
-        });
-        
-        console.log('🔍 Before formatting - Upcoming:', upcomingRaw.length, 'Past:', pastRaw.length);
 
-        this.upcomingReservations = this.formatReservationTimeDisplay(upcomingRaw);
-        this.pastReservations = this.formatReservationTimeDisplay(pastRaw);
-
-        // Ensure all time displays use AM/PM format
-        this.convertToAMPMFormat(this.upcomingReservations);
-        this.convertToAMPMFormat(this.pastReservations);
-
-        // Group reservations by date for mobile view
-        this.groupedUpcomingReservations = this.groupReservationsByDate(this.upcomingReservations);
-        this.groupedPastReservations = this.groupReservationsByDate(this.pastReservations);
-
-        console.log('📊 Personal Reservations loaded:');
-        console.log('- Upcoming:', this.upcomingReservations.length);
-        console.log('- Past:', this.pastReservations.length);
-        console.log('- Weather data from backend:', this.upcomingReservations.filter(r => r.weatherForecast).length, 'reservations');
-
-        this.loading = false;
-        
-        // Load all reservations since it's now the first tab (without showing loading again)
-        this.loadAllReservations(false);
-
-        // Also load admin reservations if user is admin
-        const user = this.authService.currentUser;
-        if (user?.role === 'admin' || user?.role === 'superadmin') {
-          console.log('✅ Admin user detected, loading admin reservations on init');
-          this.loadAdminReservations(false);
-        }
-      },
-      error: (error) => {
-        console.error('❌ HTTP request failed:', error);
-        console.error('❌ Error status:', error.status);
-        console.error('❌ Error message:', error.message);
-        console.error('❌ Error details:', error.error);
-        
-        this.loading = false;
-        
-        let errorMessage = 'Failed to load reservations';
-        if (error.status === 401) {
-          errorMessage = 'Authentication required. Please log in again.';
-        } else if (error.status === 403) {
-          errorMessage = 'Access denied. Please check your permissions.';
-        } else if (error.status === 0) {
-          errorMessage = 'Cannot connect to server. Please check your internet connection.';
-        }
-        
-        this.snackBar.open(errorMessage, 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    });
+          this.snackBar.open(errorMessage, 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          });
+        },
+      });
   }
 
   onTabChange(event: any): void {
@@ -1306,93 +1572,114 @@ click "Try Again" below to reconnect.
     // Use the general reservations endpoint with showAll=true to get all reservations
     // Set high limit to fetch all reservations (default is 10)
     const timestamp = new Date().getTime();
-    this.http.get<any>(`${this.apiUrl}/reservations?showAll=true&limit=1000&_t=${timestamp}`).subscribe({
-      next: (response) => {
-        const reservations = response.data || [];
-        console.log('🔍 Raw reservations received:', reservations.length);
-        console.log('🔍 Sample reservation users:', reservations.slice(0, 3).map((r: any) => ({ 
-          id: r._id, 
-          user: r.userId?.fullName || 'No user', 
-          status: r.status,
-          date: r.date,
-          players: r.players 
-        })));
-        
-        // Filter out cancelled reservations and past date/time reservations
-        const now = new Date();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of today
-        
-        const activeReservations = reservations.filter((r: any) => {
-          if (r.status === 'cancelled') return false;
-          
-          const reservationDate = new Date(r.date);
-          reservationDate.setHours(0, 0, 0, 0);
-          
-          // Future dates: include
-          if (reservationDate > today) return true;
-          
-          // Past dates: exclude
-          if (reservationDate < today) return false;
-          
-          // Today: check if reservation end time hasn't passed yet
-          if (reservationDate.getTime() === today.getTime()) {
-            const currentHour = now.getHours();
-            const endHour = r.endTimeSlot || (r.timeSlot + (r.duration || 1));
-            return endHour > currentHour; // Show until entire reservation time is over
+    this.http
+      .get<any>(`${this.apiUrl}/reservations?showAll=true&limit=1000&_t=${timestamp}`)
+      .subscribe({
+        next: (response) => {
+          const reservations = response.data || [];
+          console.log('🔍 Raw reservations received:', reservations.length);
+          console.log(
+            '🔍 Sample reservation users:',
+            reservations.slice(0, 3).map((r: any) => ({
+              id: r._id,
+              user: r.userId?.fullName || 'No user',
+              status: r.status,
+              date: r.date,
+              players: r.players,
+            })),
+          );
+
+          // Filter out cancelled reservations and past date/time reservations
+          const now = new Date();
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Set to start of today
+
+          const activeReservations = reservations.filter((r: any) => {
+            if (r.status === 'cancelled') return false;
+
+            const reservationDate = new Date(r.date);
+            reservationDate.setHours(0, 0, 0, 0);
+
+            // Future dates: include
+            if (reservationDate > today) return true;
+
+            // Past dates: exclude
+            if (reservationDate < today) return false;
+
+            // Today: check if reservation end time hasn't passed yet
+            if (reservationDate.getTime() === today.getTime()) {
+              const currentHour = now.getHours();
+              const endHour = r.endTimeSlot || r.timeSlot + (r.duration || 1);
+              return endHour > currentHour; // Show until entire reservation time is over
+            }
+
+            return false;
+          });
+          console.log('🔍 Active reservations before formatting:', activeReservations.length);
+          console.log(
+            '🔍 Active reservations details:',
+            activeReservations.map((r) => ({
+              id: r._id,
+              user: r.userId?.fullName,
+              date: r.date,
+              timeSlot: r.timeSlot,
+              players: r.players,
+            })),
+          );
+
+          this.allReservations = this.formatReservationTimeDisplay(activeReservations);
+
+          // Ensure all time displays use AM/PM format
+          this.convertToAMPMFormat(this.allReservations);
+          console.log('🔍 After formatting:', this.allReservations.length);
+
+          // Homeowner's Day entries removed - no longer blocking Wednesdays
+          // this.addHomeownerDayEntries();
+
+          // Group reservations by date for mobile view
+          this.groupedAllReservations = this.groupReservationsByDate(this.allReservations);
+
+          console.log('📊 All Reservations loaded:');
+          console.log('- Total from all users (excluding cancelled):', this.allReservations.length);
+          console.log(
+            '- Cancelled reservations filtered out:',
+            reservations.length - activeReservations.length,
+          );
+          console.log('- Grouped by date:', this.groupedAllReservations.length, 'dates');
+          console.log(
+            '- Real weather data:',
+            this.allReservations.filter((r) => r.weatherForecast).length,
+            'reservations have weather',
+          );
+
+          // Verify mobile and desktop use same data
+          const totalGrouped = this.groupedAllReservations.reduce(
+            (sum, group) => sum + group.reservations.length,
+            0,
+          );
+          console.log('✅ Data consistency check:');
+          console.log('  - Desktop view (allReservations):', this.allReservations.length, 'items');
+          console.log('  - Mobile view (groupedAllReservations):', totalGrouped, 'items');
+          console.log(
+            '  - Match:',
+            this.allReservations.length === totalGrouped ? '✓' : '✗ MISMATCH!',
+          );
+
+          if (showLoading) {
+            this.loading = false;
           }
-          
-          return false;
-        });
-        console.log('🔍 Active reservations before formatting:', activeReservations.length);
-        console.log('🔍 Active reservations details:', activeReservations.map(r => ({
-          id: r._id,
-          user: r.userId?.fullName,
-          date: r.date,
-          timeSlot: r.timeSlot,
-          players: r.players
-        })));
-
-        this.allReservations = this.formatReservationTimeDisplay(activeReservations);
-
-        // Ensure all time displays use AM/PM format
-        this.convertToAMPMFormat(this.allReservations);
-        console.log('🔍 After formatting:', this.allReservations.length);
-
-        // Homeowner's Day entries removed - no longer blocking Wednesdays
-        // this.addHomeownerDayEntries();
-
-        // Group reservations by date for mobile view
-        this.groupedAllReservations = this.groupReservationsByDate(this.allReservations);
-
-        console.log('📊 All Reservations loaded:');
-        console.log('- Total from all users (excluding cancelled):', this.allReservations.length);
-        console.log('- Cancelled reservations filtered out:', reservations.length - activeReservations.length);
-        console.log('- Grouped by date:', this.groupedAllReservations.length, 'dates');
-        console.log('- Real weather data:', this.allReservations.filter(r => r.weatherForecast).length, 'reservations have weather');
-
-        // Verify mobile and desktop use same data
-        const totalGrouped = this.groupedAllReservations.reduce((sum, group) => sum + group.reservations.length, 0);
-        console.log('✅ Data consistency check:');
-        console.log('  - Desktop view (allReservations):', this.allReservations.length, 'items');
-        console.log('  - Mobile view (groupedAllReservations):', totalGrouped, 'items');
-        console.log('  - Match:', this.allReservations.length === totalGrouped ? '✓' : '✗ MISMATCH!');
-
-        if (showLoading) {
-          this.loading = false;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading all reservations:', error);
-        if (showLoading) {
-          this.loading = false;
-        }
-        this.snackBar.open('Failed to load all reservations', 'Close', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    });
+        },
+        error: (error) => {
+          console.error('Error loading all reservations:', error);
+          if (showLoading) {
+            this.loading = false;
+          }
+          this.snackBar.open('Failed to load all reservations', 'Close', {
+            duration: 3000,
+            panelClass: ['error-snackbar'],
+          });
+        },
+      });
   }
 
   loadAdminReservations(showLoading: boolean = true): void {
@@ -1403,91 +1690,110 @@ click "Try Again" below to reconnect.
 
     // Fetch ALL reservations without any filtering - no status filter, no date filter
     const timestamp = new Date().getTime();
-    this.http.get<any>(`${this.apiUrl}/reservations?showAll=true&limit=10000&_t=${timestamp}`).subscribe({
-      next: (response) => {
-        console.log('📊 ADMIN REPORT - Full response:', response);
-        const reservations = response.data || [];
-        console.log('🔍 Admin Report - Raw reservations received:', reservations.length);
-        console.log('🔍 First reservation raw data:', reservations[0]);
-        console.log('🔍 Status breakdown before filtering:', {
-          pending: reservations.filter((r: any) => r.status === 'pending').length,
-          confirmed: reservations.filter((r: any) => r.status === 'confirmed').length,
-          cancelled: reservations.filter((r: any) => r.status === 'cancelled').length,
-          completed: reservations.filter((r: any) => r.status === 'completed').length
-        });
+    this.http
+      .get<any>(`${this.apiUrl}/reservations?showAll=true&limit=10000&_t=${timestamp}`)
+      .subscribe({
+        next: (response) => {
+          console.log('📊 ADMIN REPORT - Full response:', response);
+          const reservations = response.data || [];
+          console.log('🔍 Admin Report - Raw reservations received:', reservations.length);
+          console.log('🔍 First reservation raw data:', reservations[0]);
+          console.log('🔍 Status breakdown before filtering:', {
+            pending: reservations.filter((r: any) => r.status === 'pending').length,
+            confirmed: reservations.filter((r: any) => r.status === 'confirmed').length,
+            cancelled: reservations.filter((r: any) => r.status === 'cancelled').length,
+            completed: reservations.filter((r: any) => r.status === 'completed').length,
+          });
 
-        // Sort reservations in DESCENDING order (newest first)
-        this.adminReservations = reservations.sort((a: any, b: any) => {
-          const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
-          if (dateCompare !== 0) return dateCompare;
-          // If same date, sort by time slot descending
-          return b.timeSlot - a.timeSlot;
-        });
+          // Sort reservations in DESCENDING order (newest first)
+          this.adminReservations = reservations.sort((a: any, b: any) => {
+            const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
+            if (dateCompare !== 0) return dateCompare;
+            // If same date, sort by time slot descending
+            return b.timeSlot - a.timeSlot;
+          });
 
-        // Convert time displays to AM/PM format
-        this.convertToAMPMFormat(this.adminReservations);
+          // Convert time displays to AM/PM format
+          this.convertToAMPMFormat(this.adminReservations);
 
-        console.log('📊 Admin reservations loaded:', this.adminReservations.length);
+          console.log('📊 Admin reservations loaded:', this.adminReservations.length);
 
-        // Calculate statistics
-        this.calculateAdminStats(reservations);
+          // Calculate statistics
+          this.calculateAdminStats(reservations);
 
-        // Update sorted array for template binding
-        this.sortedAdminReservations = this.getSortedAdminReservations();
+          // Update sorted array for template binding
+          this.sortedAdminReservations = this.getSortedAdminReservations();
 
-        // Split into pending and other reservations
-        this.filterAdminReservations();
+          // Split into pending and other reservations
+          this.filterAdminReservations();
 
-        console.log('📊 Admin Report loaded - Total:', this.adminReservations.length, 'Sorted (descending):', this.sortedAdminReservations.length);
-        console.log('📊 Pending items:', this.pendingAdminReservations.length, 'Other items:', this.otherAdminReservations.length);
+          console.log(
+            '📊 Admin Report loaded - Total:',
+            this.adminReservations.length,
+            'Sorted (descending):',
+            this.sortedAdminReservations.length,
+          );
+          console.log(
+            '📊 Pending items:',
+            this.pendingAdminReservations.length,
+            'Other items:',
+            this.otherAdminReservations.length,
+          );
 
-        if (showLoading) {
-          this.loading = false;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading admin reservations:', error);
-        if (showLoading) {
-          this.loading = false;
-        }
-        this.snackBar.open('Failed to load admin report', 'Close', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    });
+          if (showLoading) {
+            this.loading = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading admin reservations:', error);
+          if (showLoading) {
+            this.loading = false;
+          }
+          this.snackBar.open('Failed to load admin report', 'Close', {
+            duration: 3000,
+            panelClass: ['error-snackbar'],
+          });
+        },
+      });
   }
 
   calculateAdminStats(reservations: any[]): void {
     this.adminStats = {
       total: reservations.length,
-      pending: reservations.filter(r => r.status === 'pending').length,
-      confirmed: reservations.filter(r => r.status === 'confirmed').length,
-      cancelled: reservations.filter(r => r.status === 'cancelled').length,
-      completed: reservations.filter(r => r.status === 'completed').length,
-      noShow: reservations.filter(r => r.status === 'no-show').length,
+      pending: reservations.filter((r) => r.status === 'pending').length,
+      confirmed: reservations.filter((r) => r.status === 'confirmed').length,
+      cancelled: reservations.filter((r) => r.status === 'cancelled').length,
+      completed: reservations.filter((r) => r.status === 'completed').length,
+      noShow: reservations.filter((r) => r.status === 'no-show').length,
       totalRevenue: reservations.reduce((sum, r) => sum + (r.totalFee || 0), 0),
-      paidRevenue: reservations.filter(r => r.paymentStatus === 'paid').reduce((sum, r) => sum + (r.totalFee || 0), 0),
-      pendingRevenue: reservations.filter(r => r.paymentStatus === 'pending').reduce((sum, r) => sum + (r.totalFee || 0), 0)
+      paidRevenue: reservations
+        .filter((r) => r.paymentStatus === 'paid')
+        .reduce((sum, r) => sum + (r.totalFee || 0), 0),
+      pendingRevenue: reservations
+        .filter((r) => r.paymentStatus === 'pending')
+        .reduce((sum, r) => sum + (r.totalFee || 0), 0),
     };
   }
 
   filterAdminReservations(): void {
     // First sub-tab: ONLY Pending status (reservation status must be 'pending')
-    this.pendingAdminReservations = this.sortedAdminReservations.filter(r =>
-      r.status === 'pending'
+    this.pendingAdminReservations = this.sortedAdminReservations.filter(
+      (r) => r.status === 'pending',
     );
 
     // Second sub-tab: Everything else (all non-pending statuses)
-    this.otherAdminReservations = this.sortedAdminReservations.filter(r =>
-      r.status !== 'pending'
+    this.otherAdminReservations = this.sortedAdminReservations.filter(
+      (r) => r.status !== 'pending',
     );
 
     // Debug logging
     console.log('📊 Filtered Admin Reservations:');
     console.log('  - Pending Items:', this.pendingAdminReservations.length);
     console.log('  - Other Items:', this.otherAdminReservations.length);
-    console.log('  - Pending Items statuses:', this.pendingAdminReservations.map(r => `${r.status}/${r.paymentStatus}`));
+    console.log(
+      '  - Pending Items statuses:',
+      this.pendingAdminReservations.map((r) => `${r.status}/${r.paymentStatus}`),
+    );
   }
 
   isAdmin(): boolean {
@@ -1506,7 +1812,8 @@ click "Try Again" below to reconnect.
 
   getSortedAdminReservations(): Reservation[] {
     // For admin report, use adminReservations if available, otherwise use allReservations
-    const source = this.adminReservations.length > 0 ? this.adminReservations : this.allReservations;
+    const source =
+      this.adminReservations.length > 0 ? this.adminReservations : this.allReservations;
 
     // Sort in DESCENDING order - newest dates first, then highest time slots first
     return [...source].sort((a, b) => {
@@ -1537,10 +1844,13 @@ click "Try Again" below to reconnect.
       let j = i + 1;
       while (j < reservations.length) {
         const next = reservations[j];
-        const isSameDate = new Date(current.date).toDateString() === new Date(next.date).toDateString();
+        const isSameDate =
+          new Date(current.date).toDateString() === new Date(next.date).toDateString();
         // For descending order, next timeSlot should be one less than current
-        const isConsecutive = next.timeSlot === (consecutiveGroup[consecutiveGroup.length - 1].timeSlot - 1);
-        const haveSamePlayers = JSON.stringify(current.players.sort()) === JSON.stringify(next.players.sort());
+        const isConsecutive =
+          next.timeSlot === consecutiveGroup[consecutiveGroup.length - 1].timeSlot - 1;
+        const haveSamePlayers =
+          JSON.stringify(current.players.sort()) === JSON.stringify(next.players.sort());
 
         if (isSameDate && isConsecutive && haveSamePlayers) {
           consecutiveGroup.push(next);
@@ -1560,7 +1870,7 @@ click "Try Again" below to reconnect.
           ...firstSlot,
           timeSlotDisplay: this.formatTimeRange(lastSlot.timeSlot, firstSlot.timeSlot + 1),
           totalFee: totalFee,
-          feePerPlayer: totalFee / firstSlot.players.length
+          feePerPlayer: totalFee / firstSlot.players.length,
         };
 
         grouped.push(mergedReservation);
@@ -1589,15 +1899,18 @@ click "Try Again" below to reconnect.
     while (i < sorted.length) {
       const current = sorted[i];
       const consecutiveGroup = [current];
-      
+
       // Find consecutive reservations for the same date
       let j = i + 1;
       while (j < sorted.length) {
         const next = sorted[j];
-        const isSameDate = new Date(current.date).toDateString() === new Date(next.date).toDateString();
-        const isConsecutive = next.timeSlot === (consecutiveGroup[consecutiveGroup.length - 1].timeSlot + 1);
-        const haveSamePlayers = JSON.stringify(current.players.sort()) === JSON.stringify(next.players.sort());
-        
+        const isSameDate =
+          new Date(current.date).toDateString() === new Date(next.date).toDateString();
+        const isConsecutive =
+          next.timeSlot === consecutiveGroup[consecutiveGroup.length - 1].timeSlot + 1;
+        const haveSamePlayers =
+          JSON.stringify(current.players.sort()) === JSON.stringify(next.players.sort());
+
         if (isSameDate && isConsecutive && haveSamePlayers) {
           consecutiveGroup.push(next);
           j++;
@@ -1611,14 +1924,14 @@ click "Try Again" below to reconnect.
         const firstSlot = consecutiveGroup[0];
         const lastSlot = consecutiveGroup[consecutiveGroup.length - 1];
         const totalFee = consecutiveGroup.reduce((sum, res) => sum + res.totalFee, 0);
-        
+
         const mergedReservation: Reservation = {
           ...firstSlot,
           timeSlotDisplay: this.formatTimeRange(firstSlot.timeSlot, lastSlot.timeSlot + 1),
           totalFee: totalFee,
-          feePerPlayer: totalFee / firstSlot.players.length
+          feePerPlayer: totalFee / firstSlot.players.length,
         };
-        
+
         grouped.push(mergedReservation);
       } else {
         // Single reservation, keep as is
@@ -1656,7 +1969,7 @@ click "Try Again" below to reconnect.
    * Convert all reservation time displays to AM/PM format
    */
   convertToAMPMFormat(reservations: Reservation[]): void {
-    reservations.forEach(reservation => {
+    reservations.forEach((reservation) => {
       if (!reservation.timeSlotDisplay || reservation.timeSlotDisplay.includes(':00')) {
         // If it's a single hour slot or military time format, convert it
         if (reservation.timeSlotDisplay && reservation.timeSlotDisplay.includes(' - ')) {
@@ -1687,25 +2000,26 @@ click "Try Again" below to reconnect.
     });
 
     // Format time display for each reservation individually
-    return sorted.map(res => ({
+    return sorted.map((res) => ({
       ...res,
-      timeSlotDisplay: res.timeSlotDisplay ||
-        this.formatTimeRange(res.timeSlot, res.timeSlot + (res.duration || 1))
+      timeSlotDisplay:
+        res.timeSlotDisplay ||
+        this.formatTimeRange(res.timeSlot, res.timeSlot + (res.duration || 1)),
     }));
   }
 
   getDateMonth(date: Date | string): string {
-    return new Date(date).toLocaleDateString('en-US', { 
-      month: 'short', 
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   }
 
   getShortDate(date: Date | string): string {
-    return new Date(date).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric'
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
     });
   }
 
@@ -1715,7 +2029,7 @@ click "Try Again" below to reconnect.
     const diffMs = now.getTime() - past.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffDays > 0) {
       return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     } else if (diffHours > 0) {
@@ -1727,29 +2041,42 @@ click "Try Again" below to reconnect.
 
   getStatusColor(status: string): string {
     switch (status) {
-      case 'confirmed': return 'primary';
-      case 'pending': return 'accent';
-      case 'cancelled': return 'warn';
-      case 'completed': return '';
-      default: return '';
+      case 'confirmed':
+        return 'primary';
+      case 'pending':
+        return 'accent';
+      case 'cancelled':
+        return 'warn';
+      case 'completed':
+        return '';
+      default:
+        return '';
     }
   }
 
   getPaymentStatusColor(status: string): string {
     switch (status) {
-      case 'paid': return 'primary';
-      case 'pending': return 'accent';
-      case 'overdue': return 'warn';
-      default: return '';
+      case 'paid':
+        return 'primary';
+      case 'pending':
+        return 'accent';
+      case 'overdue':
+        return 'warn';
+      default:
+        return '';
     }
   }
 
   getPaymentStatusText(status: string): string {
     switch (status) {
-      case 'paid': return 'Paid';
-      case 'pending': return 'Payment Pending';
-      case 'overdue': return 'Payment Overdue';
-      default: return status;
+      case 'paid':
+        return 'Paid';
+      case 'pending':
+        return 'Payment Pending';
+      case 'overdue':
+        return 'Payment Overdue';
+      default:
+        return status;
     }
   }
 
@@ -1792,8 +2119,8 @@ click "Try Again" below to reconnect.
 
   editReservation(reservation: Reservation): void {
     // Navigate to reservations page with edit mode
-    this.router.navigate(['/reservations'], { 
-      queryParams: { edit: reservation._id } 
+    this.router.navigate(['/reservations'], {
+      queryParams: { edit: reservation._id },
     });
   }
 
@@ -1814,7 +2141,7 @@ click "Try Again" below to reconnect.
       next: (response) => {
         this.snackBar.open('Reservation cancelled successfully', 'Close', {
           duration: 3000,
-          panelClass: ['success-snackbar']
+          panelClass: ['success-snackbar'],
         });
         this.loadReservations(); // Reload the list
         this.closeCancelModal(); // Close the modal
@@ -1823,16 +2150,16 @@ click "Try Again" below to reconnect.
         const message = error.error?.message || 'Failed to cancel reservation';
         this.snackBar.open(message, 'Close', {
           duration: 3000,
-          panelClass: ['error-snackbar']
+          panelClass: ['error-snackbar'],
         });
         this.closeCancelModal(); // Close the modal even on error
-      }
+      },
     });
   }
 
   viewPayment(reservation: Reservation): void {
-    this.router.navigate(['/payments'], { 
-      queryParams: { reservation: reservation._id } 
+    this.router.navigate(['/payments'], {
+      queryParams: { reservation: reservation._id },
     });
   }
 
@@ -1854,7 +2181,7 @@ click "Try Again" below to reconnect.
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 
@@ -1896,7 +2223,7 @@ click "Try Again" below to reconnect.
     const diffMs = future.getTime() - now.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (diffDays > 0) {
       return `In ${diffDays} day${diffDays > 1 ? 's' : ''}`;
     } else if (diffHours > 0) {
@@ -1906,12 +2233,11 @@ click "Try Again" below to reconnect.
     }
   }
 
-
   isWeatherClear(weatherDescription: string): boolean {
     if (!weatherDescription) return false;
     const clearConditions = ['clear sky', 'clear', 'sunny'];
-    return clearConditions.some(condition => 
-      weatherDescription.toLowerCase().includes(condition)
+    return clearConditions.some((condition) =>
+      weatherDescription.toLowerCase().includes(condition),
     );
   }
 
@@ -1919,34 +2245,42 @@ click "Try Again" below to reconnect.
     if (!reservation.weatherForecast?.description) {
       return ''; // Default color
     }
-    
+
     const description = reservation.weatherForecast.description.toLowerCase();
-    
+
     // Clear/Sunny weather - Light blue
     if (this.isWeatherClear(description)) {
       return 'rgba(173, 216, 255, 0.3)';
     }
-    
+
     // Rainy weather - Light purple/blue
-    if (description.includes('rain') || description.includes('drizzle') || description.includes('shower')) {
+    if (
+      description.includes('rain') ||
+      description.includes('drizzle') ||
+      description.includes('shower')
+    ) {
       return 'rgba(196, 181, 253, 0.3)'; // Light purple for rain
     }
-    
+
     // Stormy weather - Darker gray
     if (description.includes('storm') || description.includes('thunder')) {
       return 'rgba(107, 114, 128, 0.4)'; // Darker gray for storms
     }
-    
+
     // Foggy/Misty weather - Light yellow/gray
-    if (description.includes('fog') || description.includes('mist') || description.includes('haze')) {
+    if (
+      description.includes('fog') ||
+      description.includes('mist') ||
+      description.includes('haze')
+    ) {
       return 'rgba(254, 240, 138, 0.3)'; // Light yellow for fog/mist
     }
-    
+
     // Snow weather - Light cyan/white
     if (description.includes('snow') || description.includes('sleet')) {
       return 'rgba(224, 242, 254, 0.4)'; // Light cyan for snow
     }
-    
+
     // Cloudy weather (default for clouds, overcast, etc.) - Light gray
     return 'rgba(156, 163, 175, 0.2)';
   }
@@ -1955,34 +2289,42 @@ click "Try Again" below to reconnect.
     if (!reservation.weatherForecast?.description) {
       return '#e5e7eb'; // Default gray
     }
-    
+
     const description = reservation.weatherForecast.description.toLowerCase();
-    
+
     // Clear/Sunny weather - Blue
     if (this.isWeatherClear(description)) {
       return '#3b82f6';
     }
-    
+
     // Rainy weather - Purple
-    if (description.includes('rain') || description.includes('drizzle') || description.includes('shower')) {
+    if (
+      description.includes('rain') ||
+      description.includes('drizzle') ||
+      description.includes('shower')
+    ) {
       return '#8b5cf6'; // Purple for rain
     }
-    
+
     // Stormy weather - Dark gray
     if (description.includes('storm') || description.includes('thunder')) {
       return '#6b7280'; // Dark gray for storms
     }
-    
+
     // Foggy/Misty weather - Yellow
-    if (description.includes('fog') || description.includes('mist') || description.includes('haze')) {
+    if (
+      description.includes('fog') ||
+      description.includes('mist') ||
+      description.includes('haze')
+    ) {
       return '#f59e0b'; // Yellow for fog/mist
     }
-    
+
     // Snow weather - Light blue
     if (description.includes('snow') || description.includes('sleet')) {
       return '#0ea5e9'; // Light blue for snow
     }
-    
+
     // Cloudy weather (default) - Gray
     return '#9ca3af';
   }
@@ -1990,24 +2332,24 @@ click "Try Again" below to reconnect.
   getWeatherIcon(weatherIcon: string): string {
     // Map OpenWeatherMap icons to Material Icons
     const iconMap: { [key: string]: string } = {
-      '01d': 'wb_sunny',        // clear sky day
-      '01n': 'nights_stay',     // clear sky night
+      '01d': 'wb_sunny', // clear sky day
+      '01n': 'nights_stay', // clear sky night
       '02d': 'partly_cloudy_day', // few clouds day
       '02n': 'partly_cloudy_night', // few clouds night
-      '03d': 'cloud',           // scattered clouds
-      '03n': 'cloud',           // scattered clouds
-      '04d': 'cloud',           // broken clouds
-      '04n': 'cloud',           // broken clouds
-      '09d': 'grain',           // shower rain
-      '09n': 'grain',           // shower rain
-      '10d': 'rainy',           // rain day
-      '10n': 'rainy',           // rain night
-      '11d': 'thunderstorm',    // thunderstorm day
-      '11n': 'thunderstorm',    // thunderstorm night
-      '13d': 'ac_unit',         // snow day
-      '13n': 'ac_unit',         // snow night
-      '50d': 'foggy',           // mist day
-      '50n': 'foggy'            // mist night
+      '03d': 'cloud', // scattered clouds
+      '03n': 'cloud', // scattered clouds
+      '04d': 'cloud', // broken clouds
+      '04n': 'cloud', // broken clouds
+      '09d': 'grain', // shower rain
+      '09n': 'grain', // shower rain
+      '10d': 'rainy', // rain day
+      '10n': 'rainy', // rain night
+      '11d': 'thunderstorm', // thunderstorm day
+      '11n': 'thunderstorm', // thunderstorm night
+      '13d': 'ac_unit', // snow day
+      '13n': 'ac_unit', // snow night
+      '50d': 'foggy', // mist day
+      '50n': 'foggy', // mist night
     };
 
     return iconMap[weatherIcon] || 'cloud';
@@ -2016,10 +2358,10 @@ click "Try Again" below to reconnect.
   getBlockReasonDisplay(reservation: Reservation): string {
     if (!reservation.blockReason) return '';
     const reasonMap: { [key: string]: string } = {
-      'maintenance': '🔧 Maintenance',
-      'private_event': '🎉 Private Event',
-      'weather': '🌧️ Weather',
-      'other': '📝 Other'
+      maintenance: '🔧 Maintenance',
+      private_event: '🎉 Private Event',
+      weather: '🌧️ Weather',
+      other: '📝 Other',
     };
     return reasonMap[reservation.blockReason] || reservation.blockReason;
   }
@@ -2027,10 +2369,10 @@ click "Try Again" below to reconnect.
   getBlockReasonIcon(reservation: Reservation): string {
     if (!reservation.blockReason) return 'block';
     const iconMap: { [key: string]: string } = {
-      'maintenance': 'build',
-      'private_event': 'event',
-      'weather': 'cloud',
-      'other': 'info'
+      maintenance: 'build',
+      private_event: 'event',
+      weather: 'cloud',
+      other: 'info',
     };
     return iconMap[reservation.blockReason] || 'block';
   }
@@ -2039,13 +2381,12 @@ click "Try Again" below to reconnect.
     return reservation.status === 'blocked';
   }
 
-
   /**
    * Add Homeowner's Day entries for the next 2 upcoming Wednesdays
    */
   addHomeownerDayEntries(): void {
     const homeownerEntries = this.generateHomeownerDayEntries();
-    
+
     // Add entries to the beginning of the list
     this.allReservations = [...homeownerEntries, ...this.allReservations];
 
@@ -2081,7 +2422,7 @@ click "Try Again" below to reconnect.
           { desc: 'sunny', icon: '01d', temp: 28, rain: 10, humidity: 65 },
           { desc: 'partly cloudy', icon: '02d', temp: 26, rain: 20, humidity: 70 },
           { desc: 'cloudy', icon: '03d', temp: 25, rain: 30, humidity: 75 },
-          { desc: 'clear sky', icon: '01d', temp: 29, rain: 5, humidity: 60 }
+          { desc: 'clear sky', icon: '01d', temp: 29, rain: 5, humidity: 60 },
         ];
 
         const weather = weatherTypes[foundWednesdays % weatherTypes.length];
@@ -2104,18 +2445,19 @@ click "Try Again" below to reconnect.
             description: weather.desc,
             icon: weather.icon,
             rainChance: weather.rain + Math.floor(Math.random() * 10) - 5, // ±5% variation
-            humidity: weather.humidity + Math.floor(Math.random() * 10) - 5 // ±5% variation
-          }
+            humidity: weather.humidity + Math.floor(Math.random() * 10) - 5, // ±5% variation
+          },
         };
 
         entries.push(entry);
         foundWednesdays++;
 
-        console.log(`📅 Generated Homeowner's Day entry for: ${checkDate.toDateString()} with weather: ${entry.weatherForecast?.temperature}°C`);
+        console.log(
+          `📅 Generated Homeowner's Day entry for: ${checkDate.toDateString()} with weather: ${entry.weatherForecast?.temperature}°C`,
+        );
       }
     }
 
     return entries;
   }
-
 }

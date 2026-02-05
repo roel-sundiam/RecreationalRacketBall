@@ -11,7 +11,8 @@ const clubNamePattern = /RT2 Pickleball Club/i;
 
 const run = async () => {
   await mongoose.connect(
-    process.env.MONGODB_URI || "mongodb://localhost:27017/recreational-racketball",
+    process.env.MONGODB_URI ||
+      "mongodb://localhost:27017/recreational-racketball",
   );
 
   const club = await Club.findOne({ name: clubNamePattern });

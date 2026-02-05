@@ -133,7 +133,8 @@ export const getMembers = asyncHandler(
       paymentFilter.clubId = req.clubId;
     }
 
-    const payments2026 = await Payment.find(paymentFilter).select("userId amount");
+    const payments2026 =
+      await Payment.find(paymentFilter).select("userId amount");
 
     // Create a map of userId -> payment amount
     const paymentMap = new Map();
@@ -180,7 +181,8 @@ export const getMembers = asyncHandler(
         // Include club information for cross-club requests
         if (allClubs && membershipObj.clubId) {
           const club = membershipObj.clubId;
-          result.clubId = typeof club === 'string' ? club : club._id?.toString();
+          result.clubId =
+            typeof club === "string" ? club : club._id?.toString();
           result.clubName = club.name;
         }
 
@@ -744,10 +746,9 @@ export const updateMemberRole = asyncHandler(
         membershipFilter.clubId = req.clubId;
       }
 
-      const membership = await ClubMembership.findOne(membershipFilter).populate(
-        "userId",
-        "username fullName",
-      );
+      const membership = await ClubMembership.findOne(
+        membershipFilter,
+      ).populate("userId", "username fullName");
 
       // If superadmin without club context, derive it from membership
       if (membership && !req.clubId) {
@@ -1009,7 +1010,8 @@ export const getPendingMembers = asyncHandler(
       const populateOptions: any = [
         {
           path: "userId",
-          select: "fullName username email gender profilePicture registrationDate isActive",
+          select:
+            "fullName username email gender profilePicture registrationDate isActive",
         },
       ];
 
@@ -1050,7 +1052,8 @@ export const getPendingMembers = asyncHandler(
           // Include club information for cross-club requests
           if (allClubs && membership.clubId) {
             const club = membership.clubId;
-            result.clubId = typeof club === 'string' ? club : club._id?.toString();
+            result.clubId =
+              typeof club === "string" ? club : club._id?.toString();
             result.clubName = club.name;
           }
 
@@ -1119,7 +1122,8 @@ export const getInactiveMembers = asyncHandler(
       const populateOptions: any = [
         {
           path: "userId",
-          select: "fullName username email gender profilePicture registrationDate isActive",
+          select:
+            "fullName username email gender profilePicture registrationDate isActive",
         },
       ];
 
@@ -1161,7 +1165,8 @@ export const getInactiveMembers = asyncHandler(
           // Include club information for cross-club requests
           if (allClubs && membership.clubId) {
             const club = membership.clubId;
-            result.clubId = typeof club === 'string' ? club : club._id?.toString();
+            result.clubId =
+              typeof club === "string" ? club : club._id?.toString();
             result.clubName = club.name;
           }
 

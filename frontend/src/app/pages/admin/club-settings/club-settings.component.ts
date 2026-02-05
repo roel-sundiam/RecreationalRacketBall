@@ -52,7 +52,10 @@ export class ClubSettingsComponent implements OnInit {
       guestFee: [70, [Validators.required, Validators.min(0)]],
       // Membership Fee
       membershipFeeAnnual: [1000, [Validators.required, Validators.min(0)]],
-      membershipFeeCurrency: ['PHP', [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
+      membershipFeeCurrency: [
+        'PHP',
+        [Validators.required, Validators.minLength(3), Validators.maxLength(3)],
+      ],
     });
   }
 
@@ -263,7 +266,7 @@ export class ClubSettingsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      
+
       // Validate file type
       if (!file.type.startsWith('image/')) {
         this.errorMessage = 'Please select an image file';
@@ -277,7 +280,7 @@ export class ClubSettingsComponent implements OnInit {
       }
 
       this.selectedLogoFile = file;
-      
+
       // Preview the image
       const reader = new FileReader();
       reader.onload = (e: any) => {
@@ -315,11 +318,11 @@ export class ClubSettingsComponent implements OnInit {
         this.clubLogoUrl = response.data.logo;
         this.successMessage = 'Club logo uploaded successfully!';
         this.selectedLogoFile = null;
-        
+
         // Reload the selected club to update the toolbar
         await this.authService.reloadSelectedClub();
         console.log('Selected club after reload:', this.authService.selectedClub);
-        
+
         setTimeout(() => {
           this.successMessage = '';
         }, 3000);
@@ -337,4 +340,3 @@ export class ClubSettingsComponent implements OnInit {
     this.clubLogoUrl = null;
   }
 }
-

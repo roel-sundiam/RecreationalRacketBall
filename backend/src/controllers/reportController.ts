@@ -1016,7 +1016,8 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
 
     // Update period to show current date
     // Extract year from beginning balance date (e.g., "JANUARY 1, 2026" -> 2026)
-    const beginningYear = financialData.beginningBalance.date.match(/\d{4}/)?.[0] || new Date().getFullYear();
+    // If beginningBalance doesn't exist, use current year
+    const beginningYear = financialData.beginningBalance?.date?.match(/\d{4}/)?.[0] || new Date().getFullYear();
 
     const currentDate = new Date();
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -1103,7 +1104,7 @@ export const getFinancialReport = asyncHandler(async (req: AuthenticatedRequest,
         (sum: number, item: any) => sum + item.amount, 0
       );
       financialData.netIncome = financialData.totalReceipts - financialData.totalDisbursements;
-      financialData.fundBalance = financialData.beginningBalance.amount + financialData.netIncome;
+      financialData.fundBalance = (financialData.beginningBalance?.amount || 0) + financialData.netIncome;
 
     } catch (error) {
       console.warn('⚠️ Could not calculate Service Fee Liability:', error);

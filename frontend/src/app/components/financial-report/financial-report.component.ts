@@ -149,7 +149,7 @@ interface CourtUsageData {
                 <div class="statement-content">
         <div class="statement-body">
           <!-- Beginning Balance -->
-          <div class="statement-section beginning-balance">
+          <div class="statement-section beginning-balance" *ngIf="financialData.beginningBalance">
             <div class="balance-row">
               <div class="balance-title">BEGINNING BALANCE: {{ financialData.beginningBalance.date }}</div>
               <div class="balance-amount">{{ formatCurrency(financialData.beginningBalance.amount) }}</div>
@@ -446,7 +446,7 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
 
       // Recalculate net income and fund balance
       updatedData.netIncome = updatedData.totalReceipts - updatedData.totalDisbursements;
-      updatedData.fundBalance = updatedData.beginningBalance.amount + updatedData.netIncome;
+      updatedData.fundBalance = (updatedData.beginningBalance?.amount || 0) + updatedData.netIncome;
 
       // Update timestamp
       updatedData.lastUpdated = new Date().toISOString();

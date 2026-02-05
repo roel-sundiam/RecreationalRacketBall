@@ -123,6 +123,7 @@ router.get(
 router.get(
   '/financial-sheet',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   getFinancialReport
 );

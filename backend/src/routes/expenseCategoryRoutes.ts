@@ -13,6 +13,7 @@ import {
   updateCategoryValidation
 } from '../controllers/expenseCategoryController';
 import { authenticateToken, requireFinancialAccess } from '../middleware/auth';
+import { extractClubContext } from '../middleware/club';
 
 const router = Router();
 
@@ -24,6 +25,7 @@ const router = Router();
 router.get(
   '/',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   getAllCategories
 );
@@ -36,6 +38,7 @@ router.get(
 router.get(
   '/all',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   getAllCategoriesIncludingInactive
 );
@@ -48,6 +51,7 @@ router.get(
 router.put(
   '/reorder',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   reorderCategories
 );
@@ -60,6 +64,7 @@ router.put(
 router.get(
   '/:id',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   getCategoryById
 );
@@ -72,6 +77,7 @@ router.get(
 router.post(
   '/',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   createCategoryValidation,
   createCategory
@@ -85,6 +91,7 @@ router.post(
 router.put(
   '/:id',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   updateCategoryValidation,
   updateCategory
@@ -98,6 +105,7 @@ router.put(
 router.delete(
   '/:id',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   deleteCategory
 );
@@ -110,6 +118,7 @@ router.delete(
 router.patch(
   '/:id/activate',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   activateCategory
 );
@@ -122,6 +131,7 @@ router.patch(
 router.get(
   '/:id/usage',
   authenticateToken,
+  extractClubContext,
   requireFinancialAccess,
   getCategoryUsage
 );

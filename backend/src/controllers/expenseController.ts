@@ -233,7 +233,7 @@ export const getExpenseCategories = asyncHandler(async (req: AuthenticatedReques
   // Fetch active categories from database, sorted by displayOrder
   const categories = await ExpenseCategory.find({
     isActive: true,
-    clubId: req.clubId
+    ...(req.clubId ? { $or: [{ clubId: req.clubId }, { clubId: { $exists: false } }] } : {})
   })
     .sort({ displayOrder: 1, name: 1 })
     .lean();
@@ -351,7 +351,9 @@ export const expenseValidationRules = [
       const category = await ExpenseCategory.findOne({
         name: value,
         isActive: true,
-        clubId: authReq.clubId
+        ...(authReq.clubId
+          ? { $or: [{ clubId: authReq.clubId }, { clubId: { $exists: false } }] }
+          : {})
       });
       if (!category) {
         throw new Error('Invalid or inactive category');

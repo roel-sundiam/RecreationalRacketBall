@@ -11,7 +11,11 @@ import { asyncHandler } from '../middleware/errorHandler';
  * GET /api/expense-categories
  */
 export const getAllCategories = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const categories = await ExpenseCategory.find({ isActive: true })
+  const clubFilter = req.clubId
+    ? { $or: [{ clubId: req.clubId }, { clubId: { $exists: false } }] }
+    : {};
+
+  const categories = await ExpenseCategory.find({ isActive: true, ...clubFilter })
     .sort({ displayOrder: 1, name: 1 })
     .lean();
 
@@ -26,7 +30,11 @@ export const getAllCategories = asyncHandler(async (req: AuthenticatedRequest, r
  * GET /api/expense-categories/all
  */
 export const getAllCategoriesIncludingInactive = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const categories = await ExpenseCategory.find()
+  const clubFilter = req.clubId
+    ? { $or: [{ clubId: req.clubId }, { clubId: { $exists: false } }] }
+    : {};
+
+  const categories = await ExpenseCategory.find(clubFilter)
     .sort({ displayOrder: 1, name: 1 })
     .populate('createdBy', 'firstName lastName username')
     .populate('updatedBy', 'firstName lastName username')
@@ -87,10 +95,14 @@ export const createCategory = asyncHandler(async (req: AuthenticatedRequest, res
   }
 
   const userId = req.user._id;
+  const clubId = req.clubId;
 
   // Check for duplicate name (case-insensitive)
   const existingCategory = await ExpenseCategory.findOne({
-    name: { $regex: new RegExp(`^${name}$`, 'i') }
+    name: { $regex: new RegExp(`^${name}$`, 'i') },
+    ...(clubId
+      ? { $or: [{ clubId }, { clubId: { $exists: false } }] }
+      : {})
   });
 
   if (existingCategory) {
@@ -114,7 +126,8 @@ export const createCategory = asyncHandler(async (req: AuthenticatedRequest, res
     icon,
     displayOrder,
     isActive: true,
-    createdBy: userId
+    createdBy: userId,
+    clubId: clubId
   });
 
   await category.save();

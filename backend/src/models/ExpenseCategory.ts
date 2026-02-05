@@ -7,6 +7,7 @@ export interface IExpenseCategory extends Document {
   displayOrder: number;
   color?: string;
   icon?: string;
+  clubId?: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
   updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -51,6 +52,12 @@ const ExpenseCategorySchema: Schema = new Schema(
       trim: true,
       maxlength: [50, 'Icon name must not exceed 50 characters']
     },
+    clubId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Club',
+      required: false,
+      index: true
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -67,16 +74,20 @@ const ExpenseCategorySchema: Schema = new Schema(
 );
 
 // Indexes for efficient queries
-ExpenseCategorySchema.index({ name: 1 }, { unique: true });
+ExpenseCategorySchema.index({ clubId: 1, name: 1 }, { unique: true });
 ExpenseCategorySchema.index({ isActive: 1, displayOrder: 1 });
 
 // Pre-save hook to ensure case-insensitive uniqueness
 ExpenseCategorySchema.pre('save', async function(next) {
   if (this.isModified('name')) {
     const ExpenseCategoryModel = this.constructor as any;
+    const clubFilter = this.clubId
+      ? { clubId: this.clubId }
+      : { clubId: { $exists: false } };
     const existingCategory = await ExpenseCategoryModel.findOne({
       name: { $regex: new RegExp(`^${this.name}$`, 'i') },
-      _id: { $ne: this._id }
+      _id: { $ne: this._id },
+      ...clubFilter
     });
 
     if (existingCategory) {

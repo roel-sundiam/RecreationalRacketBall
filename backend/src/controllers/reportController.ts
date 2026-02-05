@@ -341,6 +341,7 @@ export const getFinancialAnalysisReport = asyncHandler(
       Payment.aggregate([
         {
           $match: {
+            ...(req.clubId && { clubId: req.clubId }),
             status: "completed",
             createdAt: { $gte: start, $lte: end },
           },
@@ -361,6 +362,7 @@ export const getFinancialAnalysisReport = asyncHandler(
       Payment.aggregate([
         {
           $match: {
+            ...(req.clubId && { clubId: req.clubId }),
             status: "completed",
             createdAt: { $gte: start, $lte: end },
           },
@@ -378,6 +380,7 @@ export const getFinancialAnalysisReport = asyncHandler(
       Payment.aggregate([
         {
           $match: {
+            ...(req.clubId && { clubId: req.clubId }),
             status: "completed",
             createdAt: { $gte: start, $lte: end },
           },
@@ -413,6 +416,7 @@ export const getFinancialAnalysisReport = asyncHandler(
       Payment.aggregate([
         {
           $match: {
+            ...(req.clubId && { clubId: req.clubId }),
             status: "pending",
             dueDate: { $lt: new Date() },
           },

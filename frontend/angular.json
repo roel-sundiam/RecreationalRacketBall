@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "tennis-club-frontend": {
+    "RecreationalRacketBall": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -72,10 +72,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "tennis-club-frontend:build:production"
+              "buildTarget": "RecreationalRacketBall:build:production"
             },
             "development": {
-              "buildTarget": "tennis-club-frontend:build:development"
+              "buildTarget": "RecreationalRacketBall:build:development"
             }
           },
           "defaultConfiguration": "development"

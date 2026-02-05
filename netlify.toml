@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
   functions = "netlify/functions"
-  publish = "dist/tennis-club-frontend/browser"
+  publish = "dist/RecreationalRacketBall/browser"
 
 [build.environment]
   NODE_VERSION = "18.19.0"

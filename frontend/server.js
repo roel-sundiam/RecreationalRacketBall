@@ -4,7 +4,7 @@ const app = express();
 const PORT = process.env.PORT || 4200;
 
 // Serve static files from dist directory
-app.use(express.static(path.join(__dirname, 'dist/tennis-club-frontend/browser')));
+app.use(express.static(path.join(__dirname, 'dist/RecreationalRacketBall/browser')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -13,7 +13,7 @@ app.get('/health', (req, res) => {
 
 // Redirect all other routes to index.html for SPA routing
 app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist/tennis-club-frontend/browser', 'index.html'));
+  res.sendFile(path.join(__dirname, 'dist/RecreationalRacketBall/browser', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {

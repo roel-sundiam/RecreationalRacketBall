@@ -13,8 +13,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { timeout, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { timeout, catchError, tap } from 'rxjs/operators';
+import { of, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { environment } from '../../../environments/environment';
 import { canCancelReservation } from '../../utils/date-validation.util';
@@ -1107,6 +1107,7 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
   reservationToCancel: Reservation | null = null;
 
   private apiUrl = environment.apiUrl;
+  private subscriptions = new Subscription();
 
   constructor(
     private http: HttpClient,
@@ -1126,10 +1127,28 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
 
     // Test backend connectivity first
     this.testBackendConnectivity();
+
+    // Subscribe to club changes and reload reservations when club changes
+    this.subscriptions.add(
+      this.authService.selectedClub$
+        .pipe(
+          tap((club) =>
+            console.log(
+              '📋 MyReservations received club change:',
+              club?.club?.name || club?.clubName,
+            ),
+          ),
+        )
+        .subscribe((club) => {
+          console.log('🔄 MyReservations: Club changed to:', club?.club?.name || club?.clubName);
+          this.loadReservations();
+        }),
+    );
   }
 
   ngOnDestroy(): void {
-    // Cleanup any subscriptions if needed
+    // Cleanup subscriptions
+    this.subscriptions.unsubscribe();
   }
 
   @HostListener('window:resize', ['$event'])

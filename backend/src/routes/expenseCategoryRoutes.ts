@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   getAllCategories,
   getAllCategoriesIncludingInactive,
@@ -10,10 +10,10 @@ import {
   reorderCategories,
   getCategoryUsage,
   createCategoryValidation,
-  updateCategoryValidation
-} from '../controllers/expenseCategoryController';
-import { authenticateToken, requireFinancialAccess } from '../middleware/auth';
-import { extractClubContext } from '../middleware/club';
+  updateCategoryValidation,
+} from "../controllers/expenseCategoryController";
+import { authenticateToken, requireFinancialAccess } from "../middleware/auth";
+import { extractClubContext } from "../middleware/club";
 
 const router = Router();
 
@@ -23,11 +23,11 @@ const router = Router();
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.get(
-  '/',
+  "/",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  getAllCategories
+  getAllCategories,
 );
 
 /**
@@ -36,11 +36,11 @@ router.get(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.get(
-  '/all',
+  "/all",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  getAllCategoriesIncludingInactive
+  getAllCategoriesIncludingInactive,
 );
 
 /**
@@ -49,11 +49,11 @@ router.get(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.put(
-  '/reorder',
+  "/reorder",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  reorderCategories
+  reorderCategories,
 );
 
 /**
@@ -62,11 +62,11 @@ router.put(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.get(
-  '/:id',
+  "/:id",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  getCategoryById
+  getCategoryById,
 );
 
 /**
@@ -75,12 +75,12 @@ router.get(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.post(
-  '/',
+  "/",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
   createCategoryValidation,
-  createCategory
+  createCategory,
 );
 
 /**
@@ -89,12 +89,12 @@ router.post(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.put(
-  '/:id',
+  "/:id",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
   updateCategoryValidation,
-  updateCategory
+  updateCategory,
 );
 
 /**
@@ -103,11 +103,11 @@ router.put(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  deleteCategory
+  deleteCategory,
 );
 
 /**
@@ -116,11 +116,11 @@ router.delete(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.patch(
-  '/:id/activate',
+  "/:id/activate",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  activateCategory
+  activateCategory,
 );
 
 /**
@@ -129,11 +129,11 @@ router.patch(
  * @access Private (Admin/SuperAdmin with financial access)
  */
 router.get(
-  '/:id/usage',
+  "/:id/usage",
   authenticateToken,
   extractClubContext,
   requireFinancialAccess,
-  getCategoryUsage
+  getCategoryUsage,
 );
 
 export default router;

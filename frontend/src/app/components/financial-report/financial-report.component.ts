@@ -219,9 +219,7 @@ interface CourtUsageData {
                       <div class="item-description">Accrued App Service Fee</div>
                       <div class="item-amount">
                         {{
-                          formatCurrency(
-                            financialData.liabilities.appServiceFee.remainingLiability
-                          )
+                          formatCurrency(financialData.liabilities.appServiceFee.remainingLiability)
                         }}
                       </div>
                     </div>
@@ -301,7 +299,6 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   private readonly REFRESH_INTERVAL = 30000; // 30 seconds
   private socket: Socket | null = null;
   public socketConnected = false;
-
 
   constructor(
     private http: HttpClient,

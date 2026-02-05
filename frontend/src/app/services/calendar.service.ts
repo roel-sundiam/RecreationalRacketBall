@@ -39,7 +39,7 @@ export interface DayReservationInfo {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CalendarService {
   private apiUrl = environment.apiUrl || 'http://localhost:3000/api';
@@ -49,7 +49,7 @@ export class CalendarService {
   // Debug info for UI
   public debugInfo: any = {
     dateRange: { startDate: '', endDate: '' },
-    backendResponse: { total: 0, blocked: 0, blockedDates: [] }
+    backendResponse: { total: 0, blocked: 0, blockedDates: [] },
   };
 
   constructor(private http: HttpClient) {}
@@ -58,6 +58,8 @@ export class CalendarService {
    * Fetch all reservations for a given month
    */
   getMonthReservations(year: number, month: number): Observable<Map<string, DayReservationInfo>> {
+    console.log(`📅 CalendarService: Fetching reservations for ${month + 1}/${year}`);
+
     // Month is 0-indexed in JavaScript Date
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0); // Last day of month
@@ -71,7 +73,7 @@ export class CalendarService {
       startDate: startDateStr,
       endDate: endDateStr,
       month: month + 1,
-      year: year
+      year: year,
     };
 
     // Fetch both reservations and weather forecast in parallel
@@ -81,21 +83,33 @@ export class CalendarService {
         dateTo: endDateStr,
         populate: 'userId', // Request user data to be populated
         limit: '1000', // Get all reservations for the month (no pagination)
-        showAll: 'true' // Show all users' reservations (not just mine)
-      }
+        showAll: 'true', // Show all users' reservations (not just mine)
+      },
     });
 
     const weather$ = this.http.get<any>(`${this.apiUrl}/weather/forecast`).pipe(
-      catchError(error => {
+      catchError((error) => {
         console.warn('Weather forecast unavailable:', error);
         return of({ forecast: [] }); // Return empty forecast on error
-      })
+      }),
     );
 
     return forkJoin({
       reservations: reservations$,
-      weather: weather$
+      weather: weather$,
     }).pipe(
+      tap(({ reservations }) => {
+        const reservationData = reservations.success && reservations.data ? reservations.data : [];
+        console.log(`📅 CalendarService: Received ${reservationData.length} reservations from API`);
+        if (reservationData.length > 0) {
+          console.log('📅 Sample reservations:');
+          reservationData.slice(0, 3).forEach((r: any) => {
+            console.log(
+              `  - ID: ${r._id}, Club: ${r.clubId}, Date: ${r.date}, TimeSlot: ${r.timeSlot}`,
+            );
+          });
+        }
+      }),
       map(({ reservations, weather }) => {
         const reservationData = reservations.success && reservations.data ? reservations.data : [];
         const weatherForecast = weather.forecast || [];
@@ -103,30 +117,38 @@ export class CalendarService {
         const blockedFromBackend = reservationData
           .filter((r: any) => r.status === 'blocked')
           .map((r: any) => ({
-            date: typeof r.date === 'string' ? r.date.split('T')[0] : new Date(r.date).toISOString().split('T')[0],
+            date:
+              typeof r.date === 'string'
+                ? r.date.split('T')[0]
+                : new Date(r.date).toISOString().split('T')[0],
             timeSlot: r.timeSlot,
             notes: r.blockNotes,
             reason: r.blockReason,
-            _id: r._id
+            _id: r._id,
           }));
 
         // Store backend response for debug (kept for potential future debugging)
         this.debugInfo.backendResponse = {
           total: reservationData.length,
           blocked: blockedFromBackend.length,
-          blockedDates: blockedFromBackend
+          blockedDates: blockedFromBackend,
         };
 
         return this.processMonthData(reservationData, year, month, weatherForecast);
       }),
-      tap(data => this.monthDataSubject.next(data))
+      tap((data) => this.monthDataSubject.next(data)),
     );
   }
 
   /**
    * Process raw reservation data into daily summaries
    */
-  private processMonthData(reservations: Reservation[], year: number, month: number, weatherForecast: any[] = []): Map<string, DayReservationInfo> {
+  private processMonthData(
+    reservations: Reservation[],
+    year: number,
+    month: number,
+    weatherForecast: any[] = [],
+  ): Map<string, DayReservationInfo> {
     console.log(`🔧 Processing ${reservations.length} reservations for ${month + 1}/${year}`);
     console.log(`🌤️  Processing ${weatherForecast.length} days of weather forecast`);
 
@@ -136,7 +158,7 @@ export class CalendarService {
 
     // Create a map of weather data by date
     const weatherMap = new Map<string, any>();
-    weatherForecast.forEach(dayForecast => {
+    weatherForecast.forEach((dayForecast) => {
       if (dayForecast.date) {
         weatherMap.set(dayForecast.date, dayForecast);
       }
@@ -160,7 +182,7 @@ export class CalendarService {
         isPeakDay: false,
         isWednesday: isWednesday,
         maxRainChance: undefined,
-        hasWeatherData: false
+        hasWeatherData: false,
       });
     }
 
@@ -168,7 +190,7 @@ export class CalendarService {
     console.log(`🔧 Sample keys:`, Array.from(dayMap.keys()).slice(0, 5));
 
     // Populate with reservation data
-    reservations.forEach(reservation => {
+    reservations.forEach((reservation) => {
       const resDate = new Date(reservation.date);
       const dateKey = this.getDateKey(resDate);
       const dayInfo = dayMap.get(dateKey);

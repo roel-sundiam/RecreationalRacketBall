@@ -93,27 +93,46 @@ export const extractClubContext = async (
     }
 
     // Get clubId from various sources (priority order)
+    // CRITICAL: X-Club-Id header should take precedence over JWT
+    // because X-Club-Id is sent on every request and reflects current selection
     let clubId: string | undefined;
+    let clubIdSource = "";
 
-    // 1. From JWT (selectedClubId)
-    if ((req as any).user?.selectedClubId) {
-      clubId = (req as any).user.selectedClubId;
+    console.log("🔍🔍🔍 CLUB CONTEXT DEBUG START 🔍🔍🔍");
+    console.log("  ALL HEADERS:", JSON.stringify(req.headers));
+    console.log("  X-Club-Id header value:", req.headers["x-club-id"]);
+    console.log("  JWT selectedClubId:", (req as any).user?.selectedClubId);
+
+    // 1. From request header (HIGHEST PRIORITY - sent on every request with current selection)
+    if (req.headers["x-club-id"]) {
+      clubId = req.headers["x-club-id"] as string;
+      clubIdSource = "X-Club-Id header ✅ PRIMARY";
+      console.log("  ✅ Using X-Club-Id header:", clubId);
     }
 
-    // 2. From request header
-    if (!clubId && req.headers["x-club-id"]) {
-      clubId = req.headers["x-club-id"] as string;
+    // 2. From JWT (selectedClubId) - FALLBACK for first request
+    if (!clubId && (req as any).user?.selectedClubId) {
+      clubId = (req as any).user.selectedClubId;
+      clubIdSource = "JWT selectedClubId (FALLBACK)";
+      console.log("  ⚠️ Using JWT selectedClubId (header was missing):", clubId);
     }
 
     // 3. From request body
     if (!clubId && req.body?.clubId) {
       clubId = req.body.clubId;
+      clubIdSource = "request body";
+      console.log("  ⚠️ Using request body clubId:", clubId);
     }
 
     // 4. From URL params
     if (!clubId && req.params?.clubId) {
       clubId = req.params.clubId;
+      clubIdSource = "URL params";
+      console.log("  ⚠️ Using URL params clubId:", clubId);
     }
+
+    console.log("  🔍 FINAL DECISION:", { clubId, source: clubIdSource });
+    console.log("🔍🔍🔍 CLUB CONTEXT DEBUG END 🔍🔍🔍");
 
     // Validate clubId is present
     if (!clubId) {

@@ -8,7 +8,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.token;
   const selectedClub = authService.selectedClub;
 
-  console.log('🔧 HTTP Interceptor - Token:', !!token, 'Club:', selectedClub?.club?.name || selectedClub?.clubId || 'none');
+  // Very detailed logging on every request
+  console.log('🔧🔧🔧 HTTP INTERCEPTOR DEBUG START 🔧🔧🔧');
+  console.log('  Request URL:', req.url);
+  console.log('  selectedClub property value:', selectedClub);
+  console.log('  selectedClub?.clubId:', selectedClub?.clubId);
+  console.log('  selectedClub?.clubName:', selectedClub?.clubName);
+  console.log('  Token present:', !!token);
+  console.log('🔧🔧🔧 HTTP INTERCEPTOR DEBUG END 🔧🔧🔧');
 
   // Check if token is expired before sending request
   if (token && authService.isTokenExpired()) {
@@ -16,12 +23,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     authService.logout();
 
     // Return 401 error locally without making the request
-    return throwError(() => new HttpErrorResponse({
-      error: { success: false, message: 'Token expired' },
-      status: 401,
-      statusText: 'Unauthorized',
-      url: req.url
-    }));
+    return throwError(
+      () =>
+        new HttpErrorResponse({
+          error: { success: false, message: 'Token expired' },
+          status: 401,
+          statusText: 'Unauthorized',
+          url: req.url,
+        }),
+    );
   }
 
   // Build headers object
@@ -37,8 +47,21 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Add X-Club-Id header if club is selected
   if (selectedClub && selectedClub.clubId) {
+    console.log('🏢 HTTP Interceptor - DEBUG:', {
+      selectedClubValue: authService.selectedClub,
+      selectedClubProperty: selectedClub,
+      clubId: selectedClub.clubId,
+      clubName: selectedClub.clubName || selectedClub.club?.name,
+      requestUrl: req.url,
+    });
     headers = headers.set('X-Club-Id', selectedClub.clubId);
     console.log('🏢 HTTP Interceptor - Added X-Club-Id header:', selectedClub.clubId);
+  } else {
+    console.log('🏢 HTTP Interceptor - NO CLUB SELECTED:', {
+      selectedClubExists: !!selectedClub,
+      selectedClubValue: selectedClub,
+      requestUrl: req.url,
+    });
   }
 
   // Clone request with all headers
@@ -54,6 +77,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
       // Re-throw the error so components can still handle it if needed
       return throwError(() => error);
-    })
+    }),
   );
 };

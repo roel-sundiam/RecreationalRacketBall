@@ -1,4 +1,11 @@
-import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewEncapsulation,
+  ChangeDetectorRef,
+  ViewChild,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -10,8 +17,11 @@ import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular
 import { CalendarOptions, EventClickArg, EventInput, Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { Subscription } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { CalendarService, DayReservationInfo, Reservation } from '../../services/calendar.service';
 import { CalendarDayDetailsDialogComponent } from '../calendar-day-details-dialog/calendar-day-details-dialog.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-calendar-view',
@@ -22,19 +32,20 @@ import { CalendarDayDetailsDialogComponent } from '../calendar-day-details-dialo
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    FullCalendarModule
+    FullCalendarModule,
   ],
   templateUrl: './calendar-view.component.html',
   styleUrls: ['./calendar-view.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
-export class CalendarViewComponent implements OnInit {
+export class CalendarViewComponent implements OnInit, OnDestroy {
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
 
   loading = true;
   monthData: Map<string, DayReservationInfo> = new Map();
   isInitialLoad = true;
   private isRefetching = false;
+  private subscriptions = new Subscription();
 
   debugInfo: any = {
     totalReservations: 0,
@@ -42,7 +53,7 @@ export class CalendarViewComponent implements OnInit {
     eventsRendered: 0,
     blockedReservations: [],
     dateRange: { startDate: '', endDate: '', month: 0, year: 0 },
-    backendResponse: { total: 0, blocked: 0, blockedDates: [] }
+    backendResponse: { total: 0, blocked: 0, blockedDates: [] },
   };
 
   get serviceDebugInfo() {
@@ -55,13 +66,15 @@ export class CalendarViewComponent implements OnInit {
     headerToolbar: {
       left: 'prev',
       center: 'title',
-      right: 'next'
+      right: 'next',
     },
     height: 'auto',
     fixedWeekCount: false,
     showNonCurrentDates: false,
     eventOrder: 'order,start', // Sort by our custom 'order' property, then by start time
     events: (fetchInfo, successCallback, failureCallback) => {
+      console.log('📅 Events callback fired, monthData size:', this.monthData.size);
+
       // Return current events from monthData
       const events: EventInput[] = [];
       let blockedCount = 0;
@@ -70,8 +83,9 @@ export class CalendarViewComponent implements OnInit {
 
       this.monthData.forEach((dayInfo, dateKey) => {
         // Add reservation events
-        dayInfo.reservations.forEach(reservation => {
+        dayInfo.reservations.forEach((reservation) => {
           allReservations++;
+          console.log(`  Event: ${dateKey} at ${reservation.timeSlot}:00 - ${reservation.status}`);
 
           // Collect blocked reservations for debug info
           if (reservation.status === 'blocked') {
@@ -82,13 +96,19 @@ export class CalendarViewComponent implements OnInit {
               blockNotes: reservation.blockNotes,
               blockReason: reservation.blockReason,
               status: reservation.status,
-              _id: reservation._id
+              _id: reservation._id,
             });
           }
 
           // Show: confirmed, pending, blocked, completed, and no-show (historical) reservations
           // Hide: cancelled (user cancelled)
-          if (reservation.status === 'confirmed' || reservation.status === 'pending' || reservation.status === 'blocked' || reservation.status === 'completed' || reservation.status === 'no-show') {
+          if (
+            reservation.status === 'confirmed' ||
+            reservation.status === 'pending' ||
+            reservation.status === 'blocked' ||
+            reservation.status === 'completed' ||
+            reservation.status === 'no-show'
+          ) {
             // For blocked reservations, show the block notes (full description) as title
             let title = '';
             let statusBadge = '';
@@ -103,14 +123,16 @@ export class CalendarViewComponent implements OnInit {
             } else if (reservation.status === 'blocked') {
               statusBadge = '🚫 ';
             } else if (reservation.status === 'no-show') {
-              statusBadge = '⏱️ ';  // Indicates historical/passed reservation
+              statusBadge = '⏱️ '; // Indicates historical/passed reservation
             }
 
             if (reservation.status === 'blocked') {
               title = `${statusBadge}${reservation.blockNotes || reservation.blockReason || 'Court Blocked'}`;
             } else {
               const startTime = this.formatTimeSlot(reservation.timeSlot);
-              const endTime = this.formatTimeSlot(reservation.timeSlot + (reservation.duration || 1));
+              const endTime = this.formatTimeSlot(
+                reservation.timeSlot + (reservation.duration || 1),
+              );
               title = `${statusBadge}${this.getReserverName(reservation)} (${startTime}-${endTime})`;
             }
 
@@ -144,21 +166,25 @@ export class CalendarViewComponent implements OnInit {
               id: reservation._id,
               title: title,
               start: startDateTime,
-              allDay: false,  // Must be false for time-based sorting
+              allDay: false, // Must be false for time-based sorting
               backgroundColor: bgColor,
               borderColor: borderColor,
               color: bgColor, // Also set color property
               textColor: 'white', // Ensure text is white
               order: eventOrder, // Explicit ordering for FullCalendar
-              classNames: ['reservation-event', `payment-${paymentStatus}`, `status-${reservation.status}`],
+              classNames: [
+                'reservation-event',
+                `payment-${paymentStatus}`,
+                `status-${reservation.status}`,
+              ],
               extendedProps: {
                 reservation: reservation,
                 hours: reservation.duration,
                 timeSlot: reservation.timeSlot,
                 bgColor: bgColor, // Store color in extendedProps as fallback
                 status: reservation.status,
-                paymentStatus: paymentStatus
-              }
+                paymentStatus: paymentStatus,
+              },
             });
           }
         });
@@ -191,8 +217,12 @@ export class CalendarViewComponent implements OnInit {
         totalReservations: allReservations,
         blockedCount: blockedCount,
         eventsRendered: events.length,
-        blockedReservations: blockedReservations
+        blockedReservations: blockedReservations,
       };
+
+      console.log(
+        `📅 Events callback: Building ${events.length} events from ${allReservations} reservations`,
+      );
 
       // Sort events by timeSlot to show them in chronological order
       events.sort((a, b) => {
@@ -201,6 +231,7 @@ export class CalendarViewComponent implements OnInit {
         return timeA - timeB;
       });
 
+      console.log('📅 Calling successCallback with', events.length, 'events');
       successCallback(events);
     },
     eventClick: this.handleEventClick.bind(this),
@@ -211,26 +242,46 @@ export class CalendarViewComponent implements OnInit {
     customButtons: {
       prev: {
         text: 'prev',
-        click: () => this.handlePrevMonth()
+        click: () => this.handlePrevMonth(),
       },
       next: {
         text: 'next',
-        click: () => this.handleNextMonth()
-      }
+        click: () => this.handleNextMonth(),
+      },
     },
-    eventContent: this.renderEventContent.bind(this)
+    eventContent: this.renderEventContent.bind(this),
   };
 
   constructor(
     private calendarService: CalendarService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
     // Loading starts as true, load initial data
     this.loadMonthData(new Date());
+
+    // Subscribe to club changes and reload calendar data
+    this.subscriptions.add(
+      this.authService.selectedClub$
+        .pipe(
+          tap((club) =>
+            console.log('📅 Calendar received club change:', club?.club?.name || club?.clubName),
+          ),
+        )
+        .subscribe((club) => {
+          console.log('🔄 Calendar: Club changed to:', club?.club?.name || club?.clubName);
+          this.monthData.clear(); // Clear cached data
+          this.loadMonthData(new Date());
+        }),
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   /**
@@ -242,14 +293,24 @@ export class CalendarViewComponent implements OnInit {
     const monthKey = `${year}-${month}`;
     const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-
     // Set loading immediately but schedule change detection
     this.loading = true;
     setTimeout(() => this.cdr.detectChanges(), 0);
 
     this.calendarService.getMonthReservations(year, month).subscribe({
       next: (data) => {
+        console.log('📅 CalendarService returned data, monthData size:', data.size);
+        let totalReservations = 0;
+        data.forEach((dayInfo, dateKey) => {
+          totalReservations += dayInfo.reservations.length;
+          if (totalReservations <= 5) {
+            console.log(`  ${dateKey}: ${dayInfo.reservations.length} reservations`);
+          }
+        });
+        console.log(`📅 Total reservations in monthData: ${totalReservations}`);
+
         this.monthData = data;
+        console.log('📅 monthData updated, size:', this.monthData.size);
 
         // Refetch events to update calendar display
         if (this.calendarComponent) {
@@ -257,7 +318,14 @@ export class CalendarViewComponent implements OnInit {
 
           // Log current view date before refetch
           const currentView = calendarApi.view.currentStart;
+          console.log('📅 Current calendar view:', currentView);
+          console.log('📅 Loading date:', date);
 
+          // Reset calendar to current month to ensure it displays fresh data
+          console.log('📅 Calling gotoDate to sync calendar');
+          calendarApi.gotoDate(date);
+
+          console.log('📅 Calling refetchEvents()');
           calendarApi.refetchEvents();
 
           // Apply weather styling to all cells after events are loaded
@@ -270,12 +338,12 @@ export class CalendarViewComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
+        console.error('📅 Error loading month data:', error);
         this.loading = false;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
-
 
   /**
    * Handle previous month button
@@ -289,7 +357,6 @@ export class CalendarViewComponent implements OnInit {
     // Calculate previous month
     const prevMonth = new Date(currentDate);
     prevMonth.setMonth(prevMonth.getMonth() - 1);
-
 
     // Load data first, then navigate
     this.loadMonthDataThenNavigate(prevMonth, 'prev');
@@ -307,7 +374,6 @@ export class CalendarViewComponent implements OnInit {
     // Calculate next month
     const nextMonth = new Date(currentDate);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-
 
     // Load data first, then navigate
     this.loadMonthDataThenNavigate(nextMonth, 'next');
@@ -347,7 +413,7 @@ export class CalendarViewComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -366,8 +432,8 @@ export class CalendarViewComponent implements OnInit {
         maxWidth: '95vw',
         data: {
           date: eventDate,
-          dayInfo: dayInfo
-        }
+          dayInfo: dayInfo,
+        },
       });
     }
   }
@@ -386,8 +452,8 @@ export class CalendarViewComponent implements OnInit {
         maxWidth: '95vw',
         data: {
           date: clickedDate,
-          dayInfo: dayInfo
-        }
+          dayInfo: dayInfo,
+        },
       });
     }
   }
@@ -405,7 +471,7 @@ export class CalendarViewComponent implements OnInit {
               <div class="fc-event-title">${arg.event.title}</div>
             </div>
           </div>
-        `
+        `,
       };
     }
     return { html: arg.event.title };
@@ -429,7 +495,7 @@ export class CalendarViewComponent implements OnInit {
     const dateStr = `${year}-${month}-${day}`;
 
     this.router.navigate(['/reservations'], {
-      queryParams: { date: dateStr }
+      queryParams: { date: dateStr },
     });
   }
 
@@ -446,7 +512,7 @@ export class CalendarViewComponent implements OnInit {
   getBlockedReservationsDebug(): any[] {
     const blocked: any[] = [];
     this.monthData.forEach((dayInfo, dateKey) => {
-      dayInfo.reservations.forEach(reservation => {
+      dayInfo.reservations.forEach((reservation) => {
         if (reservation.status === 'blocked') {
           blocked.push({
             date: dateKey,
@@ -455,7 +521,7 @@ export class CalendarViewComponent implements OnInit {
             notes: reservation.blockNotes || 'N/A',
             timeSlot: reservation.timeSlot,
             endTimeSlot: reservation.endTimeSlot,
-            duration: reservation.duration
+            duration: reservation.duration,
           });
         }
       });
@@ -505,7 +571,7 @@ export class CalendarViewComponent implements OnInit {
   getReservationStatusCounts(): { [key: string]: number } {
     const counts: { [key: string]: number } = {};
     this.monthData.forEach((dayInfo) => {
-      dayInfo.reservations.forEach(reservation => {
+      dayInfo.reservations.forEach((reservation) => {
         const status = reservation.status || 'unknown';
         counts[status] = (counts[status] || 0) + 1;
       });
@@ -521,12 +587,12 @@ export class CalendarViewComponent implements OnInit {
     let count = 0;
     this.monthData.forEach((dayInfo) => {
       if (count >= 5) return;
-      dayInfo.reservations.forEach(reservation => {
+      dayInfo.reservations.forEach((reservation) => {
         if (count >= 5) return;
         samples.push({
           date: reservation.date,
           status: reservation.status,
-          timeSlot: reservation.timeSlot
+          timeSlot: reservation.timeSlot,
         });
         count++;
       });
@@ -538,11 +604,15 @@ export class CalendarViewComponent implements OnInit {
    * Get payment status border color
    */
   getPaymentStatusBorderColor(status: string): string {
-    switch(status) {
-      case 'paid': return '#4caf50';      // green
-      case 'pending': return '#ff9800';   // orange
-      case 'overdue': return '#dc2626';   // red
-      default: return '#9e9e9e';          // gray for not_applicable
+    switch (status) {
+      case 'paid':
+        return '#4caf50'; // green
+      case 'pending':
+        return '#ff9800'; // orange
+      case 'overdue':
+        return '#dc2626'; // red
+      default:
+        return '#9e9e9e'; // gray for not_applicable
     }
   }
 
@@ -562,11 +632,16 @@ export class CalendarViewComponent implements OnInit {
     let hiddenCount = 0;
 
     this.monthData.forEach((dayInfo, dateKey) => {
-      dayInfo.reservations.forEach(reservation => {
+      dayInfo.reservations.forEach((reservation) => {
         if (debugInfo.length >= 10) return; // Limit to 10 for readability
 
         const paymentStatus = reservation.paymentStatus || 'not_applicable';
-        const isVisible = reservation.status === 'confirmed' || reservation.status === 'pending' || reservation.status === 'blocked' || reservation.status === 'completed' || reservation.status === 'no-show';
+        const isVisible =
+          reservation.status === 'confirmed' ||
+          reservation.status === 'pending' ||
+          reservation.status === 'blocked' ||
+          reservation.status === 'completed' ||
+          reservation.status === 'no-show';
 
         if (isVisible) {
           visibleCount++;
@@ -584,7 +659,7 @@ export class CalendarViewComponent implements OnInit {
           rawPaymentStatus: reservation.paymentStatus,
           borderColor: this.getPaymentStatusBorderColor(paymentStatus),
           borderWidth: this.getPaymentStatusBorderWidth(paymentStatus),
-          isVisible: isVisible
+          isVisible: isVisible,
         });
       });
     });
@@ -599,7 +674,7 @@ export class CalendarViewComponent implements OnInit {
         paymentStatus: '',
         borderColor: '',
         borderWidth: '',
-        isVisible: true
+        isVisible: true,
       });
     }
 
@@ -712,7 +787,7 @@ export class CalendarViewComponent implements OnInit {
         date: dateKey,
         hasWeather: dayInfo.hasWeatherData,
         rainChance: dayInfo.maxRainChance,
-        reservations: dayInfo.reservations.length
+        reservations: dayInfo.reservations.length,
       });
     });
 

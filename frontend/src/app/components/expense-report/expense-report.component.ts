@@ -22,7 +22,10 @@ import { MatSortModule } from '@angular/material/sort';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData,
+} from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import { environment } from '../../../environments/environment';
 
 interface Expense {
@@ -81,7 +84,7 @@ interface ExpenseResponse {
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatSortModule
+    MatSortModule,
   ],
   template: `
     <div class="page-container">
@@ -102,14 +105,14 @@ interface ExpenseResponse {
             <mat-card class="summary-card">
               <mat-icon>payments</mat-icon>
               <div class="summary-content">
-                <span class="summary-value">₱{{getTotalAmount() | number:'1.2-2'}}</span>
+                <span class="summary-value">₱{{ getTotalAmount() | number: '1.2-2' }}</span>
                 <span class="summary-label">Total Expenses</span>
               </div>
             </mat-card>
             <mat-card class="summary-card">
               <mat-icon>receipt</mat-icon>
               <div class="summary-content">
-                <span class="summary-value">{{getTotalCount()}}</span>
+                <span class="summary-value">{{ getTotalCount() }}</span>
                 <span class="summary-label">Records</span>
               </div>
             </mat-card>
@@ -126,7 +129,7 @@ interface ExpenseResponse {
               <mat-icon>list</mat-icon>
               Expense List
             </ng-template>
-            
+
             <div class="tab-content">
               <!-- Filters and Add Button -->
               <div class="actions-bar">
@@ -136,12 +139,12 @@ interface ExpenseResponse {
                     <mat-select [(value)]="selectedCategory" (selectionChange)="onFilterChange()">
                       <mat-option value="all">All Categories</mat-option>
                       <mat-option *ngFor="let category of expenseCategories" [value]="category">
-                        {{category}}
+                        {{ category }}
                       </mat-option>
                     </mat-select>
                   </mat-form-field>
                 </div>
-                
+
                 <button mat-raised-button color="primary" (click)="openAddExpenseDialog()">
                   <mat-icon>add</mat-icon>
                   Add Expense
@@ -161,15 +164,17 @@ interface ExpenseResponse {
                   <ng-container matColumnDef="date">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
                     <td mat-cell *matCellDef="let expense">
-                      {{formatDate(expense.date)}}
+                      {{ formatDate(expense.date) }}
                     </td>
                   </ng-container>
 
                   <!-- Amount Column -->
                   <ng-container matColumnDef="amount">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header class="amount-column">Amount</th>
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header class="amount-column">
+                      Amount
+                    </th>
                     <td mat-cell *matCellDef="let expense" class="amount-column">
-                      <span class="amount">₱{{expense.amount | number:'1.2-2'}}</span>
+                      <span class="amount">₱{{ expense.amount | number: '1.2-2' }}</span>
                     </td>
                   </ng-container>
 
@@ -177,7 +182,7 @@ interface ExpenseResponse {
                   <ng-container matColumnDef="details">
                     <th mat-header-cell *matHeaderCellDef>Details</th>
                     <td mat-cell *matCellDef="let expense">
-                      <span class="details-text">{{expense.details}}</span>
+                      <span class="details-text">{{ expense.details }}</span>
                     </td>
                   </ng-container>
 
@@ -185,7 +190,7 @@ interface ExpenseResponse {
                   <ng-container matColumnDef="category">
                     <th mat-header-cell *matHeaderCellDef>Category</th>
                     <td mat-cell *matCellDef="let expense">
-                      <mat-chip class="category-chip">{{expense.category}}</mat-chip>
+                      <mat-chip class="category-chip">{{ expense.category }}</mat-chip>
                     </td>
                   </ng-container>
 
@@ -196,23 +201,33 @@ interface ExpenseResponse {
                       <button mat-icon-button (click)="editExpense(expense)" matTooltip="Edit">
                         <mat-icon>edit</mat-icon>
                       </button>
-                      <button mat-icon-button color="warn" (click)="deleteExpense(expense)" matTooltip="Delete">
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        (click)="deleteExpense(expense)"
+                        matTooltip="Delete"
+                      >
                         <mat-icon>delete</mat-icon>
                       </button>
                     </td>
                   </ng-container>
 
                   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="expense-row"></tr>
+                  <tr
+                    mat-row
+                    *matRowDef="let row; columns: displayedColumns"
+                    class="expense-row"
+                  ></tr>
                 </table>
 
                 <!-- Paginator -->
-                <mat-paginator 
+                <mat-paginator
                   [length]="totalExpenses"
                   [pageSize]="pageSize"
                   [pageSizeOptions]="[10, 25, 50, 100]"
                   (page)="onPageChange($event)"
-                  showFirstLastButtons>
+                  showFirstLastButtons
+                >
                 </mat-paginator>
               </div>
 
@@ -221,7 +236,7 @@ interface ExpenseResponse {
                 <div class="expense-card" *ngFor="let expense of expenses">
                   <div class="card-header">
                     <div class="card-date">{{ formatDate(expense.date) }}</div>
-                    <div class="card-amount">₱{{ expense.amount | number:'1.2-2' }}</div>
+                    <div class="card-amount">₱{{ expense.amount | number: '1.2-2' }}</div>
                   </div>
                   <div class="card-body">
                     <div class="card-details">{{ expense.details }}</div>
@@ -229,7 +244,9 @@ interface ExpenseResponse {
                   </div>
                   <div class="card-actions">
                     <button mat-stroked-button (click)="editExpense(expense)">Edit</button>
-                    <button mat-stroked-button color="warn" (click)="deleteExpense(expense)">Delete</button>
+                    <button mat-stroked-button color="warn" (click)="deleteExpense(expense)">
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
@@ -251,30 +268,32 @@ interface ExpenseResponse {
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>add</mat-icon>
-              {{editingExpense ? 'Edit' : 'Add'}} Expense
+              {{ editingExpense ? 'Edit' : 'Add' }} Expense
             </ng-template>
 
             <div class="tab-content">
               <mat-card class="form-card">
                 <mat-card-header>
                   <mat-card-title>
-                    <mat-icon>{{editingExpense ? 'edit' : 'add'}}</mat-icon>
-                    {{editingExpense ? 'Edit' : 'Add New'}} Expense
+                    <mat-icon>{{ editingExpense ? 'edit' : 'add' }}</mat-icon>
+                    {{ editingExpense ? 'Edit' : 'Add New' }} Expense
                   </mat-card-title>
                 </mat-card-header>
 
                 <mat-card-content>
-                  <form [formGroup]="expenseForm" (ngSubmit)="onSubmitExpense()" class="expense-form">
+                  <form
+                    [formGroup]="expenseForm"
+                    (ngSubmit)="onSubmitExpense()"
+                    class="expense-form"
+                  >
                     <div class="form-grid">
                       <label class="form-field">
                         <span class="field-label">Date</span>
-                        <input
-                          class="field-input"
-                          type="date"
-                          formControlName="date"
-                          required
-                        />
-                        <span class="field-error" *ngIf="expenseForm.get('date')?.hasError('required')">
+                        <input class="field-input" type="date" formControlName="date" required />
+                        <span
+                          class="field-error"
+                          *ngIf="expenseForm.get('date')?.hasError('required')"
+                        >
                           Date is required
                         </span>
                       </label>
@@ -290,10 +309,16 @@ interface ExpenseResponse {
                           step="0.01"
                           required
                         />
-                        <span class="field-error" *ngIf="expenseForm.get('amount')?.hasError('required')">
+                        <span
+                          class="field-error"
+                          *ngIf="expenseForm.get('amount')?.hasError('required')"
+                        >
                           Amount is required
                         </span>
-                        <span class="field-error" *ngIf="expenseForm.get('amount')?.hasError('min')">
+                        <span
+                          class="field-error"
+                          *ngIf="expenseForm.get('amount')?.hasError('min')"
+                        >
                           Amount must be greater than 0
                         </span>
                       </label>
@@ -306,7 +331,10 @@ interface ExpenseResponse {
                             {{ category }}
                           </option>
                         </select>
-                        <span class="field-error" *ngIf="expenseForm.get('category')?.hasError('required')">
+                        <span
+                          class="field-error"
+                          *ngIf="expenseForm.get('category')?.hasError('required')"
+                        >
                           Category is required
                         </span>
                       </label>
@@ -320,10 +348,16 @@ interface ExpenseResponse {
                           placeholder="Expense description"
                           required
                         ></textarea>
-                        <span class="field-error" *ngIf="expenseForm.get('details')?.hasError('required')">
+                        <span
+                          class="field-error"
+                          *ngIf="expenseForm.get('details')?.hasError('required')"
+                        >
                           Details are required
                         </span>
-                        <span class="field-error" *ngIf="expenseForm.get('details')?.hasError('minlength')">
+                        <span
+                          class="field-error"
+                          *ngIf="expenseForm.get('details')?.hasError('minlength')"
+                        >
                           Details must be at least 3 characters
                         </span>
                       </label>
@@ -333,13 +367,16 @@ interface ExpenseResponse {
 
                 <mat-card-actions align="end">
                   <button mat-button (click)="resetForm()" type="button">Cancel</button>
-                  <button 
-                    mat-raised-button 
-                    color="primary" 
-                    (click)="onSubmitExpense()" 
-                    [disabled]="expenseForm.invalid || submitting">
-                    <mat-icon>{{submitting ? 'hourglass_empty' : (editingExpense ? 'save' : 'add')}}</mat-icon>
-                    {{submitting ? 'Saving...' : (editingExpense ? 'Update' : 'Add')}} Expense
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="onSubmitExpense()"
+                    [disabled]="expenseForm.invalid || submitting"
+                  >
+                    <mat-icon>{{
+                      submitting ? 'hourglass_empty' : editingExpense ? 'save' : 'add'
+                    }}</mat-icon>
+                    {{ submitting ? 'Saving...' : editingExpense ? 'Update' : 'Add' }} Expense
                   </button>
                 </mat-card-actions>
               </mat-card>
@@ -349,28 +386,28 @@ interface ExpenseResponse {
       </div>
     </div>
   `,
-  styleUrls: ['./expense-report.component.scss']
+  styleUrls: ['./expense-report.component.scss'],
 })
 export class ExpenseReportComponent implements OnInit {
   expenses: Expense[] = [];
   expenseCategories: string[] = [];
   displayedColumns: string[] = ['date', 'amount', 'details', 'category', 'actions'];
-  
+
   // Pagination
   currentPage = 1;
   pageSize = 25;
   totalExpenses = 0;
   totalAmount = 0;
-  
+
   // Filters
   selectedCategory = 'all';
-  
+
   // State
   loading = false;
   submitting = false;
   editingExpense: Expense | null = null;
   selectedTabIndex = 0;
-  
+
   // Form
   expenseForm: FormGroup;
 
@@ -380,13 +417,13 @@ export class ExpenseReportComponent implements OnInit {
     private router: Router,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private fb: FormBuilder
+    private fb: FormBuilder,
   ) {
     this.expenseForm = this.fb.group({
       date: [this.formatDateInput(new Date()), [Validators.required]],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       details: ['', [Validators.required, Validators.minLength(3)]],
-      category: ['', [Validators.required]]
+      category: ['', [Validators.required]],
     });
   }
 
@@ -396,23 +433,25 @@ export class ExpenseReportComponent implements OnInit {
   }
 
   loadExpenseCategories() {
-    this.http.get<{success: boolean; data: string[]}>(`${environment.apiUrl}/expenses/categories`).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.expenseCategories = response.data;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading categories:', error);
-      }
-    });
+    this.http
+      .get<{ success: boolean; data: string[] }>(`${environment.apiUrl}/expenses/categories`)
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.expenseCategories = response.data;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading categories:', error);
+        },
+      });
   }
 
   loadExpenses() {
     this.loading = true;
     const params: any = {
       page: this.currentPage,
-      limit: this.pageSize
+      limit: this.pageSize,
     };
 
     if (this.selectedCategory !== 'all') {
@@ -432,7 +471,7 @@ export class ExpenseReportComponent implements OnInit {
         console.error('Error loading expenses:', error);
         this.showSnackBar('Failed to load expenses', 'error');
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -460,7 +499,7 @@ export class ExpenseReportComponent implements OnInit {
       date: this.formatDateInput(new Date(expense.date)),
       amount: expense.amount,
       details: expense.details,
-      category: expense.category
+      category: expense.category,
     });
     this.selectedTabIndex = 1; // Switch to the form tab
   }
@@ -478,8 +517,8 @@ export class ExpenseReportComponent implements OnInit {
         next: (response: any) => {
           if (response.success) {
             this.showSnackBar(
-              this.editingExpense ? 'Expense updated successfully' : 'Expense added successfully', 
-              'success'
+              this.editingExpense ? 'Expense updated successfully' : 'Expense added successfully',
+              'success',
             );
             this.resetForm();
             this.loadExpenses();
@@ -490,7 +529,7 @@ export class ExpenseReportComponent implements OnInit {
           console.error('Error saving expense:', error);
           this.showSnackBar('Failed to save expense', 'error');
           this.submitting = false;
-        }
+        },
       });
     }
   }
@@ -503,11 +542,11 @@ export class ExpenseReportComponent implements OnInit {
         message: `Are you sure you want to delete this expense: "${expense.details}"?`,
         confirmText: 'Delete',
         cancelText: 'Cancel',
-        type: 'danger'
-      } as ConfirmationDialogData
+        type: 'danger',
+      } as ConfirmationDialogData,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.http.delete(`${environment.apiUrl}/expenses/${expense._id}`).subscribe({
           next: (response: any) => {
@@ -519,7 +558,7 @@ export class ExpenseReportComponent implements OnInit {
           error: (error) => {
             console.error('Error deleting expense:', error);
             this.showSnackBar('Failed to delete expense', 'error');
-          }
+          },
         });
       }
     });
@@ -532,7 +571,7 @@ export class ExpenseReportComponent implements OnInit {
       date: this.formatDateInput(new Date()),
       amount: '',
       details: '',
-      category: ''
+      category: '',
     });
     this.selectedTabIndex = 0; // Return to list tab
   }
@@ -563,7 +602,7 @@ export class ExpenseReportComponent implements OnInit {
   private showSnackBar(message: string, type: 'success' | 'error') {
     this.snackBar.open(message, 'Close', {
       duration: 3000,
-      panelClass: type === 'success' ? 'success-snackbar' : 'error-snackbar'
+      panelClass: type === 'success' ? 'success-snackbar' : 'error-snackbar',
     });
   }
 }

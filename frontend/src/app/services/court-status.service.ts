@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, interval, of } from 'rxjs';
+import { BehaviorSubject, Observable, interval, of, Subscription } from 'rxjs';
 import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
@@ -44,11 +44,12 @@ interface Reservation {
 @Injectable({
   providedIn: 'root'
 })
-export class CourtStatusService {
+export class CourtStatusService implements OnDestroy {
   private apiUrl = environment.apiUrl || 'http://localhost:3000/api';
   private statusSubject = new BehaviorSubject<CourtStatusData | null>(null);
   public status$ = this.statusSubject.asObservable();
   private refreshIntervalSubscription: any;
+  private clubChangeSubscription: Subscription | null = null;
 
   private readonly COURT_OPEN_HOUR = 5;  // 5 AM
   private readonly COURT_CLOSE_HOUR = 22; // 10 PM
@@ -56,7 +57,27 @@ export class CourtStatusService {
   constructor(
     private http: HttpClient,
     private authService: AuthService
-  ) {}
+  ) {
+    // Subscribe to club changes to refresh data when club is switched
+    this.clubChangeSubscription = this.authService.selectedClub$.subscribe((club) => {
+      console.log('🏢🏢🏢 COURT STATUS SERVICE - CLUB CHANGE DETECTED 🏢🏢🏢');
+      console.log('  New club:', club?.clubName || club?.clubId);
+      console.log('  Previous status:', this.statusSubject.value);
+      this.statusSubject.next(null); // Reset status
+      this.refreshStatus(); // Fetch new data
+      console.log('  ✅ Triggered refresh');
+    });
+  }
+
+  /**
+   * Cleanup subscriptions
+   */
+  ngOnDestroy(): void {
+    if (this.clubChangeSubscription) {
+      this.clubChangeSubscription.unsubscribe();
+    }
+    this.stopAutoRefresh();
+  }
 
   /**
    * Get current court status as an Observable
@@ -108,7 +129,14 @@ export class CourtStatusService {
    */
   private fetchAndProcessStatus(): Observable<CourtStatusData> {
     // Only fetch if a club is selected
-    if (!this.authService.selectedClub) {
+    const selectedClub = this.authService.selectedClub;
+    console.log('🔍 CourtStatusService.fetchAndProcessStatus():', {
+      clubSelected: !!selectedClub,
+      clubId: selectedClub?.clubId,
+      clubName: selectedClub?.clubName,
+    });
+
+    if (!selectedClub) {
       const emptyStatus: CourtStatusData = {
         current: { exists: false, timeRange: '', players: [], isBlocked: false },
         next: { exists: false, timeRange: '', players: [], isBlocked: false },
@@ -120,10 +148,21 @@ export class CourtStatusService {
     }
 
     const todayStr = this.getTodayDateString();
+    const apiUrl = `${this.apiUrl}/reservations/date/${todayStr}`;
+    
+    console.log('📡 CourtStatusService making API request:', {
+      url: apiUrl,
+      club: selectedClub?.clubName,
+      clubId: selectedClub?.clubId,
+    });
 
-    return this.http.get<any>(`${this.apiUrl}/reservations/date/${todayStr}`).pipe(
+    return this.http.get<any>(apiUrl).pipe(
       map(response => {
-        console.log('Court status API response:', response);
+        console.log('✅ Court status API response received:', {
+          statusCode: 200,
+          dataCount: Array.isArray(response.data) ? response.data.length : 0,
+          club: selectedClub?.clubName,
+        });
 
         // Handle different response formats
         let reservations: Reservation[] = [];

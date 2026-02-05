@@ -307,7 +307,7 @@ export const getFinancialAnalysisReport = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { startDate, endDate, groupBy } = req.query;
 
-    console.log('📊 FINANCIAL ANALYSIS REPORT REQUEST:', {
+    console.log("📊 FINANCIAL ANALYSIS REPORT REQUEST:", {
       clubId: req.clubId,
       userRole: req.user?.role,
       userId: req.user?._id,
@@ -1721,18 +1721,20 @@ export const getFinancialReport = asyncHandler(
           if (club) {
             // Update club name
             financialData.clubName = club.name.toUpperCase();
-            
+
             // Update location from club address
             const address = club.address;
             if (address) {
               financialData.location = `${address.street}, ${address.city}, ${address.province}`;
             }
-            
-            console.log(`\ud83c\udfe2 Updated financial report for club: ${club.name}`);
+
+            console.log(
+              `\ud83c\udfe2 Updated financial report for club: ${club.name}`,
+            );
             console.log(`\ud83d\udccd Location: ${financialData.location}`);
           }
         } catch (error) {
-          console.warn('\u26a0\ufe0f Could not fetch club data:', error);
+          console.warn("\u26a0\ufe0f Could not fetch club data:", error);
         }
       }
 
@@ -1782,13 +1784,15 @@ export const getFinancialReport = asyncHandler(
 
       // Load expenses from database and group by category (filtered by year and club)
       const expenseFilter: any = {
-        date: { $gte: yearStart, $lte: yearEnd }
+        date: { $gte: yearStart, $lte: yearEnd },
       };
       if (req.clubId) {
         expenseFilter.clubId = req.clubId;
       }
 
-      const databaseExpenses = await Expense.find(expenseFilter).sort({ date: 1 });
+      const databaseExpenses = await Expense.find(expenseFilter).sort({
+        date: 1,
+      });
 
       // Group expenses by category and calculate totals
       const expensesByCategory = databaseExpenses.reduce(

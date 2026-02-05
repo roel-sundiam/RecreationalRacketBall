@@ -57,14 +57,20 @@ export class ClubSwitcherComponent implements OnInit, OnDestroy {
 
   switchClub(club: ClubMembership): void {
     if (this.selectedClub?.clubId === club.clubId) {
+      console.log('⚠️ Club already selected, skipping switch');
       return; // Already selected
     }
 
+    const fromName =
+      this.selectedClub?.club?.name ||
+      (this.selectedClub as any)?.clubName ||
+      this.selectedClub?.clubId;
+    const toName = club.club?.name || (club as any)?.clubName || club.clubId;
+    console.log('🔄 Switching club from:', fromName, 'to:', toName);
+    console.log('Club object:', club);
     this.authService.selectClub(club);
-    console.log('Switched to club:', club.club?.name || club.clubId);
-
-    // Reload current page to refresh data with new club context
-    window.location.reload();
+    console.log('✅ Switched to club:', toName);
+    // No page reload needed - components subscribe to club changes
   }
 
   navigateToClubSelector(): void {

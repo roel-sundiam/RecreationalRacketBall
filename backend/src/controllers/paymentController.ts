@@ -1217,7 +1217,7 @@ export const getPayments = asyncHandler(
     console.log("💰 INITIAL REQ.CLUBID:", {
       value: req.clubId,
       type: typeof req.clubId,
-      isObjectId: req.clubId instanceof require('mongoose').Types.ObjectId,
+      isObjectId: req.clubId instanceof require("mongoose").Types.ObjectId,
     });
 
     if (req.query.userId) {
@@ -1245,7 +1245,8 @@ export const getPayments = asyncHandler(
 
     // If regular member (not admin/treasurer of this club), only show own payments
     // Check club role set by extractClubContext, not global user role
-    const isAdminInClub = req.clubRole && ["admin", "treasurer"].includes(req.clubRole);
+    const isAdminInClub =
+      req.clubRole && ["admin", "treasurer"].includes(req.clubRole);
     if (req.user?.role === "member" && !isAdminInClub) {
       filter.userId = req.user._id.toString();
     }
@@ -1291,7 +1292,7 @@ export const getPayments = asyncHandler(
         .lean();
 
       console.log("💰 PAYMENTS RETRIEVED:", payments.length, "payments");
-      
+
       if (payments.length > 0) {
         console.log("💰 PAYMENT DETAILS:");
         payments.forEach((p: any, idx: number) => {

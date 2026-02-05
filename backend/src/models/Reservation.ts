@@ -401,7 +401,7 @@ reservationSchema.statics.isSlotAvailable = async function (
 };
 
 // Static method to get reservations for a specific date
-reservationSchema.statics.getReservationsForDate = async function (date: Date) {
+reservationSchema.statics.getReservationsForDate = async function (date: Date, clubId?: string) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
 
@@ -409,12 +409,20 @@ reservationSchema.statics.getReservationsForDate = async function (date: Date) {
   endOfDay.setHours(23, 59, 59, 999);
 
   try {
-    const reservations = await this.find({
+    const query: any = {
       date: {
         $gte: startOfDay,
         $lte: endOfDay,
       },
-    })
+    };
+    
+    // Add clubId filter if provided
+    if (clubId) {
+      query.clubId = clubId;
+      console.log(`🔍 RESERVATION QUERY: Filtering by clubId: ${clubId}`);
+    }
+
+    const reservations = await this.find(query)
       .populate("userId", "username fullName")
       .sort({ timeSlot: 1 });
 

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IExpenseCategory extends Document {
   name: string;
@@ -18,59 +18,59 @@ const ExpenseCategorySchema: Schema = new Schema(
   {
     name: {
       type: String,
-      required: [true, 'Category name is required'],
+      required: [true, "Category name is required"],
       trim: true,
-      minlength: [3, 'Category name must be at least 3 characters'],
-      maxlength: [100, 'Category name must not exceed 100 characters']
+      minlength: [3, "Category name must be at least 3 characters"],
+      maxlength: [100, "Category name must not exceed 100 characters"],
     },
     description: {
       type: String,
       trim: true,
-      maxlength: [500, 'Description must not exceed 500 characters']
+      maxlength: [500, "Description must not exceed 500 characters"],
     },
     isActive: {
       type: Boolean,
-      default: true
+      default: true,
     },
     displayOrder: {
       type: Number,
-      default: 0
+      default: 0,
     },
     color: {
       type: String,
       trim: true,
       validate: {
-        validator: function(v: string) {
+        validator: function (v: string) {
           if (!v) return true; // Optional field
           return /^#[0-9A-F]{6}$/i.test(v);
         },
-        message: 'Color must be a valid hex format (#RRGGBB)'
-      }
+        message: "Color must be a valid hex format (#RRGGBB)",
+      },
     },
     icon: {
       type: String,
       trim: true,
-      maxlength: [50, 'Icon name must not exceed 50 characters']
+      maxlength: [50, "Icon name must not exceed 50 characters"],
     },
     clubId: {
       type: Schema.Types.ObjectId,
-      ref: 'Club',
+      ref: "Club",
       required: false,
-      index: true
+      index: true,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Creator is required']
+      ref: "User",
+      required: [true, "Creator is required"],
     },
     updatedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
-    }
+      ref: "User",
+    },
   },
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
 // Indexes for efficient queries
@@ -78,37 +78,41 @@ ExpenseCategorySchema.index({ clubId: 1, name: 1 }, { unique: true });
 ExpenseCategorySchema.index({ isActive: 1, displayOrder: 1 });
 
 // Pre-save hook to ensure case-insensitive uniqueness
-ExpenseCategorySchema.pre('save', async function(next) {
-  if (this.isModified('name')) {
+ExpenseCategorySchema.pre("save", async function (next) {
+  if (this.isModified("name")) {
     const ExpenseCategoryModel = this.constructor as any;
     const clubFilter = this.clubId
       ? { clubId: this.clubId }
       : { clubId: { $exists: false } };
     const existingCategory = await ExpenseCategoryModel.findOne({
-      name: { $regex: new RegExp(`^${this.name}$`, 'i') },
+      name: { $regex: new RegExp(`^${this.name}$`, "i") },
       _id: { $ne: this._id },
-      ...clubFilter
+      ...clubFilter,
     });
 
     if (existingCategory) {
-      throw new Error('Category name already exists (case-insensitive)');
+      throw new Error("Category name already exists (case-insensitive)");
     }
   }
   next();
 });
 
 // Pre-save hook to validate deactivation
-ExpenseCategorySchema.pre('save', async function(next) {
-  if (this.isModified('isActive') && !this.isActive) {
+ExpenseCategorySchema.pre("save", async function (next) {
+  if (this.isModified("isActive") && !this.isActive) {
     try {
-      const Expense = mongoose.model('Expense');
-      const expenseCount = await Expense.countDocuments({ category: this.name });
+      const Expense = mongoose.model("Expense");
+      const expenseCount = await Expense.countDocuments({
+        category: this.name,
+      });
 
       if (expenseCount > 0) {
-        throw new Error(`Cannot deactivate category. It is used in ${expenseCount} expense(s)`);
+        throw new Error(
+          `Cannot deactivate category. It is used in ${expenseCount} expense(s)`,
+        );
       }
     } catch (error: any) {
-      if (error.message.includes('Cannot deactivate')) {
+      if (error.message.includes("Cannot deactivate")) {
         throw error;
       }
       // If Expense model doesn't exist yet, allow deactivation
@@ -117,6 +121,9 @@ ExpenseCategorySchema.pre('save', async function(next) {
   next();
 });
 
-const ExpenseCategory = mongoose.model<IExpenseCategory>('ExpenseCategory', ExpenseCategorySchema);
+const ExpenseCategory = mongoose.model<IExpenseCategory>(
+  "ExpenseCategory",
+  ExpenseCategorySchema,
+);
 
 export default ExpenseCategory;

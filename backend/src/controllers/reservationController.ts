@@ -149,14 +149,20 @@ export const getReservations = asyncHandler(
       filter.userId = req.user._id.toString();
     }
 
-    console.log("🔍 Reservation Filter Debug:");
+    console.log("🔍🔍🔍 RESERVATION QUERY DEBUG START 🔍🔍🔍");
+    console.log("- req.clubId value:", req.clubId);
+    console.log("- req.clubId type:", typeof req.clubId);
+    console.log("- req.clubId string:", req.clubId?.toString());
     console.log("- User role:", req.user?.role);
     console.log("- showAll query:", req.query.showAll);
     console.log("- Final filter:", JSON.stringify(filter));
+    console.log("- filter.clubId:", filter.clubId);
+    console.log("- filter.clubId type:", typeof filter.clubId);
     console.log(
       "- Will show all users?",
       req.user?.role !== "member" || req.query.showAll === "true",
     );
+    console.log("🔍🔍🔍 RESERVATION QUERY DEBUG END 🔍🔍🔍");
 
     // Auto-mark past pending reservations as 'no-show'
     const yesterday = new Date();
@@ -186,11 +192,28 @@ export const getReservations = asyncHandler(
     }
 
     const total = await Reservation.countDocuments(filter);
+    console.log("📊 QUERY RESULT:", {
+      filter: JSON.stringify(filter),
+      total: total,
+      filterClubId: filter.clubId?.toString(),
+    });
+    
     const reservations = await Reservation.find(filter)
       .populate("userId", "username fullName email")
       .sort({ date: 1, timeSlot: 1 })
       .skip(skip)
       .limit(limit);
+
+    console.log("📋 RETURNED RESERVATIONS:", {
+      count: reservations.length,
+      clubIdFromFilter: filter.clubId?.toString(),
+      returnedReservations: reservations.map((r: any) => ({
+        id: r._id?.toString(),
+        clubId: r.clubId?.toString(),
+        date: r.date,
+        timeSlot: r.timeSlot,
+      })),
+    });
 
     res.status(200).json({
       success: true,
@@ -231,8 +254,13 @@ export const getReservationsForDate = asyncHandler(
       );
     }
 
+    console.log(
+      `🏢 COURT STATUS: Filtering for clubId: ${req.clubId}, date: ${date}`,
+    );
+
     let reservations = await (Reservation as any).getReservationsForDate(
       queryDate,
+      req.clubId,
     );
 
     // Ensure reservations is always an array
@@ -243,6 +271,10 @@ export const getReservationsForDate = asyncHandler(
       );
       reservations = [];
     }
+
+    console.log(
+      `✅ COURT STATUS: Found ${reservations.length} reservations for clubId: ${req.clubId}`,
+    );
 
     // Filter out the excluded reservation if in edit mode
     if (excludeId) {

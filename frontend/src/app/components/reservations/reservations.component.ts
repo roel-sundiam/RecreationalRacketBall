@@ -6,6 +6,8 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../../../environments/environment';
+import { Subscription } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 // Custom notification interface
 interface Notification {
@@ -775,6 +777,21 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     // Add click outside handler for dropdown
     document.addEventListener('click', this.onDocumentClick.bind(this));
+
+    // Subscribe to club changes and reload club settings
+    this.authService.selectedClub$
+      .pipe(
+        tap((club) =>
+          console.log(
+            '📝 Reservations form received club change:',
+            club?.club?.name || club?.clubName,
+          ),
+        ),
+      )
+      .subscribe((club) => {
+        console.log('🔄 Reservations form: Club changed to:', club?.club?.name || club?.clubName);
+        this.loadClubSettings();
+      });
   }
 
   ngOnDestroy(): void {

@@ -1242,7 +1242,13 @@ export const getPayments = asyncHandler(
       filter.userId = req.user._id.toString();
     }
 
-    console.log("💰 PAYMENT FILTER:", filter);
+    console.log("💰 PAYMENT FILTER:", JSON.stringify(filter, null, 2));
+    console.log("💰 REQUEST USER:", {
+      userId: req.user?._id,
+      role: req.user?.role,
+      clubId: req.clubId,
+    });
+    console.log("💰 REQUEST PARAMS:", req.query);
 
     try {
       const total = await Payment.countDocuments(filter);
@@ -1277,8 +1283,20 @@ export const getPayments = asyncHandler(
         .lean();
 
       console.log("💰 PAYMENTS RETRIEVED:", payments.length, "payments");
-
-      // Transform payments to ensure all required fields are present
+      
+      if (payments.length > 0) {
+        console.log("💰 PAYMENT DETAILS:");
+        payments.forEach((p: any, idx: number) => {
+          console.log(`   Payment ${idx + 1}:`, {
+            id: p._id,
+            status: p.status,
+            amount: p.amount,
+            clubId: p.clubId,
+            userId: p.userId?._id || p.userId,
+            createdAt: p.createdAt,
+          });
+        });
+      }
       const transformedPayments = payments.map((payment: any) => {
         const reservation = payment.reservationId || null;
         return {

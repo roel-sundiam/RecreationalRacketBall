@@ -5,6 +5,7 @@ import Reservation from "../models/Reservation";
 import Payment from "../models/Payment";
 import Poll from "../models/Poll";
 import Expense from "../models/Expense";
+import Club from "../models/Club";
 import { AuthenticatedRequest } from "../middleware/auth";
 import { asyncHandler } from "../middleware/errorHandler";
 import { sheetsService } from "../services/sheetsService";
@@ -1699,6 +1700,28 @@ export const getFinancialReport = asyncHandler(
 
       const fileContent = fs.readFileSync(dataPath, "utf8");
       const financialData = JSON.parse(fileContent);
+
+      // Fetch club data from database
+      if (req.clubId) {
+        try {
+          const club = await Club.findById(req.clubId);
+          if (club) {
+            // Update club name
+            financialData.clubName = club.name.toUpperCase();
+            
+            // Update location from club address
+            const address = club.address;
+            if (address) {
+              financialData.location = `${address.street}, ${address.city}, ${address.province}`;
+            }
+            
+            console.log(`\ud83c\udfe2 Updated financial report for club: ${club.name}`);
+            console.log(`\ud83d\udccd Location: ${financialData.location}`);
+          }
+        } catch (error) {
+          console.warn('\u26a0\ufe0f Could not fetch club data:', error);
+        }
+      }
 
       // Update period to show current date
       // Extract year from beginning balance date (e.g., "JANUARY 1, 2026" -> 2026)

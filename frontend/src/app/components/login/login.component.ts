@@ -28,15 +28,11 @@ import { AnalyticsService } from '../../services/analytics.service';
         <div class="info-header">
           <div class="logo-section">
             <div class="logo-icon">
-              <img
-                src="/rich-town-2-tennis-logo.png"
-                alt="Rich Town 2 Tennis Club Logo"
-                class="logo-image"
-              />
+              <i class="pi pi-trophy"></i>
             </div>
             <div>
-              <h1 class="app-title">Rich Town 2 Tennis Club</h1>
-              <p class="app-tagline">Modern Court Reservation System</p>
+              <h1 class="app-title">Court Reservation System</h1>
+              <p class="app-tagline">Professional Multi-Club Management</p>
             </div>
           </div>
         </div>
@@ -45,8 +41,8 @@ import { AnalyticsService } from '../../services/analytics.service';
           <h2 class="features-title">How It Works</h2>
           <div class="features-subtitle">
             <p>
-              Join our competitive tennis community with rankings, open court play, and professional
-              court management
+              Manage courts efficiently with rankings, open play sessions, and professional
+              reservation management across multiple clubs
             </p>
           </div>
 
@@ -57,21 +53,8 @@ import { AnalyticsService } from '../../services/analytics.service';
             <div class="feature-content">
               <h3>Reserve Courts</h3>
               <p>
-                Book tennis courts with flexible scheduling. Choose from available time slots
-                between 5 AM - 10 PM.
-              </p>
-            </div>
-          </div>
-
-          <div class="feature-item">
-            <div class="feature-icon">
-              <i class="pi pi-trophy"></i>
-            </div>
-            <div class="feature-content">
-              <h3>Open Court & Rankings</h3>
-              <p>
-                Participate in open court sessions, earn points from competitive matches, and climb
-                the seeding rankings. Build your tennis reputation!
+                Book courts with flexible scheduling. Choose from available time slots and reserve
+                your preferred court times instantly.
               </p>
             </div>
           </div>
@@ -83,8 +66,8 @@ import { AnalyticsService } from '../../services/analytics.service';
             <div class="feature-content">
               <h3>Member Community</h3>
               <p>
-                Join our approved tennis club community. Connect with players and improve your
-                ranking together.
+                Join approved club communities. Connect with other players, collaborate on matches,
+                and improve together.
               </p>
             </div>
           </div>
@@ -96,8 +79,8 @@ import { AnalyticsService } from '../../services/analytics.service';
             <div class="feature-content">
               <h3>Easy Payments</h3>
               <p>
-                Handle membership fees and court bookings seamlessly. Peak hours: ₱150 base + ₱70
-                per guest. Non-peak: ₱100 base + ₱70 per guest.
+                Handle membership fees and court bookings seamlessly. Track payments, invoices, and
+                financial reports all in one place.
               </p>
             </div>
           </div>
@@ -109,8 +92,8 @@ import { AnalyticsService } from '../../services/analytics.service';
             <div class="feature-content">
               <h3>Weather Integration</h3>
               <p>
-                Get real-time weather updates for Delapaz Norte, San Fernando, Pampanga before your
-                game.
+                Get real-time weather updates for your location before your game. Plan your matches
+                with confidence.
               </p>
             </div>
           </div>
@@ -209,7 +192,7 @@ import { AnalyticsService } from '../../services/analytics.service';
           <div class="login-help">
             <div class="help-text">
               <i class="pi pi-info-circle"></i>
-              <span>New to Rich Town 2 Tennis Club?</span>
+              <span>New to our platform?</span>
               <button type="button" class="register-link" (click)="goToRegister()">
                 Create your account here
               </button>

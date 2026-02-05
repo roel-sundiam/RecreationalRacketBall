@@ -219,7 +219,34 @@ export const requireSuperAdmin = (req: AuthenticatedRequest, res: Response, next
   next();
 };
 export const requireTreasurer = requireRole(['treasurer', 'admin', 'superadmin']);
-export const requireFinancialAccess = requireRole(['treasurer', 'admin', 'superadmin']);
+export const requireFinancialAccess = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+    return;
+  }
+
+  const isPlatformAdmin = (req.user as any).platformRole === 'platform_admin';
+  const isSuperAdmin = req.user.role === 'superadmin' || isPlatformAdmin;
+  const hasLegacyRole = ['treasurer', 'admin', 'superadmin'].includes(req.user.role);
+  const hasClubRole = req.clubRole === 'admin' || req.clubRole === 'treasurer';
+
+  if (isSuperAdmin || hasLegacyRole || hasClubRole) {
+    next();
+    return;
+  }
+
+  res.status(403).json({
+    success: false,
+    error: 'Insufficient permissions'
+  });
+};
 
 export const requireApprovedUser = (
   req: AuthenticatedRequest,

@@ -269,7 +269,7 @@ router.get("/:id", authenticateToken, getPayment);
  * @desc Update payment details (payment method, transaction ID, etc.)
  * @access Private (payment owner or admin)
  */
-router.put("/:id", authenticateToken, updatePayment);
+router.put("/:id", authenticateToken, extractClubContext, updatePayment);
 
 /**
  * @route PUT /api/payments/:id/process

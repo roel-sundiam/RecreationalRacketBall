@@ -1243,8 +1243,10 @@ export const getPayments = asyncHandler(
       };
     }
 
-    // If regular member, only show own payments
-    if (req.user?.role === "member") {
+    // If regular member (not admin/treasurer of this club), only show own payments
+    // Check club role set by extractClubContext, not global user role
+    const isAdminInClub = req.clubRole && ["admin", "treasurer"].includes(req.clubRole);
+    if (req.user?.role === "member" && !isAdminInClub) {
       filter.userId = req.user._id.toString();
     }
 

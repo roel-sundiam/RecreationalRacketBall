@@ -16,6 +16,7 @@ import {
 } from '../controllers/reportController';
 import { getStaticCourtUsageReport } from '../controllers/staticReportController';
 import { authenticateToken, requireRole, requireFinancialAccess } from '../middleware/auth';
+import { extractClubContext } from '../middleware/club';
 
 const router = Router();
 
@@ -109,6 +110,7 @@ router.get(
 router.get(
   '/static-court-usage',
   authenticateToken,
+  extractClubContext,
   getStaticCourtUsageReport
 );
 

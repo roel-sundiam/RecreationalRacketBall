@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import CourtUsageReport from '../models/CourtUsageReport';
 
 // Controller for court usage data from database
@@ -38,8 +39,16 @@ export const getStaticCourtUsageReport = async (req: Request, res: Response) => 
     const currentYear = new Date().getFullYear();
     const year = parseInt(req.query.year as string) || currentYear;
 
+    // Require club context for filtering
+    const clubId = (req as AuthenticatedRequest).clubId;
+
     // Fetch data from database, sorted by total amount (highest first)
-    const courtUsageRecords = await CourtUsageReport.find({ year }).sort({ totalAmount: -1 });
+    const filter: any = { year };
+    if (clubId) {
+      filter.clubId = clubId;
+    }
+
+    const courtUsageRecords = await CourtUsageReport.find(filter).sort({ totalAmount: -1 });
 
     if (!courtUsageRecords || courtUsageRecords.length === 0) {
       console.log(`⚠️  No court usage data found for year ${year}`);

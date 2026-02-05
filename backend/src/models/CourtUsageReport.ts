@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICourtUsageReport extends Document {
+  clubId: mongoose.Types.ObjectId;
   memberName: string;
   monthlyAmounts: Map<string, number>; // Dynamic month storage: 'YYYY-MM' -> amount
   totalAmount: number;
@@ -15,6 +16,11 @@ export interface ICourtUsageReport extends Document {
 }
 
 const courtUsageReportSchema = new Schema<ICourtUsageReport>({
+  clubId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Club',
+    required: [true, 'Club ID is required']
+  },
   memberName: {
     type: String,
     required: [true, 'Member name is required'],
@@ -67,15 +73,19 @@ courtUsageReportSchema.pre('save', function(next) {
   next();
 });
 
-// Create unique compound index for member name and year
-courtUsageReportSchema.index({ memberName: 1, year: 1 }, { unique: true });
+// Create unique compound index for club + member name + year
+courtUsageReportSchema.index({ clubId: 1, memberName: 1, year: 1 }, { unique: true });
 
 // Index for efficient sorting by total amount
 courtUsageReportSchema.index({ totalAmount: -1 });
 
 // Static method to get report data for a specific year
-courtUsageReportSchema.statics.getReportByYear = function(year: number = 2025) {
-  return this.find({ year }).sort({ totalAmount: -1 });
+courtUsageReportSchema.statics.getReportByYear = function(year: number = 2025, clubId?: mongoose.Types.ObjectId) {
+  const filter: any = { year };
+  if (clubId) {
+    filter.clubId = clubId;
+  }
+  return this.find(filter).sort({ totalAmount: -1 });
 };
 
 // Instance methods for dynamic month handling

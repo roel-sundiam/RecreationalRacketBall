@@ -31,16 +31,3 @@ services:
       - key: FRONTEND_URL
         sync: false
     healthCheckPath: /health
-
-  - type: web
-    name: recreational-racketball-frontend
-    runtime: node
-    rootDir: frontend
-    buildCommand: npm install && ng build --configuration=production
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: BACKEND_URL
-        sync: false
-    publishPath: dist/tennis-club-frontend/browser

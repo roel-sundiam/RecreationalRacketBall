@@ -698,6 +698,10 @@ export const updateMemberRole = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const { role } = req.body;
+    const isSuperAdmin =
+      req.user?.role === "superadmin" ||
+      (req as any).user?.role === "platform_admin" ||
+      (req as any).user?.platformRole === "platform_admin";
 
     if (!id) {
       return res.status(400).json({
@@ -706,16 +710,16 @@ export const updateMemberRole = asyncHandler(
       });
     }
 
-    // Require clubId
-    if (!req.clubId) {
+    // Require clubId unless superadmin (superadmin can derive club from membership)
+    if (!req.clubId && !isSuperAdmin) {
       return res.status(400).json({
         success: false,
         error: "Club context is required",
       });
     }
 
-    // Check if user is club admin
-    if (req.clubRole !== "admin") {
+    // Check if user is club admin (superadmins bypass)
+    if (!isSuperAdmin && req.clubRole !== "admin") {
       return res.status(403).json({
         success: false,
         error: "Access denied. Club admin privileges required to change roles.",
@@ -733,10 +737,22 @@ export const updateMemberRole = asyncHandler(
 
     try {
       // Find the membership record (id is membershipId)
-      const membership = await ClubMembership.findOne({
-        _id: id,
-        clubId: req.clubId,
-      }).populate("userId", "username fullName");
+      const membershipFilter: any = { _id: id };
+
+      // If club context is available, enforce it
+      if (req.clubId) {
+        membershipFilter.clubId = req.clubId;
+      }
+
+      const membership = await ClubMembership.findOne(membershipFilter).populate(
+        "userId",
+        "username fullName",
+      );
+
+      // If superadmin without club context, derive it from membership
+      if (membership && !req.clubId) {
+        req.clubId = membership.clubId as any;
+      }
 
       if (!membership) {
         return res.status(404).json({
@@ -758,8 +774,13 @@ export const updateMemberRole = asyncHandler(
       const oldRole = membership.role;
 
       // Update role
-      const updatedMembership = await ClubMembership.findByIdAndUpdate(
-        id,
+      const updateFilter: any = { _id: id };
+      if (req.clubId) {
+        updateFilter.clubId = req.clubId;
+      }
+
+      const updatedMembership = await ClubMembership.findOneAndUpdate(
+        updateFilter,
         { role },
         { new: true },
       ).populate("userId", "username fullName email");

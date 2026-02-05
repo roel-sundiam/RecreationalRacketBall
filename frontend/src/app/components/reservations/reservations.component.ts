@@ -8,6 +8,8 @@ import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { MatIcon } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
 
 // Custom notification interface
 interface Notification {
@@ -63,7 +65,7 @@ interface Reservation {
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, MatIcon, MatTooltip],
   animations: [
     trigger('slideInOut', [
       transition(':enter', [
@@ -470,6 +472,7 @@ interface Reservation {
                       (click)="removeCustomPlayer(i)"
                       [disabled]="customPlayerNames.length <= 0"
                       class="remove-btn"
+                      matTooltip="Remove this custom player"
                     >
                       Remove
                     </button>

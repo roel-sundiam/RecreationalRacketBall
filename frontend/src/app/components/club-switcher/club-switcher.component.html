@@ -1,4 +1,4 @@
-<div class="club-switcher" *ngIf="selectedClub">
+<div class="club-switcher" *ngIf="selectedClub && shouldShowSwitcher">
   <button
     mat-icon-button
     [matMenuTriggerFor]="clubMenu"
@@ -52,6 +52,15 @@
       <span>View All Clubs</span>
     </button>
   </mat-menu>
+</div>
+
+<!-- Single club users see static display (no switcher) -->
+<!-- Display hidden for single club users in toolbar -->
+<div class="club-switcher" *ngIf="selectedClub && !shouldShowSwitcher" style="display: none">
+  <div class="club-display-static">
+    <mat-icon>business</mat-icon>
+    <span class="club-name-static">{{ displayName }}</span>
+  </div>
 </div>
 
 <div class="club-switcher" *ngIf="!selectedClub">

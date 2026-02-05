@@ -90,6 +90,14 @@ export class ClubSwitcherComponent implements OnInit, OnDestroy {
     return this.clubs.length > 1;
   }
 
+  /**
+   * Only show switcher if user has multiple clubs
+   * Single-club users must logout/login to switch
+   */
+  get shouldShowSwitcher(): boolean {
+    return this.hasMultipleClubs;
+  }
+
   get displayName(): string {
     if (!this.selectedClub) {
       return 'No Club Selected';

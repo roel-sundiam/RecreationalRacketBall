@@ -222,15 +222,8 @@ export class AuthService {
           this.currentUserSubject.next(user);
           this.clubsSubject.next(clubs);
 
-          // Auto-select first approved club if available
-          const approvedClubs = clubs.filter((c: ClubMembership) => c.status === 'approved');
-          if (approvedClubs.length > 0) {
-            this.selectClub(approvedClubs[0]);
-          } else {
-            // Clear selected club if no approved clubs
-            this.selectedClubSubject.next(null);
-            localStorage.removeItem('selectedClub');
-          }
+          // DO NOT auto-select club here - let the login flow decide based on club count
+          // This allows single-club users to auto-redirect while multi-club users select
 
           console.log(
             'Auth state updated - token:',
@@ -550,8 +543,17 @@ export class AuthService {
       return;
     }
 
+    console.log('🔐 AUTH SERVICE - selectClub() called with:', {
+      clubId: club.clubId,
+      clubName: club.club?.name || club.clubName,
+      status: club.status,
+    });
+
     this.selectedClubSubject.next(club);
+    console.log('🔐 AUTH SERVICE - selectedClubSubject updated, new value:', this.selectedClubSubject.value);
+    
     localStorage.setItem('selectedClub', JSON.stringify(club));
+    console.log('🔐 AUTH SERVICE - localStorage updated with club:', club.clubId);
     console.log('🏢 Selected club:', club.club?.name || club.clubId);
   }
 
@@ -779,4 +781,24 @@ export class AuthService {
       }
     }
   }
-}
+
+  /**
+   * Determine login redirect path based on club count
+   * - Single club: Auto-select and return dashboard path
+   * - Multiple clubs: Return club selector path
+   * - No clubs: Return club-selector to show error
+   */
+  getLoginRedirectPath(): string {
+    const approvedClubs = this.approvedClubs;
+    
+    if (approvedClubs.length === 1) {
+      // Auto-select single club
+      this.selectClub(approvedClubs[0]);
+      console.log('🏢 Single club user - auto-selected:', approvedClubs[0].club?.name || approvedClubs[0].clubId);
+      return '/dashboard';
+    } else {
+      // Multiple clubs - show selector
+      console.log('🏢 Multiple clubs - redirect to selector:', approvedClubs.length, 'clubs');
+      return '/club-selector';
+    }
+  }}

@@ -112,6 +112,7 @@ router.get(
 router.get(
   "/my",
   authenticateToken,
+  extractClubContext,
   (req, res, next) => {
     // Remove client cache headers to force fresh responses
     delete req.headers["if-none-match"];
@@ -133,7 +134,7 @@ router.get(
  * @desc Check current user's overdue payments
  * @access Private
  */
-router.get("/check-overdue", authenticateToken, checkMyOverduePayments);
+router.get("/check-overdue", authenticateToken, extractClubContext, checkMyOverduePayments);
 
 /**
  * @route GET /api/payments/overdue

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -7,6 +7,8 @@ import { AuthService } from '../../services/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { Subject } from 'rxjs';
+import { takeUntil, distinctUntilChanged, skip } from 'rxjs/operators';
 import {
   CancellationDialogComponent,
   CancellationDialogData,
@@ -1090,7 +1092,7 @@ interface Notification {
   `,
   styleUrl: './payments.component.scss',
 })
-export class PaymentsComponent implements OnInit {
+export class PaymentsComponent implements OnInit, OnDestroy {
   paymentForm: FormGroup;
   loading = false;
   loadingHistory = false;
@@ -1149,6 +1151,9 @@ export class PaymentsComponent implements OnInit {
   private fixedDailyFee = 500;
   private guestFee = 70;
 
+  // Subscription cleanup
+  private destroy$ = new Subject<void>();
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -1196,19 +1201,40 @@ export class PaymentsComponent implements OnInit {
     this.setupManualPaymentFormValidation();
 
     // Check for query parameters first (from notification "Pay Now")
-    this.route.queryParams.subscribe((params) => {
-      if (params['tab']) {
-        this.activeTab = params['tab'];
-      }
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        if (params['tab']) {
+          this.activeTab = params['tab'];
+        }
 
-      // Always load pending payments
-      this.loadPendingPayments();
+        // Always load pending payments
+        this.loadPendingPayments();
 
-      if (params['reservationId']) {
-        // Auto-populate the form with the specific reservation
-        this.handleDirectPayment(params['reservationId']);
-      }
-    });
+        if (params['reservationId']) {
+          // Auto-populate the form with the specific reservation
+          this.handleDirectPayment(params['reservationId']);
+        }
+      });
+
+    // Subscribe to club changes to reload pending payments AFTER component is initialized
+    this.authService.selectedClub$
+      .pipe(
+        skip(1), // Skip initial emission to only react to actual club switches
+        takeUntil(this.destroy$)
+      )
+      .subscribe((club) => {
+        console.log('🏢 PAYMENTS: Club switched to', club?.clubId);
+        this.loadClubSettings();
+        this.resetForm();
+        this.loadPendingPayments(true);
+      });
+  }
+
+  ngOnDestroy(): void {
+    console.log('🗑️ PAYMENTS COMPONENT - DESTROYING - Cleaning up subscriptions');
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private async loadClubSettings(): Promise<void> {
@@ -1257,11 +1283,14 @@ export class PaymentsComponent implements OnInit {
 
   async loadPendingPayments(bustCache = false): Promise<void> {
     this.loadingUnpaid = true;
+    const currentClub = this.authService.selectedClub;
+    const cacheBuster = bustCache ? `&_t=${Date.now()}` : '';
+    
+    if (bustCache) {
+      console.log('🔄 PAYMENTS: Reloading for club', currentClub?.clubId, 'with cache bust');
+    }
 
     try {
-      // Add cache busting parameter and limit to fetch all payments
-      const cacheBuster = bustCache ? `&_t=${Date.now()}` : '';
-
       // Load both existing pending payments and unpaid reservations
       // Set limit=999999 to remove pagination and get all pending payments/reservations
       const [paymentsResponse, reservationsResponse] = await Promise.all([
@@ -1273,32 +1302,14 @@ export class PaymentsComponent implements OnInit {
           .toPromise(),
       ]);
       const rawExistingPayments = paymentsResponse?.data || [];
-      console.log(
-        '🔍 Raw API response for /payments/my?status=pending:',
-        rawExistingPayments.map((p: any) => ({
-          desc: p.description,
-          status: p.status,
-          id: p._id,
-        })),
-      );
 
       const unpaidReservations = (reservationsResponse?.data || []).filter(
         (reservation: Reservation) => reservation.status !== 'cancelled',
       );
 
       // Simplified filtering: only keep payments that are actually pending
-      // Remove the complex duplicate payment filtering that might cause race conditions
       const existingPayments = rawExistingPayments.filter(
         (payment: Payment) => payment.status === 'pending',
-      );
-
-      console.log(
-        '🔍 Filtered pending payments:',
-        existingPayments.map((p: any) => ({
-          desc: p.description,
-          status: p.status,
-          id: p._id,
-        })),
       );
 
       // Get all payment records to check which reservations the current user has paid for
@@ -2864,12 +2875,17 @@ export class PaymentsComponent implements OnInit {
     // Mark this as an existing payment update
     (reservationForForm as any).existingPaymentId = payment._id;
 
-    // Recalculate the fee with current member data
-    this.calculateAndSetReservationFeeWithMemberData(reservationForForm);
+    // For existing payments, use the stored payment amount directly without recalculation
+    // This ensures multi-member reservations show the correct individual amount (not total)
+    this.selectedReservation = reservationForForm;
     this.paymentForm.patchValue({
       reservationId: payment.reservationId._id,
       paymentMethod: payment.paymentMethod,
+      courtFee: payment.amount, // Use stored payment amount directly
     });
+
+    // Load available members for "Pay for Others" feature
+    this.loadAvailableMembersForPayment(reservationForForm);
 
     // Scroll to payment form after a brief delay to allow rendering
     setTimeout(() => {
@@ -3658,8 +3674,12 @@ export class PaymentsComponent implements OnInit {
       guestCount: guests.length,
     });
 
-    // Calculate total guest fee (70 per hour per guest)
-    const totalGuestFee = guests.length * 70 * duration;
+    // Calculate total guest fee using club settings
+    const guestFeePerHour = this.guestFee ?? 70;
+    const totalGuestFee =
+      this.pricingModel === 'fixed-daily'
+        ? guests.length * guestFeePerHour
+        : guests.length * guestFeePerHour * duration;
 
     // Base fee is total minus guest fees
     const baseFee = totalFee - totalGuestFee;

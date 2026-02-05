@@ -307,8 +307,11 @@ export class LoginComponent implements OnInit {
             // Regular user with no clubs - redirect to browse clubs
             this.router.navigate(['/browse-clubs']);
           } else {
-            // User has clubs - navigate to calendar
-            this.router.navigate(['/calendar']);
+            // User has clubs - use new logic:
+            // Single club: auto-select and go to dashboard
+            // Multiple clubs: go to club selector
+            const redirectPath = this.authService.getLoginRedirectPath();
+            this.router.navigate([redirectPath]);
           }
         },
         error: (error: any) => {

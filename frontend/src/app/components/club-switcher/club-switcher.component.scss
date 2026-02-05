@@ -238,3 +238,28 @@ button.mat-mdc-menu-item.selected {
     display: none;
   }
 }
+// Static display for single-club users
+.club-display-static {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .club-name-static {
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

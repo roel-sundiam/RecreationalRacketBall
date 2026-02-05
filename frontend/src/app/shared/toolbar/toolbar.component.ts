@@ -111,7 +111,7 @@ import { Subscription } from 'rxjs';
 
           <div class="nav-separator"></div>
 
-          <div class="nav-group">
+          <div class="nav-group" style="display: none">
             <!-- Club Switcher -->
             <app-club-switcher></app-club-switcher>
           </div>

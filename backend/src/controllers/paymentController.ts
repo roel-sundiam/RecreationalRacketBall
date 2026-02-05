@@ -1214,6 +1214,12 @@ export const getPayments = asyncHandler(
       clubId: req.clubId,
     };
 
+    console.log("💰 INITIAL REQ.CLUBID:", {
+      value: req.clubId,
+      type: typeof req.clubId,
+      isObjectId: req.clubId instanceof require('mongoose').Types.ObjectId,
+    });
+
     if (req.query.userId) {
       filter.userId = req.query.userId;
     }

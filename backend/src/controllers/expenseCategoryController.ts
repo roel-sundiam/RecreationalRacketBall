@@ -355,14 +355,14 @@ export const createCategoryValidation = [
     .isLength({ min: 3, max: 100 }).withMessage('Category name must be between 3 and 100 characters')
     .trim(),
   body('description')
-    .optional()
+    .optional({ checkFalsy: true })
     .isLength({ max: 500 }).withMessage('Description must not exceed 500 characters')
     .trim(),
   body('color')
-    .optional()
+    .optional({ checkFalsy: true })
     .matches(/^#[0-9A-F]{6}$/i).withMessage('Color must be a valid hex format (#RRGGBB)'),
   body('icon')
-    .optional()
+    .optional({ checkFalsy: true })
     .isLength({ max: 50 }).withMessage('Icon name must not exceed 50 characters')
     .trim()
 ];
@@ -372,21 +372,21 @@ export const createCategoryValidation = [
  */
 export const updateCategoryValidation = [
   body('name')
-    .optional()
+    .optional({ checkFalsy: true })
     .isLength({ min: 3, max: 100 }).withMessage('Category name must be between 3 and 100 characters')
     .trim(),
   body('description')
-    .optional()
+    .optional({ checkFalsy: true })
     .isLength({ max: 500 }).withMessage('Description must not exceed 500 characters')
     .trim(),
   body('color')
-    .optional()
+    .optional({ checkFalsy: true })
     .matches(/^#[0-9A-F]{6}$/i).withMessage('Color must be a valid hex format (#RRGGBB)'),
   body('icon')
-    .optional()
+    .optional({ checkFalsy: true })
     .isLength({ max: 50 }).withMessage('Icon name must not exceed 50 characters')
     .trim(),
   body('displayOrder')
-    .optional()
+    .optional({ checkFalsy: true })
     .isInt({ min: 0 }).withMessage('Display order must be a non-negative integer')
 ];

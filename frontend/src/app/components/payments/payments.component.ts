@@ -968,6 +968,14 @@ export class PaymentsComponent implements OnInit {
   paymentLoadingDebugInfo: any = null;
 
   private apiUrl = environment.apiUrl;
+  // Club-specific pricing (loaded dynamically)
+  private pricingModel: 'variable' | 'fixed-hourly' | 'fixed-daily' = 'variable';
+  private peakHours: number[] = [5, 18, 19, 20, 21];
+  private peakHourFee = 150;
+  private offPeakHourFee = 100;
+  private fixedHourlyFee = 125;
+  private fixedDailyFee = 500;
+  private guestFee = 70;
 
   constructor(
     private fb: FormBuilder,
@@ -1006,6 +1014,9 @@ export class PaymentsComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    // Load club settings before fee calculations
+    await this.loadClubSettings();
+
     // Load members data for proper fee calculation
     await this.loadMembersData();
     
@@ -1026,6 +1037,27 @@ export class PaymentsComponent implements OnInit {
         this.handleDirectPayment(params['reservationId']);
       }
     });
+  }
+
+  private async loadClubSettings(): Promise<void> {
+    try {
+      const response: any = await this.http
+        .get<any>(`${this.apiUrl}/clubs/current/settings`)
+        .toPromise();
+
+      if (response?.success && response?.data?.pricing) {
+        const pricing = response.data.pricing;
+        this.pricingModel = pricing.pricingModel || 'variable';
+        this.peakHours = pricing.peakHours?.length ? pricing.peakHours : [5, 18, 19, 20, 21];
+        this.peakHourFee = pricing.peakHourFee ?? 150;
+        this.offPeakHourFee = pricing.offPeakHourFee ?? 100;
+        this.fixedHourlyFee = pricing.fixedHourlyFee ?? 125;
+        this.fixedDailyFee = pricing.fixedDailyFee ?? 500;
+        this.guestFee = pricing.guestFee ?? 70;
+      }
+    } catch (error) {
+      console.warn('⚠️  Failed to load club settings, using defaults:', error);
+    }
   }
 
   loadUnpaidReservations(): void {
@@ -2318,8 +2350,7 @@ export class PaymentsComponent implements OnInit {
     reservation.totalFee = calculatedFee;
 
     // Calculate isPeakHour for member amount calculations
-    const peakHours = [5, 18, 19, 20, 21];
-    const isPeakHour = peakHours.includes(reservation.timeSlot);
+    const isPeakHour = this.peakHours.includes(reservation.timeSlot);
     (reservation as any).isPeakHour = isPeakHour;
 
     this.selectedReservation = reservation;
@@ -2650,19 +2681,20 @@ export class PaymentsComponent implements OnInit {
     if (!this.selectedReservation) return '';
     
     const isPeak = this.isPeakHourReservation();
-    return isPeak ? 'Peak Hour (₱100 minimum)' : 'Off-Peak (per player rate)';
+    return isPeak
+      ? `Peak Hour (₱${this.peakHourFee} base)`
+      : `Off-Peak (₱${this.offPeakHourFee} base)`;
   }
 
   isPeakHourReservation(): boolean {
     if (!this.selectedReservation) return false;
-
-    // Peak hours: 5AM, 6PM, 7PM, 8PM, 9PM (5, 18, 19, 20, 21)
-    const peakHours = [5, 18, 19, 20, 21];
-    return peakHours.includes(this.selectedReservation.timeSlot);
+    return this.peakHours.includes(this.selectedReservation.timeSlot);
   }
 
   getMemberRate(): string {
-    return this.isPeakHourReservation() ? 'Peak Rate' : '₱20';
+    return this.isPeakHourReservation()
+      ? `₱${this.peakHourFee}`
+      : `₱${this.offPeakHourFee}`;
   }
 
   getPlayerBreakdownInfo(): {
@@ -2709,31 +2741,38 @@ export class PaymentsComponent implements OnInit {
     const timeSlot = reservation.timeSlot;
     const duration = reservation.duration || 1; // Default to 1 hour if not specified
 
-    // Peak hours: 5AM, 6PM, 7PM, 8PM, 9PM (5, 18, 19, 20, 21)
-    const peakHours = [5, 18, 19, 20, 21];
-    const isPeakHour = peakHours.includes(timeSlot);
+    const isPeakHour = this.peakHours.includes(timeSlot);
 
     // Check if this is December 2025 format (players have isMember/isGuest flags)
     const isNewFormat = players.length > 0 && typeof players[0] === 'object' && 'isMember' in players[0];
 
     if (isNewFormat) {
-      // December 2025 pricing: ₱100/150 base + ₱70 per guest, calculated hour-by-hour
-      const PEAK_BASE = 150;
-      const NON_PEAK_BASE = 100;
-      const GUEST_FEE = 70;
+      // December 2025+ pricing using club settings
+      const PEAK_BASE = this.peakHourFee;
+      const NON_PEAK_BASE = this.offPeakHourFee;
+      const GUEST_FEE = this.guestFee;
 
       const memberCount = players.filter((p: any) => p.isMember).length;
       const guestCount = players.filter((p: any) => p.isGuest).length;
 
-      // Calculate base fee hour-by-hour for multi-hour reservations
+      // Calculate base fee based on pricing model
       let totalBaseFee = 0;
       const endTimeSlot = timeSlot + duration;
-      for (let hour = timeSlot; hour < endTimeSlot; hour++) {
-        const isHourPeak = peakHours.includes(hour);
-        totalBaseFee += isHourPeak ? PEAK_BASE : NON_PEAK_BASE;
+
+      if (this.pricingModel === 'fixed-daily') {
+        totalBaseFee = this.fixedDailyFee * memberCount;
+      } else if (this.pricingModel === 'fixed-hourly') {
+        totalBaseFee = this.fixedHourlyFee * duration;
+      } else {
+        for (let hour = timeSlot; hour < endTimeSlot; hour++) {
+          const isHourPeak = this.peakHours.includes(hour);
+          totalBaseFee += isHourPeak ? PEAK_BASE : NON_PEAK_BASE;
+        }
       }
 
-      const totalGuestFee = guestCount * GUEST_FEE * duration;
+      const totalGuestFee = this.pricingModel === 'fixed-daily'
+        ? guestCount * GUEST_FEE
+        : guestCount * GUEST_FEE * duration;
       const totalFee = totalBaseFee + totalGuestFee;
       const baseFeePerMember = memberCount > 0 ? totalBaseFee / memberCount : 0;
 
@@ -2741,7 +2780,9 @@ export class PaymentsComponent implements OnInit {
 
       return {
         memberFee: Math.round(baseFeePerMember),
-        nonMemberFee: guestCount > 0 ? GUEST_FEE * duration : 0,
+        nonMemberFee: guestCount > 0
+          ? (this.pricingModel === 'fixed-daily' ? GUEST_FEE : GUEST_FEE * duration)
+          : 0,
         memberCount,
         nonMemberCount: guestCount
       };
@@ -2951,8 +2992,7 @@ export class PaymentsComponent implements OnInit {
     const timeSlot = reservation.timeSlot;
 
     // Determine if it's peak hour for context
-    const peakHours = [5, 18, 19, 20, 21];
-    const isPeakHour = peakHours.includes(timeSlot);
+    const isPeakHour = this.peakHours.includes(timeSlot);
     const timeContext = isPeakHour ? ' (Peak)' : ' (Off-Peak)';
 
     // Check if this is a December 2025 reservation (new player format)
@@ -2967,10 +3007,10 @@ export class PaymentsComponent implements OnInit {
       const guestCount = players.filter((p: any) => p.isGuest).length;
       playerNames = players.map((p: any) => p.name);
 
-      // Calculate December 2025 pricing
-      const PEAK_BASE = 150;
-      const NON_PEAK_BASE = 100;
-      const GUEST_FEE = 70;
+      // Calculate pricing using club settings
+      const PEAK_BASE = this.peakHourFee;
+      const NON_PEAK_BASE = this.offPeakHourFee;
+      const GUEST_FEE = this.guestFee;
 
       const baseFee = isPeakHour ? PEAK_BASE : NON_PEAK_BASE;
       const totalGuestFee = guestCount * GUEST_FEE;

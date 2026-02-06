@@ -65,7 +65,7 @@ interface Reservation {
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIcon, MatTooltip],
+  imports: [CommonModule, ReactiveFormsModule, MatTooltip],
   animations: [
     trigger('slideInOut', [
       transition(':enter', [
@@ -687,6 +687,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   // Modern dropdown states
   dropdownStates: { [key: number]: boolean } = {};
   searchTerms: { [key: number]: string } = {};
+  selectedMemberIds: { [key: number]: string | null } = {}; // Track userId for dropdown selections
 
   // Custom notifications
   notifications: Notification[] = [];
@@ -1679,9 +1680,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Round to nearest 10 pesos (e.g., 550 → 550, 183.33 → 190)
-    this.calculatedFee = Math.ceil(totalFee / 10) * 10;
-    console.log(`🔍 Final calculated fee: ₱${totalFee} → ₱${this.calculatedFee} (rounded)`);
+    // Keep exact fee without rounding
+    this.calculatedFee = totalFee;
+    console.log(`🔍 Final calculated fee: ₱${totalFee}`);
   }
 
   isPeakHour(hour: number): boolean {
@@ -1870,9 +1871,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     const baseFeeTotal = this.getBaseFeeTotal();
     const guestFeeTotal = this.getGuestFeeTotal();
 
-    // Round total fee to nearest 10, then divide among members
-    const totalFee = Math.ceil((baseFeeTotal + guestFeeTotal) / 10) * 10;
-    const baseFeePerMember = (totalFee - guestFeeTotal) / memberCount;
+    // Keep exact base fee without rounding, divide among members
+    const baseFeePerMember = baseFeeTotal / memberCount;
 
     // Add member players
     let memberIndex = 0;
@@ -1969,17 +1969,26 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   updateReservation(): void {
     const formValue = this.reservationForm.value;
 
-    // Collect all valid player names
-    const players: string[] = [];
+    // Collect all valid players (with userId if from dropdown, or just name if custom)
+    const players: Array<string | { name: string; userId: string }> = [];
 
-    // Add member players
-    this.playersArray.controls.forEach((control) => {
+    // Add member players with userId if available
+    this.playersArray.controls.forEach((control, index) => {
       if (control.value && control.value.trim()) {
-        players.push(control.value.trim());
+        const playerName = control.value.trim();
+        const userId = this.selectedMemberIds[index];
+
+        if (userId) {
+          // Member selected from dropdown - send with userId
+          players.push({ name: playerName, userId: userId });
+        } else {
+          // Manually entered name - send as string
+          players.push(playerName);
+        }
       }
     });
 
-    // Add custom players
+    // Add custom players (guests - no userId)
     this.customPlayerNames.forEach((name) => {
       if (name && name.trim()) {
         players.push(name.trim());
@@ -2029,20 +2038,32 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   createReservation(): void {
     const formValue = this.reservationForm.value;
 
-    // Collect all valid player names (from members and custom players)
-    const players: string[] = [];
+    // Collect all valid players (with userId if from dropdown, or just name if custom)
+    const players: Array<string | { name: string; userId: string }> = [];
 
-    // Add member players
-    this.playersArray.controls.forEach((control) => {
+    // Add member players with userId if available
+    this.playersArray.controls.forEach((control, index) => {
       if (control.value && control.value.trim()) {
-        players.push(control.value.trim());
+        const playerName = control.value.trim();
+        const userId = this.selectedMemberIds[index];
+
+        if (userId) {
+          // Member selected from dropdown - send with userId
+          players.push({ name: playerName, userId: userId });
+          console.log(`➕ Adding member with userId: ${playerName} (${userId})`);
+        } else {
+          // Manually entered name - send as string
+          players.push(playerName);
+          console.log(`➕ Adding player as string: ${playerName}`);
+        }
       }
     });
 
-    // Add custom players
+    // Add custom players (guests - no userId)
     this.customPlayerNames.forEach((name) => {
       if (name && name.trim()) {
         players.push(name.trim());
+        console.log(`➕ Adding custom player: ${name.trim()}`);
       }
     });
 
@@ -2138,14 +2159,17 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   selectMember(playerIndex: number, member: Member): void {
     this.playersArray.at(playerIndex).setValue(member.fullName);
+    this.selectedMemberIds[playerIndex] = member._id; // Store userId for backend
     this.dropdownStates[playerIndex] = false;
     this.searchTerms[playerIndex] = member.fullName;
+    console.log(`✅ Selected member: ${member.fullName} (userId: ${member._id})`);
     this.calculateFee();
   }
 
   clearSelection(playerIndex: number): void {
     this.playersArray.at(playerIndex).setValue('');
     this.searchTerms[playerIndex] = '';
+    this.selectedMemberIds[playerIndex] = null; // Clear userId
     this.calculateFee();
   }
 

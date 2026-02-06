@@ -79,7 +79,6 @@ class PricingServiceClass {
     // Check cache first
     const cached = this.cache.get(clubIdStr);
     if (cached && now - cached.timestamp < this.CACHE_TTL_MS) {
-      console.log(`⚙️  Settings cache HIT for club ${clubIdStr}`);
       return cached.settings;
     }
 
@@ -209,10 +208,8 @@ class PricingServiceClass {
     if (clubId) {
       const clubIdStr = typeof clubId === "string" ? clubId : clubId.toString();
       this.cache.delete(clubIdStr);
-      console.log(`🗑️  Cleared pricing cache for club ${clubIdStr}`);
     } else {
       this.cache.clear();
-      console.log(`🗑️  Cleared all pricing cache`);
     }
   }
 

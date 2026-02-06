@@ -109,7 +109,6 @@ async function updateFinancialReportCourtReceipts(
     // Read current financial report
     const dataPath = path.join(__dirname, "../../data/financial-report.json");
     if (!fs.existsSync(dataPath)) {
-      console.warn("⚠️ Financial report JSON file not found, skipping update");
       return;
     }
 
@@ -164,7 +163,6 @@ async function updateFinancialReportCourtReceipts(
         // Update App Service Fee amount
         financialData.disbursementsExpenses[appServiceFeeIndex].amount =
           appServiceFee;
-        console.log(`💰 Updated App Service Fee: ₱${appServiceFee.toFixed(2)}`);
       }
 
       // Recalculate total disbursements to include App Service Fee
@@ -211,7 +209,6 @@ async function updateFinancialReportCourtReceipts(
             timestamp: new Date().toISOString(),
             message: `💰 Tennis Court Usage Receipts updated: ₱${totalCourtReceipts.toLocaleString()}`,
           });
-          console.log("📡 Real-time financial update broadcasted");
         }
       } catch (error) {
         console.error("⚠️ Failed to broadcast financial update:", error);
@@ -315,7 +312,6 @@ async function subtractFromCourtUsageReport(
           timestamp: new Date().toISOString(),
           message: `📊 Court usage updated: ${memberName} -₱${payment.amount} (${monthName} ${year})`,
         });
-        console.log("📡 Real-time court usage update broadcasted");
       }
     } catch (error) {
       console.error("⚠️ Failed to broadcast court usage update:", error);
@@ -332,7 +328,6 @@ async function updateCourtUsageReport(
   clubId: mongoose.Types.ObjectId,
 ): Promise<void> {
   try {
-    console.log("📊 Updating court usage report for recorded payment...");
 
     // Get user information to find member name
     await payment.populate("userId", "fullName");
@@ -416,7 +411,6 @@ async function updateCourtUsageReport(
           timestamp: new Date().toISOString(),
           message: `📊 Court usage updated: ${memberName} +₱${payment.amount} (${monthName} ${year})`,
         });
-        console.log("📡 Real-time court usage update broadcasted");
       }
     } catch (error) {
       console.error("⚠️ Failed to broadcast court usage update:", error);
@@ -990,7 +984,6 @@ export const createPayment = asyncHandler(
           payment = existingPayment;
         } else {
           // Create new payment
-          console.log(`💰 Creating new payment for ${targetUser?.fullName}`);
 
           // Only set paidBy if paying for someone else
           const isPayingForSelf = userId === req.user._id.toString();
@@ -1069,7 +1062,6 @@ export const createPayment = asyncHandler(
         );
       }
 
-      console.log(`💰 FINAL: Processed ${createdPayments.length} payments`);
       console.log(
         `💰 Payment details:`,
         createdPayments.map((p) => ({
@@ -1116,7 +1108,6 @@ export const createPayment = asyncHandler(
         })),
       };
 
-      console.log(`💰 Sending response with debug info:`, debugInfo);
 
       return res.status(201).json({
         success: true,
@@ -1251,17 +1242,14 @@ export const getPayments = asyncHandler(
       filter.userId = req.user._id.toString();
     }
 
-    console.log("💰 PAYMENT FILTER:", JSON.stringify(filter, null, 2));
     console.log("💰 REQUEST USER:", {
       userId: req.user?._id,
       role: req.user?.role,
       clubId: req.clubId,
     });
-    console.log("💰 REQUEST PARAMS:", req.query);
 
     try {
       const total = await Payment.countDocuments(filter);
-      console.log("💰 TOTAL PAYMENTS FOUND:", total);
 
       const payments = await Payment.find(filter)
         .populate("userId", "username fullName email")
@@ -1291,10 +1279,8 @@ export const getPayments = asyncHandler(
         .limit(limit)
         .lean();
 
-      console.log("💰 PAYMENTS RETRIEVED:", payments.length, "payments");
 
       if (payments.length > 0) {
-        console.log("💰 PAYMENT DETAILS:");
         payments.forEach((p: any, idx: number) => {
           console.log(`   Payment ${idx + 1}:`, {
             id: p._id,
@@ -1407,12 +1393,10 @@ export const processPayment = asyncHandler(
     const { id } = req.params;
     const { transactionId, referenceNumber, notes } = req.body;
 
-    console.log("💰 Processing payment:", id, "by user:", req.user?.username);
 
     const payment = await Payment.findById(id);
 
     if (!payment) {
-      console.log("❌ Payment not found:", id);
       return res.status(404).json({
         success: false,
         error: "Payment not found",
@@ -1437,7 +1421,6 @@ export const processPayment = asyncHandler(
     });
 
     if (payment.status !== "pending") {
-      console.log("❌ Payment not in pending status:", payment.status);
       return res.status(400).json({
         success: false,
         error: "Payment is not in pending status",
@@ -1486,7 +1469,6 @@ export const processPayment = asyncHandler(
           );
           reservation.paymentStatus = "paid";
           await reservation.save({ validateBeforeSave: false });
-          console.log("✅ Reservation payment status updated successfully");
         } else {
           console.log(
             "⚠️ No reservation found for payment or club mismatch:",
@@ -1584,10 +1566,6 @@ export const processPayment = asyncHandler(
 // Update payment details (payment method, transaction ID, etc.)
 export const updatePayment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    console.log("💰 🔥 UPDATE PAYMENT ENDPOINT HIT! 🔥 💰");
-    console.log("💰 Request ID:", req.params.id);
-    console.log("💰 Request body:", JSON.stringify(req.body, null, 2));
-    console.log("💰 User:", req.user?.username, "(", req.user?.role, ")");
 
     const { id } = req.params;
     const {
@@ -1633,7 +1611,6 @@ export const updatePayment = asyncHandler(
     // MIGRATION FIX: Ensure existing payments have proper metadata structure
     if (payment.metadata && !payment.metadata.discounts) {
       payment.metadata.discounts = [];
-      console.log("💰 MIGRATION: Added missing discounts array to payment", id);
     } else if (!payment.metadata) {
       payment.metadata = { discounts: [] };
       console.log(
@@ -1695,7 +1672,6 @@ export const updatePayment = asyncHandler(
 
       const validStatuses = ["pending", "completed", "failed", "refunded"];
       if (!validStatuses.includes(status)) {
-        console.log("💰 ERROR: Invalid status value:", status);
         return res.status(400).json({
           success: false,
           error: "Invalid status value",
@@ -1703,7 +1679,6 @@ export const updatePayment = asyncHandler(
       }
 
       if (status === "record") {
-        console.log("💰 ERROR: Cannot change to record status via update");
         return res.status(400).json({
           success: false,
           error: "Use record endpoint to mark payment as recorded",
@@ -1711,7 +1686,6 @@ export const updatePayment = asyncHandler(
       }
 
       if (payment.status !== status) {
-        console.log("💰 Updating status from", payment.status, "to", status);
         const statusNote = `Status changed from ${payment.status} to ${status} by ${req.user?.username}`;
 
         // Check if this exact note already exists
@@ -1728,13 +1702,10 @@ export const updatePayment = asyncHandler(
         if (status === "completed" && !payment.paymentDate) {
           payment.paymentDate = new Date();
           payment.markModified("paymentDate"); // Explicitly mark as modified
-          console.log("💰 Auto-set paymentDate for completed payment");
         }
       } else {
-        console.log("💰 Status unchanged (already", status, ")");
       }
     } else if (status && !isAdmin) {
-      console.log("💰 WARNING: Non-admin attempted to change status");
     }
 
     // Handle payment date updates (admin only)
@@ -1821,18 +1792,14 @@ export const updatePayment = asyncHandler(
 
     // Truncate notes if they exceed 500 characters
     if (payment.notes && payment.notes.length > 500) {
-      console.log("💰 WARNING: Notes exceed 500 characters, truncating...");
       // Keep the last 450 characters and add a note about truncation
       payment.notes =
         "...(truncated)\n" +
         payment.notes.substring(payment.notes.length - 450);
-      console.log("💰 Notes truncated to:", payment.notes.length, "characters");
     }
 
     try {
-      console.log("💰 Saving payment...");
       await payment.save();
-      console.log("💰 Payment saved successfully");
     } catch (error: any) {
       console.error("💰 ERROR during payment save:", error);
       console.error("💰 ERROR stack:", error.stack);
@@ -1840,9 +1807,7 @@ export const updatePayment = asyncHandler(
     }
 
     try {
-      console.log("💰 Populating userId...");
       await payment.populate("userId", "username fullName email");
-      console.log("💰 userId populated successfully");
     } catch (error: any) {
       console.error("💰 ERROR during userId populate:", error);
       console.error("💰 ERROR stack:", error.stack);
@@ -1850,12 +1815,10 @@ export const updatePayment = asyncHandler(
     }
 
     try {
-      console.log("💰 Populating reservationId...");
       await payment.populate(
         "reservationId",
         "userId date timeSlot endTimeSlot duration players status totalFee timeSlotDisplay",
       );
-      console.log("💰 reservationId populated successfully");
     } catch (error: any) {
       console.error("💰 ERROR during reservationId populate:", error);
       console.error("💰 ERROR stack:", error.stack);
@@ -1863,12 +1826,10 @@ export const updatePayment = asyncHandler(
     }
 
     try {
-      console.log("💰 Populating pollId...");
       await payment.populate(
         "pollId",
         "title openPlayEvent.eventDate openPlayEvent.startTime openPlayEvent.endTime",
       );
-      console.log("💰 pollId populated successfully");
     } catch (error: any) {
       console.error("💰 ERROR during pollId populate:", error);
       console.error("💰 ERROR stack:", error.stack);
@@ -1888,8 +1849,6 @@ export const updatePayment = asyncHandler(
       isAdminOverride: payment.metadata?.isAdminOverride,
     });
 
-    console.log("💰 Payment object status before response:", payment.status);
-    console.log("💰 Payment toJSON status:", payment.toJSON().status);
 
     return res.status(200).json({
       success: true,
@@ -2036,7 +1995,6 @@ export const getMyPayments = asyncHandler(
     });
 
     const total = await Payment.countDocuments(filter);
-    console.log("🔍 Total payments found for user:", total);
 
     // Add debug for completed payments specifically
     const completedFilter: any = { status: "completed" };
@@ -2047,7 +2005,6 @@ export const getMyPayments = asyncHandler(
       completedFilter.userId = req.user._id.toString();
     }
     const completedCount = await Payment.countDocuments(completedFilter);
-    console.log("🔍 Completed payments for user:", completedCount);
 
     try {
       const payments = await Payment.find(filter)
@@ -2140,7 +2097,6 @@ export const checkMyOverduePayments = asyncHandler(
       });
     }
 
-    console.log("🔍 Checking overdue payments for user:", req.user.username);
 
     // Check for overdue payments (1+ days past due)
     const oneDayAgo = new Date();
@@ -2155,7 +2111,6 @@ export const checkMyOverduePayments = asyncHandler(
       dueDate: { $lt: oneDayAgo },
     }).lean();
 
-    console.log(`🔍 Found ${overduePayments.length} overdue Payment records`);
 
     // Check 2: Reservations with pending payment status where reservation date has passed
     const overdueReservations = await Reservation.find({
@@ -2166,7 +2121,6 @@ export const checkMyOverduePayments = asyncHandler(
       status: { $in: ["pending", "confirmed"] },
     }).lean();
 
-    console.log(`🔍 Found ${overdueReservations.length} overdue Reservations`);
 
     // Format overdue details
     const overdueDetails: any[] = [];
@@ -2206,7 +2160,6 @@ export const checkMyOverduePayments = asyncHandler(
 
     const totalOverdue = overdueDetails.length;
 
-    console.log(`🔍 Total overdue items: ${totalOverdue}`);
 
     return res.status(200).json({
       success: true,
@@ -2272,7 +2225,6 @@ export const approvePayment = asyncHandler(
     const { id } = req.params;
     const { notes } = req.body;
 
-    console.log("✅ Approving payment:", id, "by admin:", req.user?.username);
 
     // Permission check is handled by requireRole middleware in route
     if (!req.user) {
@@ -2370,7 +2322,6 @@ export const recordPayment = asyncHandler(
     const { id } = req.params;
     const { notes, paymentDate } = req.body;
 
-    console.log("📝 Recording payment:", id, "by admin:", req.user?.username);
 
     // Permission check is handled by requireRole middleware in route
     if (!req.user) {
@@ -2518,7 +2469,6 @@ export const unrecordPayment = asyncHandler(
     const { id } = req.params;
     const { notes } = req.body;
 
-    console.log("🔄 Unrecording payment:", id, "by admin:", req.user?.username);
 
     // Permission check is handled by requireRole middleware in route
     if (!req.user) {
@@ -2675,7 +2625,6 @@ export const calculatePaymentAmount = asyncHandler(
 // Clean up duplicate payments (admin utility)
 export const cleanupDuplicatePayments = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    console.log("🧹 Starting payment cleanup process...");
 
     // Find all payments grouped by reservationId
     const duplicateGroups = await Payment.aggregate([
@@ -2722,7 +2671,6 @@ export const cleanupDuplicatePayments = asyncHandler(
       );
 
       payments.forEach((p: any) => {
-        console.log(`  - ${p.status}: ${p.description} (${p.id})`);
       });
 
       // Keep the completed payment, remove pending duplicates
@@ -2753,7 +2701,6 @@ export const cleanupDuplicatePayments = asyncHandler(
       }
     }
 
-    console.log(`🎉 Cleanup complete! Removed ${cleanedUp} duplicate payments`);
 
     return res.status(200).json({
       success: true,
@@ -3445,7 +3392,6 @@ export const deleteMembershipPayment = asyncHandler(
 // Update financial report to include membership fees
 async function updateFinancialReportMembershipFees(): Promise<void> {
   try {
-    console.log("💰 Updating Annual Membership Fees in financial report...");
 
     // Calculate total from all recorded membership fee payments grouped by year
     const result = await Payment.aggregate([
@@ -3471,12 +3417,10 @@ async function updateFinancialReportMembershipFees(): Promise<void> {
       },
     ]);
 
-    console.log(`💰 Membership fees by year:`, result);
 
     // Read current financial report
     const dataPath = path.join(__dirname, "../../data/financial-report.json");
     if (!fs.existsSync(dataPath)) {
-      console.warn("⚠️ Financial report JSON file not found, skipping update");
       return;
     }
 
@@ -3536,7 +3480,6 @@ async function updateFinancialReportMembershipFees(): Promise<void> {
     // Save updated financial report
     fs.writeFileSync(dataPath, JSON.stringify(financialData, null, 2), "utf8");
 
-    console.log(`💰 Financial report updated with membership fees by year`);
     console.log(
       `💰 New Total Receipts: ₱${financialData.totalReceipts.toLocaleString()}`,
     );
@@ -3554,7 +3497,6 @@ async function updateFinancialReportMembershipFees(): Promise<void> {
           timestamp: new Date().toISOString(),
           message: `💰 Annual Membership Fees updated by year`,
         });
-        console.log("📡 Real-time financial update broadcasted");
       }
     } catch (error) {
       console.error("⚠️ Failed to broadcast financial update:", error);

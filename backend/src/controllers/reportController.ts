@@ -1731,10 +1731,8 @@ export const getFinancialReport = asyncHandler(
             console.log(
               `\ud83c\udfe2 Updated financial report for club: ${club.name}`,
             );
-            console.log(`\ud83d\udccd Location: ${financialData.location}`);
           }
         } catch (error) {
-          console.warn("\u26a0\ufe0f Could not fetch club data:", error);
         }
       }
 
@@ -1838,7 +1836,6 @@ export const getFinancialReport = asyncHandler(
           yearEnd,
         );
 
-        console.log(`💰 Service Fee Liability calculated:`);
         console.log(
           `   - Total Accrued: ₱${serviceFeeLiability.totalAccrued.toFixed(2)}`,
         );
@@ -1885,7 +1882,6 @@ export const getFinancialReport = asyncHandler(
           (financialData.beginningBalance?.amount || 0) +
           financialData.netIncome;
       } catch (error) {
-        console.warn("⚠️ Could not calculate Service Fee Liability:", error);
       }
 
       // Calculate recorded payments and add to Tennis Court Usage Receipts
@@ -1977,7 +1973,6 @@ export const getFinancialReport = asyncHandler(
           financialData.receiptsCollections[creditBalancesIndex].amount =
             totalCreditBalances;
 
-          console.log(`🧮 Updated Credit Balances: ₱${totalCreditBalances}`);
 
           // Recalculate totals with updated credit balances
           financialData.totalReceipts =
@@ -2098,7 +2093,6 @@ export const getFinancialReport = asyncHandler(
       // Annual Membership Fees now calculated from membership payments in database
 
       // Debug: Log financial statement loaded
-      console.log("📊 Financial statement loaded for:", financialData.clubName);
       console.log(
         "💰 Beginning Balance:",
         `₱${(financialData.beginningBalance?.amount || 0).toLocaleString()}`,
@@ -2107,7 +2101,6 @@ export const getFinancialReport = asyncHandler(
         "💵 Fund Balance:",
         `₱${financialData.fundBalance.toLocaleString()}`,
       );
-      console.log("🕒 Last Updated:", financialData.lastUpdated);
 
       // Prevent caching to ensure real-time recorded payment calculations
       res.set({
@@ -2149,7 +2142,6 @@ export const getFinancialReport = asyncHandler(
 export const export2025FinancialReportHTML = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      console.log("📋 Exporting 2025 Financial Report as static HTML...");
 
       // Read the current financial data
       const dataPath = path.join(__dirname, "../../data/financial-report.json");
@@ -2367,7 +2359,6 @@ export const export2025FinancialReportHTML = asyncHandler(
 
       fs.writeFileSync(outputPath, html, "utf8");
 
-      console.log("✅ 2025 Financial Archive HTML created:", outputPath);
 
       return res.status(200).json({
         success: true,
@@ -2392,7 +2383,6 @@ export const export2025FinancialReportHTML = asyncHandler(
 export const forceRefreshFinancialReport = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      console.log("🔄 Force refresh financial report requested by admin");
 
       // Bypass cache and get fresh data from Google Sheets
       const freshData = await sheetsService.getFinancialReportData(true);
@@ -2562,7 +2552,6 @@ export const forceRefreshFinancialReport = asyncHandler(
           timestamp: new Date().toISOString(),
           message: `💰 Financial data force refreshed! Fund Balance: ₱${freshData.fundBalance.toLocaleString()}`,
         });
-        console.log("📡 Real-time update broadcasted to all clients");
       }
 
       return res.status(200).json({
@@ -2593,7 +2582,6 @@ export const triggerSync = asyncHandler(
     try {
       const { syncService } = await import("../services/syncService");
 
-      console.log("🔄 Manual sync triggered by admin");
       const success = await syncService.forcSync();
       const status = syncService.getSyncStatus();
 
@@ -2656,7 +2644,6 @@ export const getSyncStatus = asyncHandler(
 export const forceRefreshCourtUsageReport = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      console.log("🔄 Force refresh court usage report requested by admin");
 
       // Bypass cache and get fresh data from Google Sheets
       const freshData = await sheetsService.getCourtUsageReportData(true);
@@ -2682,7 +2669,6 @@ export const forceRefreshCourtUsageReport = asyncHandler(
       };
 
       fs.writeFileSync(dataPath, JSON.stringify(jsonData, null, 2), "utf8");
-      console.log("💾 Court usage report JSON file updated with fresh data");
 
       // Emit real-time update to all connected clients
       const { webSocketService } = await import("../services/websocketService");

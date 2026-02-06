@@ -405,12 +405,9 @@ export const vote = asyncHandler(async (req: AuthenticatedRequest, res: Response
         const yesVoters = yesOption.voters?.length || 0;
         
         if (currentConfirmed !== yesVoters) {
-          console.log(`🔧 BACKUP SYNC: Fixing confirmed players ${currentConfirmed} → ${yesVoters}`);
           poll.openPlayEvent.confirmedPlayers = [...yesOption.voters];
           await poll.save();
-          console.log(`✅ BACKUP SYNC: Confirmed players updated to ${yesVoters}`);
         } else {
-          console.log(`✅ SYNC OK: Confirmed players already correct (${currentConfirmed})`);
         }
       }
     }
@@ -780,9 +777,6 @@ export const createOpenPlay = asyncHandler(async (req: AuthenticatedRequest, res
   await openPlayPoll.populate('createdBy', 'username fullName');
 
   // Send real-time WebSocket notification
-  console.log('🎾 Poll Controller: Creating WebSocket notification data...');
-  console.log('🎾 Poll Controller: openPlayEvent startTime:', openPlayPoll.openPlayEvent!.startTime);
-  console.log('🎾 Poll Controller: openPlayEvent endTime:', openPlayPoll.openPlayEvent!.endTime);
   
   const webSocketNotification = {
     type: 'open_play_created' as const,
@@ -805,7 +799,6 @@ export const createOpenPlay = asyncHandler(async (req: AuthenticatedRequest, res
     message: `New Open Play event: ${openPlayPoll.title}`
   };
 
-  console.log('🎾 Poll Controller: Final WebSocket notification data:', JSON.stringify(webSocketNotification, null, 2));
 
   // Emit WebSocket notification for real-time updates
   webSocketService.emitOpenPlayNotification(webSocketNotification);
@@ -819,7 +812,6 @@ export const createOpenPlay = asyncHandler(async (req: AuthenticatedRequest, res
       startTime: openPlayPoll.openPlayEvent!.startTime,
       endTime: openPlayPoll.openPlayEvent!.endTime
     });
-    console.log('✅ PWA notifications sent for Open Play event');
   } catch (error) {
     console.error('❌ Failed to send PWA notifications:', error);
     // Don't fail the request if notifications fail
@@ -869,7 +861,6 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
 
   try {
     const wasGenerated = poll.openPlayEvent.matchesGenerated;
-    console.log(`🎾 Generating matches for poll ${id} with ${poll.openPlayEvent.confirmedPlayers.length} players:`, poll.openPlayEvent.confirmedPlayers);
     
     // **SMART REGENERATION**: Preserve completed matches
     const existingMatches = poll.openPlayEvent.matches || [];
@@ -883,11 +874,8 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
       }));
     const incompleteMatches = existingMatches.filter(match => match.status !== 'completed');
     
-    console.log(`📊 Found ${completedMatches.length} completed matches, ${incompleteMatches.length} incomplete matches`);
     
     if (completedMatches.length > 0) {
-      console.log(`🔒 Preserving ${completedMatches.length} completed matches`);
-      console.log(`📋 Completed matches:`, completedMatches.map(m => `Match ${m.matchNumber} (${m.status})`));
     }
     
     // Get total matches expected from DoublesSchedulerService distribution table
@@ -901,19 +889,15 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
     const currentCompletedMatches = completedMatches.length;
     const newMatchesNeeded = Math.max(0, targetTotalMatches - currentCompletedMatches);
     
-    console.log(`🎯 Target: ${targetTotalMatches} total matches (from DoublesSchedulerService)`);
     console.log(`✅ Already completed: ${currentCompletedMatches} matches`);  
-    console.log(`🆕 New matches needed: ${newMatchesNeeded} matches`);
     
     let newMatches: any[] = [];
     
     if (newMatchesNeeded === 0) {
-      console.log(`🏁 No new matches needed - target already reached`);
       // Keep existing matches as-is
       poll.openPlayEvent.matches = completedMatches;
     } else {
       // Use enhanced regeneration to generate remaining matches while avoiding conflicts
-      console.log(`🔄 Using enhanced regeneration for ${completedMatches.length} completed matches`);
       
       // Calculate the starting match number based on completed matches
       const validMatchNumbers = completedMatches.map(m => typeof m.matchNumber === 'number' ? m.matchNumber : 0).filter(n => !isNaN(n) && n > 0);
@@ -959,13 +943,11 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
         status: match.status
       }));
       
-      console.log(`✅ Generated exactly ${newMatches.length} remaining matches using enhanced regeneration`);
     }
     
     // Handle final match assignment
     if (newMatchesNeeded > 0) {
       // The new enhanced regeneration method already handles proper match numbering
-      console.log(`🔢 Using matches with pre-assigned numbering from enhanced regeneration`);
       
       // Ensure all matches have proper format and numbering
       const renumberedMatches = newMatches.map((match: any) => {
@@ -989,15 +971,12 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
         ...renumberedMatches // Add new matches with proper numbering
       ];
       
-      console.log(`🎯 Final result: ${completedMatches.length} preserved + ${renumberedMatches.length} new = ${poll.openPlayEvent.matches?.length || 0} total matches`);
     }
     
     // Validate final result matches the DoublesSchedulerService distribution
     const finalMatchCount = poll.openPlayEvent.matches?.length || 0;
     if (finalMatchCount === targetTotalMatches) {
-      console.log(`✅ SUCCESS: Generated exactly ${finalMatchCount} matches as per DoublesSchedulerService for ${totalPlayers} players`);
     } else {
-      console.log(`⚠️ WARNING: Generated ${finalMatchCount} matches but expected ${targetTotalMatches} for ${totalPlayers} players`);
     }
     
     // Final validation: Ensure no player exceeds 2 matches
@@ -1014,19 +993,14 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
     });
     
     let maxMatchViolations = 0;
-    console.log(`🔍 Final player match distribution:`);
     finalPlayerMatchCount.forEach((count, playerId) => {
-      console.log(`  ${playerId}: ${count} matches`);
       if (count > 2) {
         maxMatchViolations++;
-        console.log(`❌ VIOLATION: ${playerId} exceeds 2-match limit with ${count} matches`);
       }
     });
     
     if (maxMatchViolations === 0) {
-      console.log(`✅ SUCCESS: All players respect the 2-match maximum limit`);
     } else {
-      console.log(`❌ ERROR: ${maxMatchViolations} players exceed the 2-match limit`);
     }
     poll.openPlayEvent.matchesGenerated = true;
     
@@ -1038,7 +1012,6 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
       }));
     }
     
-    console.log('🔄 About to save poll with matches...');
     console.log('🔍 Final matches before save:', poll.openPlayEvent.matches?.map((m: any, i: number) => ({
       match: i,
       team1Length: m.team1?.length,
@@ -1050,7 +1023,6 @@ export const generateMatches = asyncHandler(async (req: AuthenticatedRequest, re
     })));
     
     await poll.save();
-    console.log('✅ Poll saved successfully');
     await poll.populate('openPlayEvent.confirmedPlayers', 'username fullName');
     await poll.populate({
       path: 'openPlayEvent.matches.players',
@@ -1110,26 +1082,21 @@ export const getOpenPlayEvents = asyncHandler(async (req: AuthenticatedRequest, 
     .sort({ 'openPlayEvent.eventDate': -1 });
 
   // Manually populate match players for Open Play events
-  console.log('🔍 getOpenPlayEvents: Starting manual populate for', events.length, 'events');
   for (const event of events) {
     if (event.openPlayEvent?.matches) {
-      console.log('🔍 getOpenPlayEvents: Processing event with', event.openPlayEvent.matches.length, 'matches');
       const allPlayerIds: string[] = [];
       event.openPlayEvent.matches.forEach((match: any) => {
         if (match.players) {
-          console.log('🔍 getOpenPlayEvents: Match has', match.players.length, 'players:', match.players);
           allPlayerIds.push(...match.players);
         }
       });
       
       if (allPlayerIds.length > 0) {
         const uniquePlayerIds = [...new Set(allPlayerIds)];
-        console.log('🔍 getOpenPlayEvents: Looking up players:', uniquePlayerIds);
         const players = await User.find({
           _id: { $in: uniquePlayerIds.map((id: string) => new mongoose.Types.ObjectId(id)) },
           clubId: req.clubId
         }).select('username fullName _id');
-        console.log('🔍 getOpenPlayEvents: Found', players.length, 'players:', players.map(p => p.fullName || p.username));
         
         const playerMap: Record<string, any> = {};
         players.forEach((player: any) => {
@@ -1195,7 +1162,6 @@ export const updateMatchOrder = asyncHandler(async (req: AuthenticatedRequest, r
   }
 
   try {
-    console.log('🔍 Received matches payload:', JSON.stringify(matches, null, 2));
     
     // Update the match order
     poll.openPlayEvent.matches = matches.map((match: any, index: number) => {
@@ -1293,13 +1259,11 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
   }
 
   try {
-    console.log(`🎾 Removing player ${playerId} from future matches in poll ${id}`);
     
     // Separate completed and incomplete matches
     const completedMatches = poll.openPlayEvent.matches.filter(match => match.status === 'completed');
     const incompleteMatches = poll.openPlayEvent.matches.filter(match => match.status !== 'completed');
     
-    console.log(`📊 Found ${completedMatches.length} completed matches and ${incompleteMatches.length} incomplete matches`);
     
     // Get all players from incomplete matches, excluding the player to remove
     const remainingPlayers = new Set<string>();
@@ -1312,7 +1276,6 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
     });
     
     const remainingPlayersArray = Array.from(remainingPlayers);
-    console.log(`👥 Remaining players for regeneration: ${remainingPlayersArray.length}`);
     
     if (remainingPlayersArray.length < 4) {
       return res.status(400).json({
@@ -1357,7 +1320,6 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
       });
     }
     
-    console.log(`🔢 Renumbered ${renumberedNewMatches.length} new matches starting from match ${lastCompletedMatchNumber + 1}`);
     
     // Combine completed matches with new matches
     poll.openPlayEvent.matches = [
@@ -1368,14 +1330,12 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
     // Update confirmed players list to reflect the removal
     if (poll.openPlayEvent.confirmedPlayers.includes(playerId)) {
       poll.openPlayEvent.confirmedPlayers = poll.openPlayEvent.confirmedPlayers.filter(id => id !== playerId);
-      console.log(`✅ Removed ${playerId} from confirmed players list`);
       
       // Also remove the vote from poll options
       const yesOption = poll.options.find(option => option.text.toLowerCase() === 'yes');
       if (yesOption && yesOption.voters.includes(playerId)) {
         yesOption.voters = yesOption.voters.filter(id => id !== playerId);
         yesOption.votes = yesOption.voters.length;
-        console.log(`✅ Removed ${playerId} vote from poll options`);
         
         // Handle payment removal/refund
         const existingPayment = await Payment.findOne({
@@ -1390,7 +1350,6 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
           if (existingPayment.status === 'completed' && (existingPayment.paymentMethod as any) === 'credits') {
             try {
               const CreditTransaction = require('../models/CreditTransaction');
-              console.log(`💳 Auto-refunding ₱${existingPayment.amount} credits for player removal`);
               
               await (CreditTransaction as any).refundOpenPlay(
                 playerId,
@@ -1398,7 +1357,6 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
                 existingPayment.amount
               );
               
-              console.log(`✅ Successfully refunded ₱${existingPayment.amount} credits`);
             } catch (error) {
               console.error('Failed to auto-refund credits:', error);
             }
@@ -1406,13 +1364,11 @@ export const removePlayerFromFutureMatches = asyncHandler(async (req: Authentica
           
           // Delete the payment record
           await Payment.deleteOne({ _id: existingPayment._id });
-          console.log(`✅ Removed payment record for ${playerId}`);
         }
       }
     }
     
     await poll.save();
-    console.log(`✅ Successfully updated poll with ${poll.openPlayEvent.matches.length} total matches`);
     
     return res.status(200).json({
       success: true,

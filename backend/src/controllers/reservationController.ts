@@ -149,20 +149,10 @@ export const getReservations = asyncHandler(
       filter.userId = req.user._id.toString();
     }
 
-    console.log("🔍🔍🔍 RESERVATION QUERY DEBUG START 🔍🔍🔍");
-    console.log("- req.clubId value:", req.clubId);
-    console.log("- req.clubId type:", typeof req.clubId);
-    console.log("- req.clubId string:", req.clubId?.toString());
-    console.log("- User role:", req.user?.role);
-    console.log("- showAll query:", req.query.showAll);
-    console.log("- Final filter:", JSON.stringify(filter));
-    console.log("- filter.clubId:", filter.clubId);
-    console.log("- filter.clubId type:", typeof filter.clubId);
     console.log(
       "- Will show all users?",
       req.user?.role !== "member" || req.query.showAll === "true",
     );
-    console.log("🔍🔍🔍 RESERVATION QUERY DEBUG END 🔍🔍🔍");
 
     // Auto-mark past pending reservations as 'no-show'
     const yesterday = new Date();
@@ -331,8 +321,6 @@ export const getReservationsForDate = asyncHandler(
     });
 
     // Generate time slots availability with weather data and Open Play blocking
-    console.log(`🔍 BACKEND DEBUG for date ${date} (UPDATED LOGIC):`);
-    console.log(`📊 Total reservations found: ${reservations.length}`);
     console.log(
       `🚫 Blocked Open Play slots: [${Array.from(blockedSlots).join(", ")}]`,
     );
@@ -401,12 +389,9 @@ export const getReservationsForDate = asyncHandler(
 
       // Enhanced debugging for specific hours that might be problematic
       if (hour === 17 || hour === 21 || hour === 22) {
-        console.log(`🔍 DETAILED DEBUG for hour ${hour} (NEW LOGIC):`);
         console.log(
           `  - Occupying reservation: ${occupyingReservation ? `${occupyingReservation.timeSlot}:00-${occupyingReservation.endTimeSlot || occupyingReservation.timeSlot + (occupyingReservation.duration || 1)}:00 (status: ${occupyingReservation.status})` : "NONE"}`,
         );
-        console.log(`  - Can be end time: ${canBeEndTime}`);
-        console.log(`  - Blocked by Open Play: ${isBlockedByOpenPlay}`);
         console.log(
           `  - Available for START: ${!occupyingReservation && !isBlockedByOpenPlay}`,
         );
@@ -425,7 +410,6 @@ export const getReservationsForDate = asyncHandler(
             weatherService.isWeatherSuitableForTennis(weather);
         }
       } catch (error) {
-        console.warn(`Failed to fetch weather for ${date} ${hour}:00:`, error);
       }
 
       const slotData = {
@@ -455,12 +439,6 @@ export const getReservationsForDate = asyncHandler(
 
       // Special logging for hour 17, 21, and 22 to debug frontend issue
       if (hour === 17 || hour === 21 || hour === 22) {
-        console.log(`🔍 BACKEND RESPONSE DATA for Hour ${hour}:`);
-        console.log(`  - hour:`, slotData.hour);
-        console.log(`  - available:`, slotData.available);
-        console.log(`  - availableAsEndTime:`, slotData.availableAsEndTime);
-        console.log(`  - canBeEndTime value was:`, canBeEndTime);
-        console.log(`  - isBlockedByOpenPlay:`, isBlockedByOpenPlay);
       }
 
       timeSlots.push(slotData);
@@ -795,7 +773,6 @@ export const createReservation = asyncHandler(
         };
       }
     } catch (error) {
-      console.warn("Failed to fetch weather for reservation:", error);
     }
 
     // Get user with current balances
@@ -827,9 +804,7 @@ export const createReservation = asyncHandler(
       } else {
         finalTotalFee = trimmedPlayers.length * offPeakFeePerMember * duration;
       }
-      console.log(`⚠️  Using fallback calculation: ₱${finalTotalFee}`);
     } else {
-      console.log(`✅ Using frontend calculated fee: ₱${finalTotalFee}`);
     }
 
     // Check for credit auto-deduction
@@ -1433,12 +1408,10 @@ export const updateReservation = asyncHandler(
 export const cancelReservation = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    console.log(`🗑️  Attempting to cancel reservation: ${id}`);
 
     const reservation = await Reservation.findById(id);
 
     if (!reservation) {
-      console.log(`❌ Reservation not found: ${id}`);
       res.status(404).json({
         success: false,
         error: "Reservation not found",
@@ -1761,7 +1734,6 @@ export const completeReservation = asyncHandler(
     if (matchResults && matchResults.length > 0) {
       try {
         await SeedingService.processMatchResults(id!, matchResults);
-        console.log(`🎾 Match results processed for reservation ${id}`);
       } catch (error) {
         console.error("Error processing match results:", error);
         res.status(400).json({

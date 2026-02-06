@@ -1,102 +1,138 @@
-<div class="club-management-container">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>business</mat-icon>
-        Club Management
-      </mat-card-title>
-    </mat-card-header>
-
-    <mat-card-content>
-      <div class="actions-bar">
-        <button mat-raised-button color="primary" routerLink="/club-registration">
-          <mat-icon>add</mat-icon>
-          Create New Club
-        </button>
-        <button mat-button (click)="loadClubs()">
-          <mat-icon>refresh</mat-icon>
+<div class="club-management-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Club Management
+        </h1>
+        <p class="subtitle">Manage all clubs, pricing, and administrators</p>
+      </div>
+      <div class="header-actions">
+        <button class="refresh-btn" (click)="loadClubs()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
           Refresh
         </button>
-      </div>
-
-      <div *ngIf="loading" class="loading-container">
-        <p>Loading clubs...</p>
-      </div>
-
-      <table mat-table [dataSource]="clubs" class="clubs-table" *ngIf="!loading && clubs.length > 0">
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Club Name</th>
-          <td mat-cell *matCellDef="let club">
-            <strong>{{ club.name }}</strong>
-            <br>
-            <small class="slug">{{ club.slug }}</small>
-          </td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let club">
-            <span class="status-badge" [class]="'status-' + club.status">
-              {{ club.status }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Tier Column -->
-        <ng-container matColumnDef="tier">
-          <th mat-header-cell *matHeaderCellDef>Tier</th>
-          <td mat-cell *matCellDef="let club">
-            {{ club.subscriptionTier }}
-          </td>
-        </ng-container>
-
-        <!-- Contact Column -->
-        <ng-container matColumnDef="contact">
-          <th mat-header-cell *matHeaderCellDef>Contact</th>
-          <td mat-cell *matCellDef="let club">
-            {{ club.contactEmail }}
-            <br>
-            <small>{{ club.contactPhone }}</small>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let club">
-            <button mat-button color="accent" (click)="openPricingDialog(club)">
-              <mat-icon>payments</mat-icon>
-              Court Fees
-            </button>
-            <button mat-button color="primary" (click)="openCreateAdminDialog(club)">
-              <mat-icon>person_add</mat-icon>
-              Create New Admin
-            </button>
-            <button mat-button (click)="openAddAdminDialog(club)">
-              <mat-icon>add_moderator</mat-icon>
-              Assign Existing User
-            </button>
-            <button mat-icon-button (click)="viewClubDetails(club)">
-              <mat-icon>visibility</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-
-      <div *ngIf="!loading && clubs.length === 0" class="no-clubs">
-        <mat-icon class="large-icon">business</mat-icon>
-        <h3>No Clubs Yet</h3>
-        <p>Create your first club to get started.</p>
-        <button mat-raised-button color="primary" routerLink="/club-registration">
-          <mat-icon>add</mat-icon>
-          Create Club
+        <button class="create-btn" routerLink="/club-registration">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Create New Club
         </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading clubs...</p>
+  </div>
+
+  <!-- Clubs Grid -->
+  <div *ngIf="!loading && clubs.length > 0" class="clubs-grid">
+    <div *ngFor="let club of clubs" class="club-card">
+      <!-- Card Header -->
+      <div class="card-header" [style.background]="club.primaryColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+        <div class="club-logo">
+          <img *ngIf="club.logo" [src]="club.logo" [alt]="club.name">
+          <svg *ngIf="!club.logo" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <button class="actions-btn" (click)="openActionsDialog(club)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="1"/>
+            <circle cx="12" cy="5" r="1"/>
+            <circle cx="12" cy="19" r="1"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <div class="club-name-section">
+          <h3 class="club-name">{{ club.name }}</h3>
+          <span class="club-slug">{{ club.slug }}</span>
+        </div>
+
+        <div class="club-meta">
+          <div class="meta-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>{{ club.memberCount || 0 }} members</span>
+          </div>
+          <div class="meta-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>{{ formatDate(club.createdAt) }}</span>
+          </div>
+        </div>
+
+        <div class="club-contact">
+          <div class="contact-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <span>{{ club.contactEmail }}</span>
+          </div>
+          <div class="contact-item" *ngIf="club.contactPhone">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span>{{ club.contactPhone }}</span>
+          </div>
+        </div>
+
+        <div class="club-footer">
+          <span class="status-badge" [class.active]="club.status === 'active'" 
+                [class.suspended]="club.status === 'suspended'"
+                [class.trial]="club.status === 'trial'">
+            {{ club.status }}
+          </span>
+          <span class="tier-badge">{{ club.subscriptionTier }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && clubs.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+      </svg>
+    </div>
+    <h2>No Clubs Yet</h2>
+    <p>Get started by creating your first club</p>
+    <button class="create-btn" routerLink="/club-registration">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Create Club
+    </button>
+  </div>
 </div>

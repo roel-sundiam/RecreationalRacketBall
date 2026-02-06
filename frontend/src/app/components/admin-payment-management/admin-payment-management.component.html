@@ -1,4 +1,15 @@
 <div class="payment-management-container">
+  <!-- Club Selector for Superadmins -->
+  <div class="club-filter-section" *ngIf="isSuperAdminOrPlatformAdmin()">
+    <app-club-selector
+      [label]="'Select Club to View'"
+      [showAllOption]="false"
+      [appearance]="'outline'"
+      [initialClubId]="selectedFilterClubId"
+      (clubSelected)="onClubFilterChange($event)">
+    </app-club-selector>
+  </div>
+
   <!-- Header Section -->
   <div class="page-header">
     <div class="header-content">

@@ -38,6 +38,7 @@ export class ClubRegistrationComponent implements OnInit {
   clubInfoForm!: FormGroup;
   addressForm!: FormGroup;
   loading = false;
+  currentStep = 1;
 
   countries = [
     'Philippines',
@@ -166,7 +167,19 @@ export class ClubRegistrationComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/club-selector']);
+    this.router.navigate(['/admin/clubs']);
+  }
+
+  nextStep(): void {
+    if (this.clubInfoForm.valid) {
+      this.currentStep = 2;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  prevStep(): void {
+    this.currentStep = 1;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // Helper method to get current location (browser geolocation)

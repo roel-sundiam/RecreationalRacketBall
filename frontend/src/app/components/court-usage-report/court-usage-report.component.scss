@@ -8,6 +8,24 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+// Club Filter Section (for Superadmins)
+.club-filter-section {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem 0;
+
+  app-club-selector {
+    max-width: 400px;
+    display: block;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+    border-left: 4px solid #3b82f6;
+    backdrop-filter: blur(20px);
+  }
+}
+
 // Header Section
 .page-header {
   background: rgba(255, 255, 255, 0.95);

@@ -11,6 +11,7 @@ import { interval, Subscription } from 'rxjs';
 import { switchMap, filter, tap } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { environment } from '../../../environments/environment';
+import { ClubSelectorComponent, ClubOption } from '../../shared/club-selector/club-selector.component';
 
 interface CourtUsageAPIResponse {
   success: boolean;
@@ -46,9 +47,21 @@ interface CourtUsageData {
     MatTableModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    ClubSelectorComponent,
   ],
   template: `
     <div class="report-container">
+      <!-- Club Selector for Superadmins -->
+      <div class="club-filter-section" *ngIf="isSuperAdminOrPlatformAdmin()">
+        <app-club-selector
+          [label]="'Select Club to View'"
+          [showAllOption]="false"
+          [appearance]="'outline'"
+          [initialClubId]="selectedFilterClubId"
+          (clubSelected)="onClubFilterChange($event)">
+        </app-club-selector>
+      </div>
+
       <!-- Modern Gradient Header -->
       <div class="modern-header">
         <div class="header-content">
@@ -921,6 +934,7 @@ export class CourtUsageReportComponent implements OnInit, OnDestroy {
   lastUpdated: string | null = null;
   autoRefreshEnabled = true;
   nextUpdateCountdown = 30;
+  selectedFilterClubId: string = '';
 
   private apiUrl = environment.apiBaseUrl;
   private autoRefreshSubscription?: Subscription;
@@ -934,6 +948,12 @@ export class CourtUsageReportComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Initialize with current selected club
+    const currentClub = this.authService.selectedClub;
+    if (currentClub && currentClub.clubId) {
+      this.selectedFilterClubId = currentClub.clubId;
+    }
+
     this.loadCourtUsageData();
     this.startAutoRefresh();
   }
@@ -951,11 +971,16 @@ export class CourtUsageReportComponent implements OnInit, OnDestroy {
     console.log('🔗 Court Usage API URL:', apiEndpoint);
     console.log('🌍 Environment:', environment.production ? 'production' : 'development');
 
-    const headers = new HttpHeaders({
+    let headers = new HttpHeaders({
       Authorization: `Bearer ${this.authService.token}`,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     });
+
+    // If superadmin has selected a specific club, add X-Club-Id header
+    if (this.selectedFilterClubId && this.isSuperAdminOrPlatformAdmin()) {
+      headers = headers.set('X-Club-Id', this.selectedFilterClubId);
+    }
 
     this.http
       .get<CourtUsageAPIResponse>(apiEndpoint, {
@@ -1134,5 +1159,22 @@ export class CourtUsageReportComponent implements OnInit, OnDestroy {
     if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
     if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
     return `${Math.floor(diffSeconds / 86400)}d ago`;
+  }
+
+  isSuperAdminOrPlatformAdmin(): boolean {
+    return this.authService.isSuperAdmin() || this.authService.isPlatformAdmin();
+  }
+
+  onClubFilterChange(club: ClubOption | null): void {
+    if (club) {
+      this.selectedFilterClubId = club._id;
+    } else {
+      // If null (All Clubs), use current selected club
+      const currentClub = this.authService.selectedClub;
+      this.selectedFilterClubId = currentClub?.clubId || '';
+    }
+
+    // Reload data with new club filter
+    this.loadCourtUsageData();
   }
 }

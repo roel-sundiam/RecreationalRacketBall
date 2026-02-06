@@ -15,6 +15,7 @@ import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../environments/environment';
 import { ExpenseReportComponent } from '../expense-report/expense-report.component';
 import { ExpenseCategoryManagementComponent } from '../expense-category-management/expense-category-management.component';
+import { ClubSelectorComponent, ClubOption } from '../../shared/club-selector/club-selector.component';
 
 interface FinancialAPIResponse {
   success: boolean;
@@ -97,9 +98,21 @@ interface CourtUsageData {
     MatTooltipModule,
     ExpenseReportComponent,
     ExpenseCategoryManagementComponent,
+    ClubSelectorComponent,
   ],
   template: `
     <div class="financial-statement-container">
+      <!-- Club Selector for Superadmins -->
+      <div class="club-filter-section" *ngIf="isSuperAdminOrPlatformAdmin()">
+        <app-club-selector
+          [label]="'Select Club to View'"
+          [showAllOption]="false"
+          [appearance]="'outline'"
+          [initialClubId]="selectedFilterClubId"
+          (clubSelected)="onClubFilterChange($event)">
+        </app-club-selector>
+      </div>
+
       <!-- Header with Club Logo and Title -->
       <div class="statement-header" *ngIf="!loading && financialData">
         <div class="club-logo" *ngIf="clubLogo">
@@ -292,6 +305,7 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   lastUpdated: string | null = null;
   autoRefreshEnabled = true;
   nextUpdateCountdown = 30;
+  selectedFilterClubId: string = '';
 
   private apiUrl = environment.apiUrl;
   private autoRefreshSubscription?: Subscription;
@@ -307,6 +321,12 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Initialize with current selected club
+    const currentClub = this.authService.selectedClub;
+    if (currentClub && currentClub.clubId) {
+      this.selectedFilterClubId = currentClub.clubId;
+    }
+
     this.loadFinancialStatement();
     this.initializeWebSocket();
     this.startAutoRefresh();
@@ -321,9 +341,14 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    const headers = new HttpHeaders({
+    let headers = new HttpHeaders({
       Authorization: `Bearer ${this.authService.token}`,
     });
+
+    // If superadmin has selected a specific club, add X-Club-Id header
+    if (this.selectedFilterClubId && this.isSuperAdminOrPlatformAdmin()) {
+      headers = headers.set('X-Club-Id', this.selectedFilterClubId);
+    }
 
     // Load financial statement only (2026 uses database-filtered court receipts)
     // Static court usage is only for 2025 archive
@@ -655,5 +680,22 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
   get clubName(): string {
     const selectedClub = this.authService.selectedClub;
     return selectedClub?.club?.name || (selectedClub as any)?.clubName || 'Club';
+  }
+
+  isSuperAdminOrPlatformAdmin(): boolean {
+    return this.authService.isSuperAdmin() || this.authService.isPlatformAdmin();
+  }
+
+  onClubFilterChange(club: ClubOption | null): void {
+    if (club) {
+      this.selectedFilterClubId = club._id;
+    } else {
+      // If null (All Clubs), use current selected club
+      const currentClub = this.authService.selectedClub;
+      this.selectedFilterClubId = currentClub?.clubId || '';
+    }
+
+    // Reload data with new club filter
+    this.loadFinancialStatement();
   }
 }

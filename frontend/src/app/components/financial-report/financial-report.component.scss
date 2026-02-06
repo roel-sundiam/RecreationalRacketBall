@@ -9,6 +9,20 @@
   margin: 0 auto;
 }
 
+// Club Filter Section (for Superadmins)
+.club-filter-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  app-club-selector {
+    max-width: 400px;
+  }
+}
+
 // Header Section
 .statement-header {
   display: flex;

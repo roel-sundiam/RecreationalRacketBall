@@ -22,6 +22,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PaymentEditDialogComponent } from './payment-edit-dialog/payment-edit-dialog.component';
 import { environment } from '../../../environments/environment';
 import { DialogService } from '../../services/dialog.service';
+import { AuthService } from '../../services/auth.service';
+import { ClubSelectorComponent, ClubOption } from '../../shared/club-selector/club-selector.component';
 
 interface Payment {
   _id: string;
@@ -44,6 +46,8 @@ interface Payment {
     date: Date;
     timeSlot: number;
   };
+  clubId?: string;
+  clubName?: string;
   notes?: string;
   recordedBy?: {
     _id: string;
@@ -97,7 +101,8 @@ interface OverdueMemberSummary {
     MatTooltipModule,
     MatMenuModule,
     MatDialogModule,
-    MatTabsModule
+    MatTabsModule,
+    ClubSelectorComponent
   ],
   templateUrl: './admin-payment-management.component.html',
   styleUrl: './admin-payment-management.component.scss'
@@ -117,6 +122,7 @@ export class AdminPaymentManagementComponent implements OnInit {
   searchTerm: string = '';
   dateRangeStart: Date | null = null;
   dateRangeEnd: Date | null = null;
+  selectedFilterClubId: string = '';
 
   // Table
   displayedColumns = ['reference', 'user', 'amount', 'method', 'status', 'type', 'reservationDate', 'paymentDate', 'actions'];
@@ -151,19 +157,33 @@ export class AdminPaymentManagementComponent implements OnInit {
     private http: HttpClient,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    // Initialize with current selected club
+    const currentClub = this.authService.selectedClub;
+    if (currentClub && currentClub.clubId) {
+      this.selectedFilterClubId = currentClub.clubId;
+    }
+
     this.loadPayments();
   }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
-    return new HttpHeaders({
+    let headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
+
+    // If superadmin has selected a specific club, add X-Club-Id header
+    if (this.selectedFilterClubId && this.isSuperAdminOrPlatformAdmin()) {
+      headers = headers.set('X-Club-Id', this.selectedFilterClubId);
+    }
+
+    return headers;
   }
 
   loadPayments(): void {
@@ -548,5 +568,22 @@ export class AdminPaymentManagementComponent implements OnInit {
 
   getTotalOverdueCount(): number {
     return this.overdueSummaries.reduce((sum, member) => sum + member.overdueCount, 0);
+  }
+
+  isSuperAdminOrPlatformAdmin(): boolean {
+    return this.authService.isSuperAdmin() || this.authService.isPlatformAdmin();
+  }
+
+  onClubFilterChange(club: ClubOption | null): void {
+    if (club) {
+      this.selectedFilterClubId = club._id;
+    } else {
+      // If null (All Clubs), use current selected club
+      const currentClub = this.authService.selectedClub;
+      this.selectedFilterClubId = currentClub?.clubId || '';
+    }
+
+    // Reload data with new club filter
+    this.loadPayments();
   }
 }

@@ -1,13 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatBadgeModule } from '@angular/material/badge';
 import { environment } from '../../../../environments/environment';
 
 interface ClubMember {
@@ -44,13 +39,8 @@ interface ClubOverview {
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
-    MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatChipsModule,
-    MatExpansionModule,
-    MatBadgeModule,
   ],
   templateUrl: './platform-overview.html',
   styleUrls: ['./platform-overview.scss'],
@@ -61,6 +51,7 @@ export class PlatformOverviewComponent implements OnInit {
   totalClubs = 0;
   totalMembers = 0;
   totalAdmins = 0;
+  expandedClubs = new Set<string>();
 
   constructor(private http: HttpClient) {}
 
@@ -90,63 +81,16 @@ export class PlatformOverviewComponent implements OnInit {
     this.totalAdmins = this.clubs.reduce((sum, club) => sum + club.adminCount, 0);
   }
 
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'active':
-        return 'primary';
-      case 'trial':
-        return 'accent';
-      case 'suspended':
-        return 'warn';
-      default:
-        return '';
+  toggleClubExpanded(clubId: string): void {
+    if (this.expandedClubs.has(clubId)) {
+      this.expandedClubs.delete(clubId);
+    } else {
+      this.expandedClubs.add(clubId);
     }
   }
 
-  getRoleColor(role: string): string {
-    switch (role) {
-      case 'admin':
-        return 'warn';
-      case 'treasurer':
-        return 'accent';
-      case 'member':
-        return 'primary';
-      default:
-        return '';
-    }
+  isClubExpanded(clubId: string): boolean {
+    return this.expandedClubs.has(clubId);
   }
 
-  getMemberStatusColor(status: string): string {
-    switch (status) {
-      case 'approved':
-        return 'primary';
-      case 'pending':
-        return 'accent';
-      case 'rejected':
-        return 'warn';
-      case 'suspended':
-        return 'warn';
-      default:
-        return '';
-    }
-  }
-
-  adjustColor(color: string): string {
-    // Darken the color slightly for gradient effect
-    try {
-      const hex = color.replace('#', '');
-      const r = parseInt(hex.substr(0, 2), 16);
-      const g = parseInt(hex.substr(2, 2), 16);
-      const b = parseInt(hex.substr(4, 2), 16);
-
-      const darkenFactor = 0.8;
-      const newR = Math.floor(r * darkenFactor);
-      const newG = Math.floor(g * darkenFactor);
-      const newB = Math.floor(b * darkenFactor);
-
-      return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-    } catch {
-      return color;
-    }
-  }
 }

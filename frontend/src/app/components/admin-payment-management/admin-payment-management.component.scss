@@ -5,6 +5,21 @@
   padding: 20px;
 }
 
+// Club Filter Section (for Superadmins)
+.club-filter-section {
+  margin-bottom: 20px;
+
+  app-club-selector {
+    max-width: 400px;
+    display: block;
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #4f46e5;
+  }
+}
+
 // Page Header
 .page-header {
   background: white;

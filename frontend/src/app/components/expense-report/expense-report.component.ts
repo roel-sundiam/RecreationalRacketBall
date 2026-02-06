@@ -20,13 +20,14 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSortModule } from '@angular/material/sort';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import {
   ConfirmationDialogComponent,
   ConfirmationDialogData,
 } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import { environment } from '../../../environments/environment';
+import { ClubSelectorComponent, ClubOption } from '../../shared/club-selector/club-selector.component';
 
 interface Expense {
   _id?: string;
@@ -34,6 +35,8 @@ interface Expense {
   amount: number;
   details: string;
   category: string;
+  clubId?: string;
+  clubName?: string;
   createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -85,9 +88,21 @@ interface ExpenseResponse {
     MatDatepickerModule,
     MatNativeDateModule,
     MatSortModule,
+    ClubSelectorComponent,
   ],
   template: `
     <div class="page-container">
+      <!-- Club Selector for Superadmins -->
+      <div class="club-filter-section" *ngIf="isSuperAdminOrPlatformAdmin()">
+        <app-club-selector
+          [label]="'Select Club to View'"
+          [showAllOption]="false"
+          [appearance]="'outline'"
+          [initialClubId]="selectedFilterClubId"
+          (clubSelected)="onClubFilterChange($event)">
+        </app-club-selector>
+      </div>
+
       <!-- Modern Header -->
       <div class="page-header">
         <div class="header-content">
@@ -401,6 +416,7 @@ export class ExpenseReportComponent implements OnInit {
 
   // Filters
   selectedCategory = 'all';
+  selectedFilterClubId: string = '';
 
   // State
   loading = false;
@@ -428,6 +444,12 @@ export class ExpenseReportComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Initialize with current selected club
+    const currentClub = this.authService.selectedClub;
+    if (currentClub && currentClub.clubId) {
+      this.selectedFilterClubId = currentClub.clubId;
+    }
+
     this.loadExpenseCategories();
     this.loadExpenses();
   }
@@ -458,7 +480,13 @@ export class ExpenseReportComponent implements OnInit {
       params.category = this.selectedCategory;
     }
 
-    this.http.get<ExpenseResponse>(`${environment.apiUrl}/expenses`, { params }).subscribe({
+    // Add X-Club-Id header if superadmin has selected a specific club
+    let headers = new HttpHeaders();
+    if (this.selectedFilterClubId && this.isSuperAdminOrPlatformAdmin()) {
+      headers = headers.set('X-Club-Id', this.selectedFilterClubId);
+    }
+
+    this.http.get<ExpenseResponse>(`${environment.apiUrl}/expenses`, { params, headers }).subscribe({
       next: (response) => {
         if (response.success) {
           this.expenses = response.data.expenses;
@@ -604,5 +632,23 @@ export class ExpenseReportComponent implements OnInit {
       duration: 3000,
       panelClass: type === 'success' ? 'success-snackbar' : 'error-snackbar',
     });
+  }
+
+  isSuperAdminOrPlatformAdmin(): boolean {
+    return this.authService.isSuperAdmin() || this.authService.isPlatformAdmin();
+  }
+
+  onClubFilterChange(club: ClubOption | null): void {
+    if (club) {
+      this.selectedFilterClubId = club._id;
+    } else {
+      // If null (All Clubs), use current selected club
+      const currentClub = this.authService.selectedClub;
+      this.selectedFilterClubId = currentClub?.clubId || '';
+    }
+
+    // Reset pagination and reload data with new club filter
+    this.currentPage = 1;
+    this.loadExpenses();
   }
 }

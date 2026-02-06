@@ -10,7 +10,7 @@
 
   &.with-toolbar {
     min-height: calc(100vh - 70px);
-    padding-top: 60px; // Add padding for fixed resurfacing banner
+    padding-top: 0; // Remove padding to eliminate white space
   }
 
   &:not(.with-toolbar) {
@@ -21,7 +21,13 @@
 /* Global Page Styles */
 .page-container {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e0 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 /* Responsive */

@@ -25,14 +25,16 @@
     >
       <div class="menu-club-item">
         <div class="menu-club-logo" *ngIf="club.club?.logo || club.clubLogo">
-          <img [src]="club.club?.logo || club.clubLogo" [alt]="club.club?.name || club.clubName">
+          <img [src]="club.club?.logo || club.clubLogo" [alt]="club.club?.name || club.clubName" />
         </div>
         <div class="menu-club-logo placeholder" *ngIf="!club.club?.logo && !club.clubLogo">
           <mat-icon>sports_tennis</mat-icon>
         </div>
 
         <div class="menu-club-info">
-          <span class="menu-club-name">{{ club.club?.name || club.clubName || 'Unknown Club' }}</span>
+          <span class="menu-club-name">{{
+            club.club?.name || club.clubName || 'Unknown Club'
+          }}</span>
           <span class="menu-club-role" [style.color]="getRoleColor(club.role)">
             <mat-icon [inline]="true">{{ getRoleIcon(club.role) }}</mat-icon>
             {{ club.role | titlecase }}

@@ -197,7 +197,7 @@ export const getReservations = asyncHandler(
       total: total,
       filterClubId: filter.clubId?.toString(),
     });
-    
+
     const reservations = await Reservation.find(filter)
       .populate("userId", "username fullName email")
       .sort({ date: 1, timeSlot: 1 })

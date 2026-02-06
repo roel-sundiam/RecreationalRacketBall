@@ -1201,27 +1201,25 @@ export class PaymentsComponent implements OnInit, OnDestroy {
     this.setupManualPaymentFormValidation();
 
     // Check for query parameters first (from notification "Pay Now")
-    this.route.queryParams
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
-        if (params['tab']) {
-          this.activeTab = params['tab'];
-        }
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      if (params['tab']) {
+        this.activeTab = params['tab'];
+      }
 
-        // Always load pending payments
-        this.loadPendingPayments();
+      // Always load pending payments
+      this.loadPendingPayments();
 
-        if (params['reservationId']) {
-          // Auto-populate the form with the specific reservation
-          this.handleDirectPayment(params['reservationId']);
-        }
-      });
+      if (params['reservationId']) {
+        // Auto-populate the form with the specific reservation
+        this.handleDirectPayment(params['reservationId']);
+      }
+    });
 
     // Subscribe to club changes to reload pending payments AFTER component is initialized
     this.authService.selectedClub$
       .pipe(
         skip(1), // Skip initial emission to only react to actual club switches
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((club) => {
         console.log('🏢 PAYMENTS: Club switched to', club?.clubId);
@@ -1285,7 +1283,7 @@ export class PaymentsComponent implements OnInit, OnDestroy {
     this.loadingUnpaid = true;
     const currentClub = this.authService.selectedClub;
     const cacheBuster = bustCache ? `&_t=${Date.now()}` : '';
-    
+
     if (bustCache) {
       console.log('🔄 PAYMENTS: Reloading for club', currentClub?.clubId, 'with cache bust');
     }

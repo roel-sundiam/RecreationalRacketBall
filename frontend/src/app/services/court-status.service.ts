@@ -42,7 +42,7 @@ interface Reservation {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CourtStatusService implements OnDestroy {
   private apiUrl = environment.apiUrl || 'http://localhost:3000/api';
@@ -51,12 +51,12 @@ export class CourtStatusService implements OnDestroy {
   private refreshIntervalSubscription: any;
   private clubChangeSubscription: Subscription | null = null;
 
-  private readonly COURT_OPEN_HOUR = 5;  // 5 AM
+  private readonly COURT_OPEN_HOUR = 5; // 5 AM
   private readonly COURT_CLOSE_HOUR = 22; // 10 PM
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
     // Subscribe to club changes to refresh data when club is switched
     this.clubChangeSubscription = this.authService.selectedClub$.subscribe((club) => {
@@ -84,13 +84,13 @@ export class CourtStatusService implements OnDestroy {
    */
   getCurrentStatus(): Observable<CourtStatusData> {
     return this.status$.pipe(
-      switchMap(status => {
+      switchMap((status) => {
         if (status === null) {
           // Initial fetch
           return this.fetchAndProcessStatus();
         }
         return of(status);
-      })
+      }),
     );
   }
 
@@ -109,9 +109,9 @@ export class CourtStatusService implements OnDestroy {
     this.refreshStatus();
 
     // Set up 60-second interval
-    this.refreshIntervalSubscription = interval(60000).pipe(
-      switchMap(() => this.fetchAndProcessStatus())
-    ).subscribe();
+    this.refreshIntervalSubscription = interval(60000)
+      .pipe(switchMap(() => this.fetchAndProcessStatus()))
+      .subscribe();
   }
 
   /**
@@ -142,14 +142,14 @@ export class CourtStatusService implements OnDestroy {
         next: { exists: false, timeRange: '', players: [], isBlocked: false },
         courtStatus: 'available',
         lastUpdated: new Date(),
-        hasAnyReservationsToday: false
+        hasAnyReservationsToday: false,
       };
       return of(emptyStatus);
     }
 
     const todayStr = this.getTodayDateString();
     const apiUrl = `${this.apiUrl}/reservations/date/${todayStr}`;
-    
+
     console.log('📡 CourtStatusService making API request:', {
       url: apiUrl,
       club: selectedClub?.clubName,
@@ -157,7 +157,7 @@ export class CourtStatusService implements OnDestroy {
     });
 
     return this.http.get<any>(apiUrl).pipe(
-      map(response => {
+      map((response) => {
         console.log('✅ Court status API response received:', {
           statusCode: 200,
           dataCount: Array.isArray(response.data) ? response.data.length : 0,
@@ -191,12 +191,12 @@ export class CourtStatusService implements OnDestroy {
         console.log('Processing', reservations.length, 'reservations');
         return this.processReservations(reservations);
       }),
-      tap(status => this.statusSubject.next(status)),
-      catchError(error => {
+      tap((status) => this.statusSubject.next(status)),
+      catchError((error) => {
         console.error('Court status fetch failed:', error);
         // Return empty status on error
         return of(this.getEmptyStatus());
-      })
+      }),
     );
   }
 
@@ -213,11 +213,11 @@ export class CourtStatusService implements OnDestroy {
 
     // Filter active reservations (not cancelled)
     const activeReservations = reservations.filter(
-      r => r.status !== 'cancelled' && r.status !== 'no-show'
+      (r) => r.status !== 'cancelled' && r.status !== 'no-show',
     );
 
     console.log('📋 Active Reservations:', activeReservations.length);
-    activeReservations.forEach(r => {
+    activeReservations.forEach((r) => {
       console.log(`  - ${r.timeSlot}:00-${r.endTimeSlot}:00 (${r.status})`, r);
     });
 
@@ -251,7 +251,7 @@ export class CourtStatusService implements OnDestroy {
 
     // Next reservation: first one that starts after current hour (not including current reservation)
     const sortedReservations = activeReservations
-      .filter(r => {
+      .filter((r) => {
         // Exclude current reservation if it exists
         if (currentReservation && r._id === currentReservation._id) {
           return false;
@@ -265,7 +265,12 @@ export class CourtStatusService implements OnDestroy {
 
     if (sortedReservations.length > 0) {
       nextReservation = sortedReservations[0];
-      console.log('✅ Found NEXT reservation:', nextReservation.timeSlot, '-', nextReservation.endTimeSlot);
+      console.log(
+        '✅ Found NEXT reservation:',
+        nextReservation.timeSlot,
+        '-',
+        nextReservation.endTimeSlot,
+      );
     } else {
       console.log('❌ No next reservation');
     }
@@ -280,7 +285,7 @@ export class CourtStatusService implements OnDestroy {
         : this.getEmptySlotInfo('No Upcoming Reservation'),
       courtStatus: activeReservations.length === 0 ? 'available' : 'open',
       lastUpdated: new Date(),
-      hasAnyReservationsToday: activeReservations.length > 0
+      hasAnyReservationsToday: activeReservations.length > 0,
     };
 
     return statusData;
@@ -299,8 +304,8 @@ export class CourtStatusService implements OnDestroy {
         isBlocked: true,
         blockInfo: {
           reason: reservation.blockReason || 'maintenance',
-          notes: reservation.blockNotes || 'Court temporarily unavailable'
-        }
+          notes: reservation.blockNotes || 'Court temporarily unavailable',
+        },
       };
     }
 
@@ -311,7 +316,7 @@ export class CourtStatusService implements OnDestroy {
       exists: true,
       timeRange: this.formatTimeRange(reservation.timeSlot, reservation.endTimeSlot),
       players: players,
-      isBlocked: false
+      isBlocked: false,
     };
   }
 
@@ -347,7 +352,7 @@ export class CourtStatusService implements OnDestroy {
       name: name,
       isGuest: isGuest,
       initials: this.getInitials(name),
-      avatarColor: this.getAvatarColor(name)
+      avatarColor: this.getAvatarColor(name),
     };
   }
 
@@ -374,12 +379,10 @@ export class CourtStatusService implements OnDestroy {
       '#8b5cf6', // purple
       '#ec4899', // pink
       '#06b6d4', // cyan
-      '#f97316'  // orange
+      '#f97316', // orange
     ];
 
-    const hash = name.split('').reduce((acc, char) =>
-      char.charCodeAt(0) + ((acc << 5) - acc), 0
-    );
+    const hash = name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
 
     return colors[Math.abs(hash) % colors.length];
   }
@@ -406,7 +409,7 @@ export class CourtStatusService implements OnDestroy {
       exists: false,
       timeRange: message,
       players: [],
-      isBlocked: false
+      isBlocked: false,
     };
   }
 
@@ -416,7 +419,7 @@ export class CourtStatusService implements OnDestroy {
   private getBeforeHoursStatus(reservations: Reservation[]): CourtStatusData {
     // Find first reservation of the day
     const firstRes = reservations
-      .filter(r => r.status !== 'blocked')
+      .filter((r) => r.status !== 'blocked')
       .sort((a, b) => a.timeSlot - b.timeSlot)[0];
 
     return {
@@ -426,7 +429,7 @@ export class CourtStatusService implements OnDestroy {
         : this.getEmptySlotInfo('No Reservations Today'),
       courtStatus: 'closed',
       lastUpdated: new Date(),
-      hasAnyReservationsToday: reservations.length > 0
+      hasAnyReservationsToday: reservations.length > 0,
     };
   }
 
@@ -439,7 +442,7 @@ export class CourtStatusService implements OnDestroy {
       next: this.getEmptySlotInfo('Opens Tomorrow at 5:00 AM'),
       courtStatus: 'closed',
       lastUpdated: new Date(),
-      hasAnyReservationsToday: false
+      hasAnyReservationsToday: false,
     };
   }
 
@@ -452,7 +455,7 @@ export class CourtStatusService implements OnDestroy {
       next: this.getEmptySlotInfo(''),
       courtStatus: 'available',
       lastUpdated: new Date(),
-      hasAnyReservationsToday: false
+      hasAnyReservationsToday: false,
     };
   }
 

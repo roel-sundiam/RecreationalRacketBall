@@ -114,7 +114,10 @@ export const extractClubContext = async (
     if (!clubId && (req as any).user?.selectedClubId) {
       clubId = (req as any).user.selectedClubId;
       clubIdSource = "JWT selectedClubId (FALLBACK)";
-      console.log("  ⚠️ Using JWT selectedClubId (header was missing):", clubId);
+      console.log(
+        "  ⚠️ Using JWT selectedClubId (header was missing):",
+        clubId,
+      );
     }
 
     // 3. From request body

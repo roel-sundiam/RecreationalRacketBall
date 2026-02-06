@@ -401,7 +401,10 @@ reservationSchema.statics.isSlotAvailable = async function (
 };
 
 // Static method to get reservations for a specific date
-reservationSchema.statics.getReservationsForDate = async function (date: Date, clubId?: string) {
+reservationSchema.statics.getReservationsForDate = async function (
+  date: Date,
+  clubId?: string,
+) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
 
@@ -415,7 +418,7 @@ reservationSchema.statics.getReservationsForDate = async function (date: Date, c
         $lte: endOfDay,
       },
     };
-    
+
     // Add clubId filter if provided
     if (clubId) {
       query.clubId = clubId;

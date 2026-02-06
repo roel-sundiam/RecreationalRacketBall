@@ -550,8 +550,11 @@ export class AuthService {
     });
 
     this.selectedClubSubject.next(club);
-    console.log('🔐 AUTH SERVICE - selectedClubSubject updated, new value:', this.selectedClubSubject.value);
-    
+    console.log(
+      '🔐 AUTH SERVICE - selectedClubSubject updated, new value:',
+      this.selectedClubSubject.value,
+    );
+
     localStorage.setItem('selectedClub', JSON.stringify(club));
     console.log('🔐 AUTH SERVICE - localStorage updated with club:', club.clubId);
     console.log('🏢 Selected club:', club.club?.name || club.clubId);
@@ -790,15 +793,19 @@ export class AuthService {
    */
   getLoginRedirectPath(): string {
     const approvedClubs = this.approvedClubs;
-    
+
     if (approvedClubs.length === 1) {
       // Auto-select single club
       this.selectClub(approvedClubs[0]);
-      console.log('🏢 Single club user - auto-selected:', approvedClubs[0].club?.name || approvedClubs[0].clubId);
+      console.log(
+        '🏢 Single club user - auto-selected:',
+        approvedClubs[0].club?.name || approvedClubs[0].clubId,
+      );
       return '/dashboard';
     } else {
       // Multiple clubs - show selector
       console.log('🏢 Multiple clubs - redirect to selector:', approvedClubs.length, 'clubs');
       return '/club-selector';
     }
-  }}
+  }
+}

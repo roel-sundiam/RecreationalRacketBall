@@ -4,6 +4,7 @@ import User from '../models/User';
 import ImpersonationLog from '../models/ImpersonationLog';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
+import { getUserClubsWithRoles } from '../middleware/club';
 
 /**
  * Generate JWT token with optional impersonation claims
@@ -14,7 +15,9 @@ const generateToken = (
     adminId: string;
     impersonatedUserId: string;
     startedAt: number;
-  }
+  },
+  selectedClubId?: string,
+  clubRoles?: { [clubId: string]: string }
 ): string => {
   const jwtSecret = process.env.JWT_SECRET;
   const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '7d';
@@ -23,7 +26,7 @@ const generateToken = (
     throw new Error('JWT_SECRET is not defined');
   }
 
-  const payload: any = { userId };
+  const payload: any = { userId, selectedClubId, clubRoles: clubRoles || {} };
 
   if (impersonation) {
     payload.impersonation = impersonation;
@@ -81,13 +84,24 @@ export const startImpersonation = asyncHandler(async (req: AuthenticatedRequest,
     return;
   }
 
-  // Generate new JWT with impersonation claims
+  // Get target user's clubs for the JWT and response
+  const clubs = await getUserClubsWithRoles(targetUser._id);
+  const clubRoles: { [clubId: string]: string } = {};
+  clubs.forEach(club => {
+    if (club.status === 'approved') {
+      clubRoles[club.clubId] = club.role;
+    }
+  });
+  const approvedClubs = clubs.filter(c => c.status === 'approved');
+  const selectedClubId = approvedClubs.length > 0 ? approvedClubs[0]?.clubId : undefined;
+
+  // Generate new JWT with impersonation claims and club info
   const startedAt = Date.now();
   const token = generateToken(targetUser._id.toString(), {
     adminId: adminUser._id.toString(),
     impersonatedUserId: targetUser._id.toString(),
     startedAt
-  });
+  }, selectedClubId, clubRoles);
 
   // Create impersonation log entry
   const impersonationLog = new ImpersonationLog({
@@ -120,6 +134,7 @@ export const startImpersonation = asyncHandler(async (req: AuthenticatedRequest,
         fullName: adminUser.fullName,
         role: adminUser.role
       },
+      clubs,
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
       impersonationLogId: impersonationLog._id
     },

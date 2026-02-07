@@ -696,15 +696,22 @@ export class AuthService {
   startImpersonation(userId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/impersonation/start/${userId}`, {}).pipe(
       tap((response: any) => {
-        const { token, user, adminUser, expiresIn } = response.data;
+        const { token, user, adminUser, clubs, expiresIn } = response.data;
+
+        // Save admin state before overwriting so we can restore on stop
+        localStorage.setItem('adminToken', localStorage.getItem('token') || '');
+        localStorage.setItem('adminUser', localStorage.getItem('user') || '');
+        localStorage.setItem('adminClubs', localStorage.getItem('clubs') || '[]');
+        localStorage.setItem('adminSelectedClub', localStorage.getItem('selectedClub') || '');
 
         // Calculate token expiration
         const expirationTimestamp = this.calculateExpirationTimestamp(expiresIn);
 
-        // Update localStorage
+        // Update localStorage with impersonated user's data
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
+        localStorage.setItem('clubs', JSON.stringify(clubs || []));
         localStorage.setItem(
           'impersonation',
           JSON.stringify({
@@ -717,12 +724,19 @@ export class AuthService {
         // Update subjects
         this.tokenSubject.next(token);
         this.currentUserSubject.next(user);
+        this.clubsSubject.next(clubs || []);
         this.impersonationSubject.next({
           isImpersonating: true,
           adminUser,
           impersonatedUser: user,
           startedAt: new Date(),
         });
+
+        // Auto-select the impersonated user's club
+        const approvedClubs = (clubs || []).filter((c: any) => c.status === 'approved');
+        if (approvedClubs.length > 0) {
+          this.selectClub(approvedClubs[0]);
+        }
 
         console.log(`👥 Impersonation started: ${adminUser.username} → ${user.username}`);
       }),
@@ -745,6 +759,26 @@ export class AuthService {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('tokenExpiration', expirationTimestamp.toString());
+
+        // Restore admin's clubs and selected club
+        const adminClubs = localStorage.getItem('adminClubs');
+        const adminSelectedClub = localStorage.getItem('adminSelectedClub');
+        if (adminClubs) {
+          localStorage.setItem('clubs', adminClubs);
+          try {
+            this.clubsSubject.next(JSON.parse(adminClubs));
+          } catch { /* ignore parse errors */ }
+        }
+        if (adminSelectedClub) {
+          localStorage.setItem('selectedClub', adminSelectedClub);
+          try {
+            this.selectedClubSubject.next(JSON.parse(adminSelectedClub));
+          } catch { /* ignore parse errors */ }
+        }
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem('adminClubs');
+        localStorage.removeItem('adminSelectedClub');
 
         // Update subjects
         this.tokenSubject.next(token);

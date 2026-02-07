@@ -51,9 +51,12 @@ import { Subscription } from 'rxjs';
           (keydown.space)="handleLogoClick()"
         >
           <div class="logo-icon">
-            <img *ngIf="clubLogo" [src]="clubLogo" [alt]="clubName" class="club-logo" />
+            <!-- Superadmin: generic racket icon -->
+            <mat-icon *ngIf="isSuperAdmin" class="superadmin-logo">sports_tennis</mat-icon>
+            <!-- Regular users: club logo -->
+            <img *ngIf="!isSuperAdmin && clubLogo" [src]="clubLogo" [alt]="clubName" class="club-logo" />
             <img
-              *ngIf="!clubLogo"
+              *ngIf="!isSuperAdmin && !clubLogo"
               src="images/rt2-logo.png"
               alt="Rich Town 2 Tennis Club"
               class="club-logo"
@@ -351,10 +354,18 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       this.currentUser = user;
       this.isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
       this.isSuperAdmin = user?.role === 'superadmin';
+      if (this.isSuperAdmin) {
+        this.clubName = 'RecRacketBall';
+        this.clubLogo = null;
+      }
     });
 
     // Subscribe to selected club changes
     this.clubSubscription = this.authService.selectedClub$.subscribe((club) => {
+      // Superadmins don't belong to a club — keep platform branding
+      if (this.isSuperAdmin) {
+        return;
+      }
       if (club) {
         // Extract club name
         this.clubName = club.club?.name || (club as any).clubName || 'Rich Town 2 Tennis Club';

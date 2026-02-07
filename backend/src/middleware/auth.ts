@@ -120,6 +120,7 @@ export const authenticateToken = async (
       _id: user._id, // Add _id for controller compatibility
       userId: user._id.toString(),
       username: user.username, // Add username for debugging
+      fullName: user.fullName, // Include fullName for impersonation logging
       role: user.role, // Add role for backward compatibility
       platformRole: user.platformRole || decoded.platformRole || "user",
       selectedClubId: decoded.selectedClubId,

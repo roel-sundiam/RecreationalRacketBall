@@ -1,5 +1,7 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AnalyticsService } from './services/analytics.service';
 import { PWANotificationService } from './services/pwa-notification.service';
 import { WebSocketService } from './services/websocket.service';
@@ -15,8 +17,10 @@ import { LayoutComponent } from './shared/layout/layout.component';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   protected readonly title = signal('Rich Town 2 Tennis Club');
+  private clubSub?: Subscription;
+  private readonly defaultTitle = 'Court Reservations';
 
   constructor(
     private analyticsService: AnalyticsService,
@@ -25,7 +29,8 @@ export class App implements OnInit {
     private appUpdateService: AppUpdateService,
     private sessionMonitorService: SessionMonitorService,
     private activityMonitorService: ActivityMonitorService,
-    private authService: AuthService
+    private authService: AuthService,
+    private titleService: Title
   ) {
     console.log('🚀 App component constructor called');
     // Services will be initialized automatically
@@ -59,5 +64,21 @@ export class App implements OnInit {
         this.activityMonitorService.initializeAdminNotifications();
       }
     });
+
+    // Update browser tab title based on selected club
+    this.clubSub = this.authService.selectedClub$.subscribe(club => {
+      const clubName = club?.club?.name || club?.clubName;
+      if (clubName) {
+        this.title.set(clubName);
+        this.titleService.setTitle(`${clubName} - ${this.defaultTitle}`);
+      } else {
+        this.title.set('Court Reservations');
+        this.titleService.setTitle(this.defaultTitle);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.clubSub?.unsubscribe();
   }
 }

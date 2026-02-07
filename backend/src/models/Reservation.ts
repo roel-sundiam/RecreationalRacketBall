@@ -356,6 +356,7 @@ reservationSchema.statics.isSlotRangeAvailable = async function (
   startTimeSlot: number,
   endTimeSlot: number,
   excludeId?: string,
+  clubId?: string,
 ) {
   // Check for any existing reservations that would conflict with the requested range
   const query: any = {
@@ -382,6 +383,10 @@ reservationSchema.statics.isSlotRangeAvailable = async function (
     query._id = { $ne: excludeId };
   }
 
+  if (clubId) {
+    query.clubId = clubId;
+  }
+
   const conflictingReservations = await this.find(query);
   return conflictingReservations.length === 0;
 };
@@ -391,12 +396,14 @@ reservationSchema.statics.isSlotAvailable = async function (
   date: Date,
   timeSlot: number,
   excludeId?: string,
+  clubId?: string,
 ) {
   return await (this as any).isSlotRangeAvailable(
     date,
     timeSlot,
     timeSlot + 1,
     excludeId,
+    clubId,
   );
 };
 

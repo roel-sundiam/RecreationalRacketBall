@@ -1969,26 +1969,17 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   updateReservation(): void {
     const formValue = this.reservationForm.value;
 
-    // Collect all valid players (with userId if from dropdown, or just name if custom)
-    const players: Array<string | { name: string; userId: string }> = [];
+    // Collect all valid player names as strings (backend handles member matching)
+    const players: string[] = [];
 
-    // Add member players with userId if available
-    this.playersArray.controls.forEach((control, index) => {
+    // Add member players
+    this.playersArray.controls.forEach((control) => {
       if (control.value && control.value.trim()) {
-        const playerName = control.value.trim();
-        const userId = this.selectedMemberIds[index];
-
-        if (userId) {
-          // Member selected from dropdown - send with userId
-          players.push({ name: playerName, userId: userId });
-        } else {
-          // Manually entered name - send as string
-          players.push(playerName);
-        }
+        players.push(control.value.trim());
       }
     });
 
-    // Add custom players (guests - no userId)
+    // Add custom players (guests)
     this.customPlayerNames.forEach((name) => {
       if (name && name.trim()) {
         players.push(name.trim());
@@ -2038,32 +2029,20 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   createReservation(): void {
     const formValue = this.reservationForm.value;
 
-    // Collect all valid players (with userId if from dropdown, or just name if custom)
-    const players: Array<string | { name: string; userId: string }> = [];
+    // Collect all valid player names as strings (backend handles member matching)
+    const players: string[] = [];
 
-    // Add member players with userId if available
-    this.playersArray.controls.forEach((control, index) => {
+    // Add member players
+    this.playersArray.controls.forEach((control) => {
       if (control.value && control.value.trim()) {
-        const playerName = control.value.trim();
-        const userId = this.selectedMemberIds[index];
-
-        if (userId) {
-          // Member selected from dropdown - send with userId
-          players.push({ name: playerName, userId: userId });
-          console.log(`➕ Adding member with userId: ${playerName} (${userId})`);
-        } else {
-          // Manually entered name - send as string
-          players.push(playerName);
-          console.log(`➕ Adding player as string: ${playerName}`);
-        }
+        players.push(control.value.trim());
       }
     });
 
-    // Add custom players (guests - no userId)
+    // Add custom players (guests)
     this.customPlayerNames.forEach((name) => {
       if (name && name.trim()) {
         players.push(name.trim());
-        console.log(`➕ Adding custom player: ${name.trim()}`);
       }
     });
 

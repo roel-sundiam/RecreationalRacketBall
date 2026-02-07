@@ -18,7 +18,7 @@ import {
   deleteBlockedReservation,
   blockCourtValidation
 } from '../controllers/reservationController';
-import { requireAdmin, requireApprovedUser, requireMembershipFees, authenticateToken } from '../middleware/auth';
+import { requireAdmin, requireApprovedUser, authenticateToken } from '../middleware/auth';
 import { extractClubContext, requireClubRole } from '../middleware/club';
 import { validateRequest } from '../middleware/validation';
 
@@ -42,17 +42,15 @@ router.get('/date/:date', getReservationsForDate);
 // Get single reservation
 router.get('/:id', getReservation);
 
-// Create new reservation (requires membership fees paid)
-router.post('/', 
-  requireMembershipFees,
+// Create new reservation
+router.post('/',
   createReservationValidation,
   validateRequest,
   createReservation
 );
 
-// Update reservation (requires membership fees paid)
+// Update reservation
 router.put('/:id',
-  requireMembershipFees,
   updateReservationValidation,
   validateRequest,
   updateReservation

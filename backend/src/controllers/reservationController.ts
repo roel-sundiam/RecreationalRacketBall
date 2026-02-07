@@ -657,6 +657,8 @@ export const createReservation = asyncHandler(
       reservationDate,
       timeSlot,
       endTimeSlot,
+      undefined,
+      req.clubId,
     );
     if (!isAvailable) {
       const conflictMessage =
@@ -739,15 +741,6 @@ export const createReservation = asyncHandler(
       res.status(400).json({
         success: false,
         error: "At least one player is required",
-      });
-      return;
-    }
-
-    // Check if user has paid membership fees
-    if (!req.user.membershipFeesPaid && req.user.role === "member") {
-      res.status(400).json({
-        success: false,
-        error: "Membership fees must be paid before making reservations",
       });
       return;
     }
@@ -1148,6 +1141,7 @@ export const updateReservation = asyncHandler(
         newDate,
         newTimeSlot,
         id,
+        req.clubId,
       );
       if (!isAvailable) {
         res.status(400).json({
@@ -1916,6 +1910,8 @@ export const blockCourt = asyncHandler(
       blockDate,
       timeSlot,
       endTimeSlot,
+      undefined,
+      req.clubId,
     );
     if (!isAvailable) {
       res.status(400).json({
@@ -2099,6 +2095,7 @@ export const updateBlockedReservation = asyncHandler(
       reservation.timeSlot,
       endTimeSlot,
       id,
+      req.clubId,
     );
 
     if (!isAvailable) {

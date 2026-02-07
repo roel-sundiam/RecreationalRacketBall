@@ -287,9 +287,14 @@ router.get(
       const userActivityCount = await UserActivity.aggregate([
         { $match: { timestamp: { $gte: fromDate, $lte: toDate } } },
         {
+          $addFields: {
+            userIdObj: { $toObjectId: "$userId" },
+          },
+        },
+        {
           $lookup: {
             from: "users",
-            localField: "userId",
+            localField: "userIdObj",
             foreignField: "_id",
             as: "user",
           },
@@ -368,9 +373,14 @@ router.get(
       const userActivity = await UserActivity.aggregate([
         { $match: { timestamp: { $gte: fromDate, $lte: toDate } } },
         {
+          $addFields: {
+            userIdObj: { $toObjectId: "$userId" },
+          },
+        },
+        {
           $lookup: {
             from: "users",
-            localField: "userId",
+            localField: "userIdObj",
             foreignField: "_id",
             as: "user",
           },
@@ -384,6 +394,7 @@ router.get(
           $group: {
             _id: "$action",
             count: { $sum: 1 },
+            uniqueUserIds: { $addToSet: "$userId" },
           },
         },
         { $sort: { count: -1 } },
@@ -391,7 +402,7 @@ router.get(
           $project: {
             action: "$_id",
             count: 1,
-            uniqueUsers: "$count", // Simplified for now
+            uniqueUsers: { $size: "$uniqueUserIds" },
             _id: 0,
           },
         },
@@ -406,9 +417,14 @@ router.get(
           },
         },
         {
+          $addFields: {
+            userIdObj: { $toObjectId: "$userId" },
+          },
+        },
+        {
           $lookup: {
             from: "users",
-            localField: "userId",
+            localField: "userIdObj",
             foreignField: "_id",
             as: "user",
           },
@@ -713,9 +729,14 @@ router.get(
       const activities = await UserActivity.aggregate([
         { $match: matchConditions },
         {
+          $addFields: {
+            userIdObj: { $toObjectId: "$userId" },
+          },
+        },
+        {
           $lookup: {
             from: "users",
-            localField: "userId",
+            localField: "userIdObj",
             foreignField: "_id",
             as: "user",
           },
@@ -729,7 +750,7 @@ router.get(
         {
           $lookup: {
             from: "clubmemberships",
-            localField: "userId",
+            localField: "userIdObj",
             foreignField: "userId",
             as: "memberships",
           },
@@ -791,9 +812,14 @@ router.get(
       const totalCountResult = await UserActivity.aggregate([
         { $match: matchConditions },
         {
+          $addFields: {
+            userIdObj: { $toObjectId: "$userId" },
+          },
+        },
+        {
           $lookup: {
             from: "users",
-            localField: "userId",
+            localField: "userIdObj",
             foreignField: "_id",
             as: "user",
           },

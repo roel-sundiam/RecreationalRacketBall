@@ -5,9 +5,6 @@ import { HttpClient } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -48,9 +45,6 @@ interface ActivityHistoryItem {
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatTabsModule,
@@ -312,38 +306,42 @@ interface ActivityHistoryItem {
                     <mat-card-header>
                       <mat-card-title>Recent Activity History</mat-card-title>
                       <div class="activity-filters">
-                        <mat-form-field appearance="outline">
-                          <mat-label>Action</mat-label>
-                          <mat-select
-                            [(value)]="activityFilters.action"
-                            (selectionChange)="loadActivityHistory()"
+                        <div class="filter-group">
+                          <label for="action-select">Action</label>
+                          <select
+                            id="action-select"
+                            class="native-select"
+                            [(ngModel)]="activityFilters.action"
+                            (change)="loadActivityHistory()"
                           >
-                            <mat-option value="">All Actions</mat-option>
-                            <mat-option value="login">Login</mat-option>
-                            <mat-option value="logout">Logout</mat-option>
-                            <mat-option value="book_court">Book Court</mat-option>
-                            <mat-option value="make_payment">Make Payment</mat-option>
-                            <mat-option value="view_schedule">View Schedule</mat-option>
-                            <mat-option value="submit_suggestion">Submit Suggestion</mat-option>
-                            <mat-option value="vote_poll">Vote Poll</mat-option>
-                            <mat-option value="partner_click">Partner Click</mat-option>
-                          </mat-select>
-                        </mat-form-field>
+                            <option value="">All Actions</option>
+                            <option value="login">Login</option>
+                            <option value="logout">Logout</option>
+                            <option value="book_court">Book Court</option>
+                            <option value="make_payment">Make Payment</option>
+                            <option value="view_schedule">View Schedule</option>
+                            <option value="submit_suggestion">Submit Suggestion</option>
+                            <option value="vote_poll">Vote Poll</option>
+                            <option value="partner_click">Partner Click</option>
+                          </select>
+                        </div>
 
-                        <mat-form-field appearance="outline">
-                          <mat-label>Component</mat-label>
-                          <mat-select
-                            [(value)]="activityFilters.component"
-                            (selectionChange)="loadActivityHistory()"
+                        <div class="filter-group">
+                          <label for="component-select">Component</label>
+                          <select
+                            id="component-select"
+                            class="native-select"
+                            [(ngModel)]="activityFilters.component"
+                            (change)="loadActivityHistory()"
                           >
-                            <mat-option value="">All Components</mat-option>
-                            <mat-option value="auth">Authentication</mat-option>
-                            <mat-option value="reservations">Reservations</mat-option>
-                            <mat-option value="payments">Payments</mat-option>
-                            <mat-option value="polls">Polls</mat-option>
-                            <mat-option value="suggestions">Suggestions</mat-option>
-                          </mat-select>
-                        </mat-form-field>
+                            <option value="">All Components</option>
+                            <option value="auth">Authentication</option>
+                            <option value="reservations">Reservations</option>
+                            <option value="payments">Payments</option>
+                            <option value="polls">Polls</option>
+                            <option value="suggestions">Suggestions</option>
+                          </select>
+                        </div>
                       </div>
                     </mat-card-header>
                     <mat-card-content>

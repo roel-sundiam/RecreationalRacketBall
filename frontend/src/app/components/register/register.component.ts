@@ -28,8 +28,8 @@ import { environment } from '../../../environments/environment';
           <div class="logo-section">
             <mat-icon class="club-logo">sports_tennis</mat-icon>
             <div class="club-info">
-              <h1 class="club-title">Rich Town 2 Tennis Club</h1>
-              <p class="club-tagline">Premium Tennis Experience</p>
+              <h1 class="club-title">Recreational Racket Ball</h1>
+              <p class="club-tagline">Premium Pickleball Experience</p>
             </div>
           </div>
         </div>

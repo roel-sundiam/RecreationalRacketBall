@@ -118,7 +118,7 @@ export const sendTestNotification = async (req: AuthenticatedRequest, res: Respo
 
     await NotificationService.sendToUser(userId, {
       title: title || '🎾 Test Notification',
-      body: body || 'This is a test notification from Tennis Club RT2',
+      body: body || 'This is a test notification from Recreational Racket Ball',
       url: '/dashboard'
     });
 

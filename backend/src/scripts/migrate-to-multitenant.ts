@@ -26,10 +26,10 @@ const stats: MigrationStats = {
   errors: []
 };
 
-// Default club data for Rich Town 2 Tennis Club
+// Default club data for Recreational Racket Ball
 const DEFAULT_CLUB_DATA = {
-  name: 'Rich Town 2 Tennis Club',
-  slug: 'richtown2',
+  name: 'Recreational Racket Ball',
+  slug: 'recreational-racket-ball',
   contactEmail: process.env.CONTACT_EMAIL || 'admin@tennisclubrt2.com',
   contactPhone: process.env.CONTACT_PHONE || '+63 945 123 4567',
   address: {

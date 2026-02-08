@@ -296,7 +296,7 @@ const startServer = async () => {
     );
 
     httpServer.listen(Number(PORT), "0.0.0.0", () => {
-      console.log(`🚀 Tennis Club RT2 Backend running on port ${PORT}`);
+      console.log(`🚀 Recreational Racket Ball Backend running on port ${PORT}`);
       console.log(`📱 Environment: ${process.env.NODE_ENV}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/health`);
       console.log(`🔗 Network access: http://192.168.68.113:${PORT}/health`);

@@ -1,7 +1,7 @@
 {
-  "name": "Tennis Club RT2 - Court Reservations",
-  "short_name": "Tennis RT2",
-  "description": "Reserve courts, track payments, and manage your tennis club experience with ease. Senior-friendly design for all members.",
+  "name": "Recreational Racket Ball - Court Reservations",
+  "short_name": "RRB",
+  "description": "Reserve courts, track payments, and manage your racketball club experience with ease. Senior-friendly design for all members.",
   "display": "standalone",
   "orientation": "any",
   "scope": "./",

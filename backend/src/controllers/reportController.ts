@@ -2154,7 +2154,7 @@ export const export2025FinancialReportHTML = asyncHandler(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2025 Financial Statement - Rich Town 2 Tennis Club</title>
+  <title>2025 Financial Statement - Recreational Racket Ball</title>
   <style>
     body {
       font-family: Arial, sans-serif;

@@ -288,7 +288,7 @@ interface GroupedMemberData {
                           mat-icon-button
                           color="accent"
                           (click)="resetPassword(member)"
-                          matTooltip="Reset Password to RT2Tennis"
+                          matTooltip="Reset Password to Recreational Racketball"
                           [disabled]="updating === member._id"
                         >
                           <mat-icon>lock_reset</mat-icon>
@@ -1045,7 +1045,7 @@ export class AdminMemberManagementComponent implements OnInit {
   resetPassword(member: Member): void {
     const dialogData: ConfirmationDialogData = {
       title: 'Reset Password',
-      message: `Are you sure you want to reset the password for ${member.fullName} to "RT2Tennis"? This action cannot be undone.`,
+      message: `Are you sure you want to reset the password for ${member.fullName} to "Recreational Racketball"? This action cannot be undone.`,
       confirmText: 'Reset Password',
       cancelText: 'Cancel',
       type: 'warning',

@@ -21,7 +21,7 @@ interface BeforeInstallPromptEvent extends Event {
           <div mat-card-avatar class="install-avatar">
             <mat-icon>download</mat-icon>
           </div>
-          <mat-card-title>Install Tennis Club RT2</mat-card-title>
+          <mat-card-title>Install Recreational Racket Ball</mat-card-title>
           <mat-card-subtitle>Get the full app experience</mat-card-subtitle>
         </mat-card-header>
 

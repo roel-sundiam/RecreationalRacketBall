@@ -70,7 +70,7 @@ async function cleanTestData() {
 
 // Run the cleanup
 if (require.main === module) {
-  console.log('🎯 Tennis Club RT2 - Database Test Data Cleanup');
+  console.log('🎯 Recreational Racket Ball - Database Test Data Cleanup');
   console.log('===============================================\n');
   
   console.log('⚠️  WARNING: This will delete all test data!');

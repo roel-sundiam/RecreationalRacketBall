@@ -126,7 +126,7 @@ const seedRules = async () => {
       {
         title: "Property Respect",
         description:
-          "Rich Town 2 Club property is to be respected at all times.",
+          "Club property is to be respected at all times.",
         category: "general",
         icon: "home",
         order: 7,

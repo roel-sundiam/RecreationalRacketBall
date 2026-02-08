@@ -76,7 +76,7 @@ async function testSupabaseConnection() {
     // Test 4: Test file upload and delete
     console.log('4️⃣ Testing file upload...');
     const testFileName = `test/connection-test-${Date.now()}.txt`;
-    const testContent = 'This is a test file from Tennis Club RT2';
+    const testContent = 'This is a test file from Recreational Racket Ball';
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(GALLERY_BUCKET)

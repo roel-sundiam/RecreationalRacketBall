@@ -451,7 +451,7 @@ export class WebSocketService {
 
       // Send welcome message
       socket.emit("welcome", {
-        message: "Connected to Tennis Club RT2 real-time updates",
+        message: "Connected to Recreational Racket Ball real-time updates",
         timestamp: new Date().toISOString(),
       });
     });

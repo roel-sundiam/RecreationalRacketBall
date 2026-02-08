@@ -459,8 +459,8 @@ export class SheetsService {
     console.log('💰 Fund Balance:', `₱${fundBalance.toLocaleString()}`);
 
     return {
-      clubName: 'RICH TOWN 2 TENNIS CLUB',
-      location: 'Rich Town 2 Subdivision, City of San Fernando, Pampanga',
+      clubName: 'RECREATIONAL RACKET BALL',
+      location: 'San Fernando, Pampanga',
       statementTitle: 'Statement of Accounts and Disbursements',
       period: `COVERING January 1, ${new Date().getFullYear()} - ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
       beginningBalance: {
@@ -568,8 +568,8 @@ export class SheetsService {
     const fundBalance = this.parseNumber(dataMap.get('fund balance') || 0);
 
     return {
-      clubName: dataMap.get('club name') || 'RICH TOWN 2 TENNIS CLUB',
-      location: dataMap.get('location') || 'Rich Town 2 Subdivision, City of San Fernando, Pampanga',
+      clubName: dataMap.get('club name') || 'RECREATIONAL RACKET BALL',
+      location: dataMap.get('location') || 'San Fernando, Pampanga',
       statementTitle: dataMap.get('statement title') || 'Statement of Accounts and Disbursements',
       period: dataMap.get('period') || `COVERING January 1, ${new Date().getFullYear()} - ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
       beginningBalance: {

@@ -18,7 +18,7 @@ import { LayoutComponent } from './shared/layout/layout.component';
   styleUrl: './app.scss'
 })
 export class App implements OnInit, OnDestroy {
-  protected readonly title = signal('Rich Town 2 Tennis Club');
+  protected readonly title = signal('Recreational Racket Ball');
   private clubSub?: Subscription;
   private readonly defaultTitle = 'Court Reservations';
 

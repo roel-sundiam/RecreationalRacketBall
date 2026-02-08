@@ -145,7 +145,7 @@ class DatabaseCopyScript {
 
   private showHelp(): void {
     console.log(`
-🎾 Tennis Club RT2 - Database Copy to Test Tool
+🎾 Recreational Racket Ball - Database Copy to Test Tool
 
 Usage: npm run copy-to-test [options]
 

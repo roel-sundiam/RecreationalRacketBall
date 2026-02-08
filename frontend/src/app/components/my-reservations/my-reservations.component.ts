@@ -1366,7 +1366,7 @@ export class MyReservationsComponent implements OnInit, OnDestroy {
     console.log('📋 STEP 1: Open a new terminal');
     console.log('📋 STEP 2: Navigate to backend directory: cd backend');
     console.log('📋 STEP 3: Start the server: npm run dev');
-    console.log('📋 STEP 4: Wait for "🚀 Rich Town 2 Tennis Club Backend running on port 3000"');
+    console.log('📋 STEP 4: Wait for "🚀 Recreational Racket Ball Backend running on port 3000"');
     console.log('📋 STEP 5: Refresh this page');
     console.log('');
     console.log('💡 Alternative: Run "./start-backend.sh" from project root');
@@ -1396,7 +1396,7 @@ Run: ./start-backend.sh
 • MongoDB issues: Check backend logs
 • Missing config: Verify .env file exists
 
-Once you see "🚀 Rich Town 2 Tennis Club Backend running on port 3000", 
+Once you see "🚀 Recreational Racket Ball Backend running on port 3000",
 click "Try Again" below to reconnect.
     `;
 

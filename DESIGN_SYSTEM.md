@@ -1,7 +1,7 @@
-# Tennis Club RT2 Design System
+# Recreational Racket Ball Design System
 
 ## Overview
-This document outlines the modern, professional design system implemented for the Tennis Club RT2 application. The design follows a senior-friendly approach with enhanced accessibility, mobile-first responsive design, and modern UI patterns.
+This document outlines the modern, professional design system implemented for the Recreational Racket Ball application. The design follows a senior-friendly approach with enhanced accessibility, mobile-first responsive design, and modern UI patterns.
 
 ## Core Design Principles
 
@@ -449,4 +449,4 @@ button:focus,
 - **Follow spacing scale** for consistent layouts
 - **Use semantic colors** from the design system
 
-This design system ensures consistency, accessibility, and modern aesthetics across the entire Tennis Club RT2 application.
+This design system ensures consistency, accessibility, and modern aesthetics across the entire Recreational Racket Ball application.

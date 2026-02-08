@@ -97,7 +97,7 @@ class DatabaseRestore {
 
   private showHelp(): void {
     console.log(`
-🎾 Tennis Club RT2 - Database Restore Tool
+🎾 Recreational Racket Ball - Database Restore Tool
 
 Usage: npm run restore [options]
 

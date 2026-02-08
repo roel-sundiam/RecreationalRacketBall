@@ -152,7 +152,7 @@ import { CreditService, DepositCreditsRequest } from '../../services/credit.serv
                       <p><strong>Bank Transfer:</strong></p>
                       <ul>
                         <li>Transfer ₱{{topupForm.get('amount')?.value || 0}} to our bank account</li>
-                        <li><strong>Account Name:</strong> Tennis Club RT2</li>
+                        <li><strong>Account Name:</strong> Recreational Racket Ball</li>
                         <li><strong>Account Number:</strong> 123-456-789-0</li>
                         <li><strong>Bank:</strong> BPI</li>
                         <li>Enter the transaction reference number above</li>
@@ -165,7 +165,7 @@ import { CreditService, DepositCreditsRequest } from '../../services/credit.serv
                       <ul>
                         <li>Send ₱{{topupForm.get('amount')?.value || 0}} to our GCash number</li>
                         <li><strong>GCash Number:</strong> 09123456789</li>
-                        <li><strong>Account Name:</strong> Tennis Club RT2</li>
+                        <li><strong>Account Name:</strong> Recreational Racket Ball</li>
                         <li>Enter the GCash reference number above</li>
                         <li>Credits will be processed within 24 hours after verification</li>
                       </ul>

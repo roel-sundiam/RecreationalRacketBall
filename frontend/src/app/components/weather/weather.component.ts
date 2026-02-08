@@ -495,7 +495,7 @@ export class WeatherComponent implements OnInit, OnDestroy {
   selectedView: 'hourly' | 'daily' = 'hourly';
   showDebugInfo = false; // Debug panel hidden
   apiUrl = environment.apiUrl; // Public for template access
-  clubAddress = 'RT2 Tennis Club, San Fernando, Pampanga';
+  clubAddress = 'Recreational Racket Ball, San Fernando, Pampanga';
   googleMapsPlusCode = '3JRG+9P8';
   googleMapsUrl = 'https://maps.google.com/?q=3JRG%2B9P8,+San+Fernando,+Pampanga';
   mapEmbedUrl: SafeResourceUrl;

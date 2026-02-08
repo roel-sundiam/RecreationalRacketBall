@@ -58,7 +58,7 @@ import { Subscription } from 'rxjs';
             <img
               *ngIf="!isSuperAdmin && !clubLogo"
               src="images/rt2-logo.png"
-              alt="Rich Town 2 Tennis Club"
+              alt="Recreational Racket Ball"
               class="club-logo"
             />
           </div>
@@ -332,7 +332,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   isAdmin = false;
   isSuperAdmin = false;
   isMobileMenuOpen = false;
-  clubName: string = 'Rich Town 2 Tennis Club'; // Default fallback
+  clubName: string = 'Recreational Racket Ball'; // Default fallback
   clubLogo: string | null = null;
 
   private userSubscription: Subscription = new Subscription();
@@ -368,12 +368,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       }
       if (club) {
         // Extract club name
-        this.clubName = club.club?.name || (club as any).clubName || 'Rich Town 2 Tennis Club';
+        this.clubName = club.club?.name || (club as any).clubName || 'Recreational Racket Ball';
 
         // Extract club logo - check nested club object first, then flat structure
         this.clubLogo = club.club?.logo || (club as any).clubLogo || null;
       } else {
-        this.clubName = 'Rich Town 2 Tennis Club';
+        this.clubName = 'Recreational Racket Ball';
         this.clubLogo = null;
       }
     });

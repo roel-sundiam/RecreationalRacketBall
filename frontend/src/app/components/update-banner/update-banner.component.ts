@@ -21,7 +21,7 @@ import { AppUpdateService } from '../../services/app-update.service';
           <mat-icon class="update-icon">system_update</mat-icon>
           <div class="update-text">
             <h3>App Update Available</h3>
-            <p>A new version of Tennis Club RT2 is ready to install</p>
+            <p>A new version of Recreational Racket Ball is ready to install</p>
           </div>
           <div class="update-actions">
             <button mat-button (click)="dismissBanner()" class="dismiss-btn">

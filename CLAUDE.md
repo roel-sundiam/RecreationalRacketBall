@@ -208,7 +208,7 @@ RATE_LIMIT_MAX_REQUESTS=500    # Max requests per window
 - Backend: Jest unit tests for business logic
 - Frontend: Angular testing utilities
 - **Test Credentials:** See `TEST_CREDENTIALS.md` for complete list of test accounts
-- **Primary Test User:** RoelSundiam/RT2Tennis (member)
+- **Primary Test User:** RoelSundiam/Recreational Racketball (member)
 - **Admin Access:** superadmin/admin123 (superadmin)
 
 #### Database Seeding

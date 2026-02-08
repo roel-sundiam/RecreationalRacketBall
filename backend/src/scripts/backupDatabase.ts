@@ -92,7 +92,7 @@ class DatabaseBackup {
 
   private showHelp(): void {
     console.log(`
-🎾 Tennis Club RT2 - Database Backup Tool
+🎾 Recreational Racket Ball - Database Backup Tool
 
 Usage: npm run backup [options]
 
